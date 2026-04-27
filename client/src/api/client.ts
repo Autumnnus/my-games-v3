@@ -58,8 +58,11 @@ export async function apiFetch<T>(
   const res = await fetch(url, { ...init, headers });
 
   if (res.status === 401) {
-    useAuthStore.getState().clearAuth();
-    window.location.href = "/login";
+    const hadToken = !!useAuthStore.getState().token;
+    if (hadToken) {
+      useAuthStore.getState().clearAuth();
+      window.location.href = "/login";
+    }
     throw createApiError("UNAUTHORIZED", "Session expired", undefined, 401);
   }
 

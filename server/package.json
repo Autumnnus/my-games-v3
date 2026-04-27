@@ -2,6 +2,7 @@
   "name": "my-games-backend-v2",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
+    "dev:cloudflare": "bun run --hot --env-file .env.cloudflare src/index.ts",
     "start": "bun run src/index.ts",
     "migrate:collections": "bun run src/scripts/migrate-game-library-collections.ts",
     "docker:mongo:up": "docker compose up -d mongo",

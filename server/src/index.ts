@@ -21,14 +21,19 @@ const allowedOrigins = [
   env.FRONTEND_URL,
   "http://localhost:5173",
   "http://localhost:4173",
+  "https://my-games-v3-client-proje.autumnnus.dev",
 ].filter((v, i, a) => a.indexOf(v) === i);
 
 app.use(
   "*",
   cors({
-    origin: (origin) => (allowedOrigins.includes(origin) ? origin : null),
+    origin: (origin) => {
+      if (!origin || allowedOrigins.includes(origin)) return origin;
+      return null;
+    },
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
   }),
 );
 

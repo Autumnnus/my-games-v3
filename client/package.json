@@ -1,10 +1,11 @@
 {
-  "name": "my-games-v2",
+  "name": "my-games-v3-client",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:cloudflare": "vite --mode cloudflare",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",

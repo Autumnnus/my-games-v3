@@ -45,6 +45,11 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: { "@": resolve(__dirname, "./src") },
   },
+  server: {
+    allowedHosts: mode === "cloudflare"
+      ? ["my-games-v3-client-proje.autumnnus.dev"]
+      : [],
+  },
   test: {
     globals: true,
     environment: "jsdom",
