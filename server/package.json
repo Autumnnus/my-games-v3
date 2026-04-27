@@ -1,0 +1,48 @@
+{
+  "name": "my-games-backend-v2",
+  "scripts": {
+    "dev": "bun run --hot src/index.ts",
+    "start": "bun run src/index.ts",
+    "migrate:collections": "bun run src/scripts/migrate-game-library-collections.ts",
+    "docker:mongo:up": "docker compose up -d mongo",
+    "docker:mongo:down": "docker compose down",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1032.0",
+    "@hono/zod-validator": "^0.7.6",
+    "@my-games/shared": "file:../packages/shared",
+    "@scalar/hono-api-reference": "^0.10.10",
+    "axios": "^1.15.2",
+    "bcryptjs": "^3.0.3",
+    "cron": "^4.4.0",
+    "hono": "^4.12.14",
+    "jsonwebtoken": "^9.0.3",
+    "mailgen": "^2.0.34",
+    "mongoose": "^9.4.1",
+    "nodemailer": "^8.0.5",
+    "papaparse": "^5.5.3",
+    "slugify": "^1.6.9",
+    "xlsx": "^0.18.5",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/bun": "latest",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/nodemailer": "^8.0.0",
+    "@types/papaparse": "^5.5.2",
+    "@typescript-eslint/eslint-plugin": "^8.58.2",
+    "@typescript-eslint/parser": "^8.58.2",
+    "@vitest/coverage-v8": "^4.1.5",
+    "eslint": "^10.2.1",
+    "eslint-config-prettier": "^10.1.8",
+    "happy-dom": "^20.9.0",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.5"
+  }
+}

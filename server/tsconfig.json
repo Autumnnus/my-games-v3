@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
+    "paths": {
+      "@my-games/shared": ["../packages/shared/index.ts"]
+    },
+    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "target": "ESNext",
+    "types": ["bun-types"]
+  }
+}

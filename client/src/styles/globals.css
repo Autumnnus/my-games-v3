@@ -1,0 +1,94 @@
+@import "tailwindcss";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/inter/700.css";
+@import "./glass.css";
+
+@theme {
+  --color-bg-base: #09090f;
+  --color-bg-elevated: #0f0f1a;
+  --color-bg-overlay: #13131f;
+
+  --color-glass-surface: rgba(255, 255, 255, 0.05);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-glass-highlight: rgba(255, 255, 255, 0.15);
+  --color-glass-surface-hover: rgba(255, 255, 255, 0.08);
+  --color-glass-border-hover: rgba(255, 255, 255, 0.18);
+
+  --color-accent-purple: #a855f7;
+  --color-accent-purple-dim: rgba(168, 85, 247, 0.15);
+  --color-accent-blue: #3b82f6;
+  --color-accent-blue-dim: rgba(59, 130, 246, 0.12);
+  --color-accent-pink: #ec4899;
+
+  --color-text-primary: rgba(255, 255, 255, 0.95);
+  --color-text-secondary: rgba(255, 255, 255, 0.6);
+  --color-text-muted: rgba(255, 255, 255, 0.35);
+
+  --color-status-completed: #22c55e;
+  --color-status-active: #3b82f6;
+  --color-status-tobecompleted: #f59e0b;
+  --color-status-abandoned: #6b7280;
+
+  --font-sans:
+    "Inter", ui-sans-serif, system-ui, -apple-system, "SF Pro Display",
+    sans-serif;
+
+  --radius-glass: 16px;
+  --radius-glass-sm: 12px;
+  --radius-glass-lg: 24px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  min-height: 100dvh;
+  margin: 0;
+}
+
+#root {
+  min-height: 100dvh;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Selection */
+::selection {
+  background: rgba(168, 85, 247, 0.35);
+  color: white;
+}
+
+/* Focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-accent-purple);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
