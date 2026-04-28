@@ -32,7 +32,7 @@ games.get(
   zValidator("query", getUserGamesQuerySchema),
   async (c) => {
     const id = c.req.param("id");
-    const { sortBy, order, search, status, platform, page, limit } =
+    const { sortBy, order, search, status, platform, page, limit, isFavorite } =
       c.req.valid("query");
     const games = await gameService.getUserGamesService({
       id,
@@ -43,6 +43,7 @@ games.get(
       platform,
       page,
       limit,
+      isFavorite,
     });
     return c.json(ok(games));
   },

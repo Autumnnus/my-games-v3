@@ -11,6 +11,7 @@ export interface GetUserGamesParams {
   search?: string;
   status?: GameStatus;
   platform?: Platform;
+  isFavorite?: boolean;
 }
 
 export interface GamesPageResponse {
@@ -45,9 +46,10 @@ export const gamesApi = {
     search,
     status,
     platform,
+    isFavorite,
   }: GetUserGamesParams) =>
     apiFetch<GamesPageResponse>(`/api/games/user/${userId}`, {
-      params: { page, limit, sortBy, order, search, status, platform },
+      params: { page, limit, sortBy, order, search, status, platform, isFavorite },
     }),
 
   getGame: (gameId: string) =>

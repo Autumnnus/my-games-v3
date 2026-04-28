@@ -261,6 +261,7 @@ async function getUserGamesService({
   platform,
   page,
   limit,
+  isFavorite,
 }: {
   id: string;
   sortBy?: string;
@@ -270,6 +271,7 @@ async function getUserGamesService({
   platform?: string;
   page?: number;
   limit?: number;
+  isFavorite?: boolean;
 }): Promise<{
   items: GameListItem[];
   total: number;
@@ -289,6 +291,7 @@ async function getUserGamesService({
   const matchCriteria: mongoose.QueryFilter<ILibraryEntry> = { user: id };
   if (status) matchCriteria.status = status;
   if (platform) matchCriteria.platform = platform;
+  if (isFavorite !== undefined) matchCriteria.isFavorite = isFavorite;
   if (search) {
     const entries = await LibraryEntry.aggregate([
       { $match: { user: new mongoose.Types.ObjectId(id) } },

@@ -47,6 +47,7 @@ export const getUserGamesQuerySchema = z.object({
   platform: platformEnum.optional(),
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(100).default(25),
+  isFavorite: z.coerce.boolean().optional(),
 });
 
 export type AddGameInput = z.infer<typeof addGameSchema>;

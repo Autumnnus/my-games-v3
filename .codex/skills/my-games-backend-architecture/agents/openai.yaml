@@ -1,0 +1,6 @@
+interface:
+  display_name: "My Games Backend Architecture"
+  short_description: "Backend layering and contract rules"
+  default_prompt: "Use $my-games-backend-architecture to change the My Games backend while preserving service, repository, validation, and response architecture."
+policy:
+  allow_implicit_invocation: true

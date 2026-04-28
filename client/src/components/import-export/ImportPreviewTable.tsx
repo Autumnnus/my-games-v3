@@ -1,25 +1,13 @@
 import { useState } from "react";
+import { CheckCircle2, XCircle, Clock, Star, Gamepad2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import type { ImportField } from "@/api/importExport";
 
 const STATUS_OPTIONS = [
-  { value: "completed", label: "Tamamlandı" },
-  { value: "activePlaying", label: "Oynuyor" },
-  { value: "toBeCompleted", label: "Beklemede" },
-  { value: "abandoned", label: "Bırakıldı" },
-];
-
-const PREVIEW_FIELDS: Array<{
-  key: ImportField;
-  label: string;
-  type: "text" | "number" | "status" | "tags";
-}> = [
-  { key: "name", label: "İsim", type: "text" },
-  { key: "status", label: "Durum", type: "status" },
-  { key: "rating", label: "Puan", type: "number" },
-  { key: "playTime", label: "Süre (dk)", type: "number" },
-  { key: "platforms", label: "Platformlar", type: "tags" },
-  { key: "genres", label: "Türler", type: "tags" },
-  { key: "tags", label: "Etiketler", type: "tags" },
+  { value: "completed", label: "Tamamlandı", color: "#22c55e" },
+  { value: "activePlaying", label: "Oynuyor", color: "#3b82f6" },
+  { value: "toBeCompleted", label: "Beklemede", color: "#f59e0b" },
+  { value: "abandoned", label: "Bırakıldı", color: "#ef4444" },
 ];
 
 interface ImportPreviewTableProps {
@@ -41,6 +29,281 @@ function getMappedValue(
   return result as Record<ImportField, unknown>;
 }
 
+function StatusBadge({ value }: { value: unknown }) {
+  const status = STATUS_OPTIONS.find((o) => o.value === String(value));
+  if (!status) return <span style={{ color: "rgba(255,255,255,0.3)" }}>—</span>;
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
+      style={{ background: `${status.color}18`, color: status.color }}
+    >
+      {status.label}
+    </span>
+  );
+}
+
+function GamePreviewCard({
+  row,
+  mapping,
+  index,
+  onEdit,
+}: {
+  row: Record<string, unknown>;
+  mapping: Record<string, ImportField>;
+  index: number;
+  onEdit: (field: ImportField, value: unknown) => void;
+}) {
+  const mapped = getMappedValue(row, mapping);
+  const name = String(mapped.name ?? "—");
+  const status = mapped.status as string | undefined;
+  const rating = mapped.rating as number | undefined;
+  const playTime = mapped.playTimeMinutes as number | undefined;
+  const platform = (mapped.platforms as string[] | undefined)?.[0];
+  const coverUrl = mapped.coverImage as string | undefined;
+  const screenshots = mapped.screenshots as unknown[] | undefined;
+  const genres = (mapped.genres as string[] | undefined)?.slice(0, 3);
+  const tags = (mapped.tags as string[] | undefined)?.slice(0, 3);
+
+  const [editingField, setEditingField] = useState<ImportField | null>(null);
+  const [editValue, setEditValue] = useState("");
+
+  function startEdit(field: ImportField, currentVal: unknown) {
+    setEditingField(field);
+    if (Array.isArray(currentVal)) setEditValue(currentVal.join(", "));
+    else setEditValue(String(currentVal ?? ""));
+  }
+
+  function commitEdit(field: ImportField) {
+    if (field === "rating") {
+      onEdit(field, parseFloat(editValue) || 0);
+    } else if (
+      field === "platforms" ||
+      field === "genres" ||
+      field === "tags"
+    ) {
+      onEdit(
+        field,
+        editValue.split(",").map((s) => s.trim()).filter(Boolean),
+      );
+    } else {
+      onEdit(field, editValue);
+    }
+    setEditingField(null);
+  }
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="flex gap-4 p-4 rounded-xl border transition-all cursor-default"
+      style={{
+        background: "rgba(255,255,255,0.03)",
+        borderColor: "rgba(255,255,255,0.06)",
+      }}
+    >
+      {/* Cover */}
+      <div className="shrink-0 w-16 h-20 rounded-lg overflow-hidden flex items-center justify-center">
+        {coverUrl ? (
+          <img
+            src={coverUrl}
+            alt={name}
+            className="w-full h-full object-cover"
+            loading="lazy"
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = "none";
+            }}
+          />
+        ) : (
+          <div
+            className="w-full h-full flex items-center justify-center text-xl"
+            style={{ background: "rgba(255,255,255,0.05)" }}
+          >
+            🎮
+          </div>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className="flex-1 min-w-0 flex flex-col gap-2">
+        {/* Name */}
+        {editingField === "name" ? (
+          <input
+            className="text-sm font-semibold bg-transparent border-b px-1 py-0.5 outline-none"
+            style={{
+              borderColor: "rgba(255,255,255,0.2)",
+              color: "rgba(255,255,255,0.9)",
+            }}
+            value={editValue}
+            autoFocus
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={() => commitEdit("name")}
+            onKeyDown={(e) => e.key === "Enter" && commitEdit("name")}
+          />
+        ) : (
+          <p
+            className="text-sm font-semibold truncate cursor-pointer hover:text-white transition-colors"
+            style={{ color: "rgba(255,255,255,0.9)" }}
+            onClick={() => startEdit("name", mapped.name)}
+            title={name}
+          >
+            {name}
+          </p>
+        )}
+
+        {/* Status + Platform */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {editingField === "status" ? (
+            <select
+              className="text-xs px-2 py-1 rounded-lg outline-none"
+              style={{
+                background: "rgba(255,255,255,0.08)",
+                color: "rgba(255,255,255,0.9)",
+              }}
+              autoFocus
+              value={String(status ?? "")}
+              onChange={(e) => {
+                onEdit("status", e.target.value);
+                setEditingField(null);
+              }}
+              onBlur={() => setEditingField(null)}
+            >
+              <option value="">—</option>
+              {STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <button
+              onClick={() => startEdit("status", status)}
+              className="flex items-center gap-1"
+            >
+              <StatusBadge value={status} />
+            </button>
+          )}
+
+          {platform && (
+            <span
+              className="text-xs px-2 py-0.5 rounded-full"
+              style={{
+                background: "rgba(124,58,237,0.15)",
+                color: "rgba(168,85,247,0.9)",
+              }}
+            >
+              {platform}
+            </span>
+          )}
+
+          {genres?.map((g) => (
+            <span
+              key={g}
+              className="text-xs px-2 py-0.5 rounded-full"
+              style={{
+                background: "rgba(255,255,255,0.05)",
+                color: "rgba(255,255,255,0.4)",
+              }}
+            >
+              {g}
+            </span>
+          ))}
+        </div>
+
+        {/* Stats row */}
+        <div className="flex items-center gap-4">
+          {/* Rating */}
+          <button
+            onClick={() => startEdit("rating", rating)}
+            className="flex items-center gap-1 text-xs"
+            style={{ color: "rgba(255,255,255,0.5)" }}
+          >
+            <Star size={12} style={{ color: "#f59e0b" }} />
+            {editingField === "rating" ? (
+              <input
+                className="w-10 text-xs bg-transparent border-b outline-none px-1"
+                style={{ borderColor: "rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.9)" }}
+                type="number"
+                min={0}
+                max={10}
+                value={editValue}
+                autoFocus
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={() => commitEdit("rating")}
+                onKeyDown={(e) => e.key === "Enter" && commitEdit("rating")}
+              />
+            ) : (
+              <span style={{ color: rating ? "#f59e0b" : "rgba(255,255,255,0.3)" }}>
+                {rating ? `${rating}/10` : "—"}
+              </span>
+            )}
+          </button>
+
+          {/* Play time */}
+          <button
+            onClick={() => startEdit("playTimeMinutes", playTime)}
+            className="flex items-center gap-1 text-xs"
+            style={{ color: "rgba(255,255,255,0.5)" }}
+          >
+            <Clock size={12} />
+            {editingField === "playTimeMinutes" ? (
+              <input
+                className="w-14 text-xs bg-transparent border-b outline-none px-1"
+                style={{ borderColor: "rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.9)" }}
+                type="number"
+                min={0}
+                value={editValue}
+                autoFocus
+                onChange={(e) => setEditValue(e.target.value)}
+                onBlur={() => commitEdit("playTimeMinutes")}
+                onKeyDown={(e) => e.key === "Enter" && commitEdit("playTimeMinutes")}
+              />
+            ) : (
+              <span>{playTime ? `${playTime} dk` : "—"}</span>
+            )}
+          </button>
+
+          {/* Screenshots count */}
+          {screenshots?.length ? (
+            <span
+              className="flex items-center gap-1 text-xs"
+              style={{ color: "rgba(255,255,255,0.3)" }}
+            >
+              <Gamepad2 size={12} />
+              {screenshots.length} ekran görüntüsü
+            </span>
+          ) : null}
+        </div>
+
+        {/* Notes preview */}
+        {(mapped.notes as string) && (
+          <p
+            className="text-xs line-clamp-1"
+            style={{ color: "rgba(255,255,255,0.3)" }}
+          >
+            {(mapped.notes as string).slice(0, 100)}
+            {(mapped.notes as string).length > 100 ? "..." : ""}
+          </p>
+        )}
+      </div>
+
+      {/* Index badge */}
+      <div className="shrink-0">
+        <span
+          className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold"
+          style={{
+            background: "rgba(255,255,255,0.06)",
+            color: "rgba(255,255,255,0.3)",
+          }}
+        >
+          {index + 1}
+        </span>
+      </div>
+    </motion.div>
+  );
+}
+
 export function ImportPreviewTable({
   rows,
   mapping,
@@ -48,165 +311,51 @@ export function ImportPreviewTable({
 }: ImportPreviewTableProps) {
   const previewRows = rows.slice(0, 10);
   const totalRows = rows.length;
+  const ignoredCount = Object.values(mapping).filter(
+    (v) => v === "ignore",
+  ).length;
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
-        İlk {previewRows.length} / {totalRows} satır önizlemesi
-      </p>
-
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{ border: "1px solid rgba(255,255,255,0.08)" }}
-      >
-        {/* Header */}
-        <div
-          className="grid px-3 py-2 text-xs font-semibold uppercase tracking-wider"
-          style={{
-            background: "rgba(255,255,255,0.04)",
-            color: "rgba(255,255,255,0.4)",
-            gridTemplateColumns:
-              "48px 1fr ".repeat(PREVIEW_FIELDS.length) + "48px",
-          }}
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+          {previewRows.length} / {totalRows} satır önizlemesi
+          {ignoredCount > 0 && (
+            <span> • {ignoredCount} sütun yoksayıldı</span>
+          )}
+        </p>
+        <p
+          className="text-xs"
+          style={{ color: "rgba(255,255,255,0.25)" }}
         >
-          <span className="col-span-1">#</span>
-          {PREVIEW_FIELDS.map((f) => (
-            <span key={f.key} className="col-span-1">
-              {f.label}
-            </span>
+          Tıklaarak düzenle
+        </p>
+      </div>
+
+      {/* Card list */}
+      <div className="flex flex-col gap-2 max-h-[clamp(240px,48vh,520px)] overflow-y-auto pr-1">
+        <AnimatePresence mode="popLayout">
+          {previewRows.map((row, idx) => (
+            <GamePreviewCard
+              key={idx}
+              row={row}
+              mapping={mapping}
+              index={idx}
+              onEdit={(field, value) => onRowEdit(idx, field, value)}
+            />
           ))}
-        </div>
+        </AnimatePresence>
 
-        {/* Rows */}
-        <div
-          className="divide-y"
-          style={{ divideColor: "rgba(255,255,255,0.04)" }}
-        >
-          {previewRows.map((row, rowIdx) => {
-            const mapped = getMappedValue(row, mapping);
-            return (
-              <div
-                key={rowIdx}
-                className="grid items-center px-3 py-2.5 text-sm gap-2"
-                style={{
-                  gridTemplateColumns:
-                    "48px 1fr ".repeat(PREVIEW_FIELDS.length) + "48px",
-                  color: "rgba(255,255,255,0.75)",
-                }}
-              >
-                <span style={{ color: "rgba(255,255,255,0.3)" }}>
-                  {rowIdx + 1}
-                </span>
-                {PREVIEW_FIELDS.map((field) => {
-                  const val = mapped[field.key];
-                  return (
-                    <CellEditor
-                      key={field.key}
-                      field={field}
-                      value={val}
-                      onChange={(v) => onRowEdit(rowIdx, field.key, v)}
-                    />
-                  );
-                })}
-                <span />
-              </div>
-            );
-          })}
-        </div>
+        {previewRows.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-12 gap-2">
+            <XCircle size={32} style={{ color: "rgba(255,255,255,0.2)" }} />
+            <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
+              Eşleştirilen satır yok
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
-}
-
-function CellEditor({
-  field,
-  value,
-  onChange,
-}: {
-  field: {
-    key: ImportField;
-    label: string;
-    type: "text" | "number" | "status" | "tags";
-  };
-  value: unknown;
-  onChange: (v: unknown) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const display = formatCell(value, field.type);
-
-  if (!editing) {
-    return (
-      <span
-        className="truncate cursor-pointer px-2 py-1 rounded hover:bg-white/5 transition-colors"
-        style={{
-          color: value ? "rgba(255,255,255,0.8)" : "rgba(255,255,255,0.25)",
-        }}
-        title={String(display)}
-        onClick={() => setEditing(true)}
-      >
-        {display || "—"}
-      </span>
-    );
-  }
-
-  if (field.type === "status") {
-    return (
-      <select
-        className="glass-input w-full px-2 py-1 text-xs"
-        value={String(value ?? "")}
-        autoFocus
-        onChange={(e) => {
-          onChange(e.target.value);
-          setEditing(false);
-        }}
-        onBlur={() => setEditing(false)}
-      >
-        <option value="">—</option>
-        {STATUS_OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-    );
-  }
-
-  if (field.type === "number") {
-    return (
-      <input
-        type="number"
-        className="glass-input w-full px-2 py-1 text-xs"
-        value={value ?? ""}
-        autoFocus
-        min={0}
-        onChange={(e) => onChange(Number(e.target.value))}
-        onBlur={() => setEditing(false)}
-      />
-    );
-  }
-
-  // text or tags
-  return (
-    <input
-      type="text"
-      className="glass-input w-full px-2 py-1 text-xs"
-      value={Array.isArray(value) ? value.join(", ") : String(value ?? "")}
-      autoFocus
-      onChange={(e) => onChange(e.target.value)}
-      onBlur={() => setEditing(false)}
-    />
-  );
-}
-
-function formatCell(
-  value: unknown,
-  type: "text" | "number" | "status" | "tags",
-): string {
-  if (value === null || value === undefined || value === "") return "";
-  if (Array.isArray(value)) return value.join(", ");
-  if (type === "status") {
-    const found = STATUS_OPTIONS.find((o) => o.value === String(value));
-    return found?.label ?? String(value);
-  }
-  return String(value);
 }

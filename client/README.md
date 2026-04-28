@@ -1,75 +1,102 @@
-# React + TypeScript + Vite
+# My Games V3 Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+The React client for My Games V3. It contains the game library, profile, Steam sync, screenshots, notifications, activity feed, and import/export interfaces.
 
-Currently, two official plugins are available:
+## Technology
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- React 19
+- TypeScript
+- Vite
+- TanStack Router
+- TanStack Query
+- Zustand
+- React Hook Form
+- Zod
+- Tailwind CSS
+- Framer Motion
+- Vitest and Testing Library
 
-## React Compiler
+## Setup
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```bash
+yarn install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Set the local API URL:
 
-```js
-// eslint.config.js
-import reactX from "eslint-plugin-react-x";
-import reactDom from "eslint-plugin-react-dom";
-
-export default defineConfig([
-  globalIgnores(["dist"]),
-  {
-    files: ["**/*.{ts,tsx}"],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs["recommended-typescript"],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ["./tsconfig.node.json", "./tsconfig.app.json"],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-]);
+```env
+VITE_API_URL=http://localhost:3030
 ```
+
+## Running
+
+```bash
+yarn dev
+```
+
+Default URL: `http://localhost:5173`
+
+## Scripts
+
+```bash
+yarn dev
+yarn dev:cloudflare
+yarn build
+yarn lint
+yarn test
+yarn test:run
+yarn preview
+yarn format
+```
+
+## Architecture
+
+```txt
+src/
+  api/          HTTP client, API functions, query key factories
+  components/   UI pieces and feature components
+  hooks/        TanStack Query query and mutation hooks
+  lib/          shared helpers and query client
+  routes/       TanStack Router route files
+  store/        client-only state with Zustand
+  styles/       global styles
+  test/         test setup
+```
+
+## State Management Rule
+
+TanStack Query owns server state. Lists, detail records, notifications, activities, statistics, screenshot counts, and profile data returned by the API must not be copied into Zustand.
+
+Zustand is only for client-side state:
+
+- Auth token and the persisted auth user.
+- UI preferences and modal or wizard state.
+- Temporary import or Steam sync state.
+- Short-lived optimistic helper state that will be reconciled with the server.
+
+When a mutation changes data, the related query cache must be updated or invalidated inside that mutation. UI refresh must not depend on a page reload, route change, or accidental refetch.
+
+Mutation checklist:
+
+- Use `setQueryData` for changed detail records.
+- Patch visible lists or infinite query pages.
+- Invalidate the relevant list key family when filter membership can change.
+- Use `removeQueries` for deleted detail records.
+- Invalidate dependent surfaces such as statistics, activity, notifications, profile, and screenshot counts.
+- Keep rollback snapshots for optimistic updates.
+
+## API Layer
+
+- HTTP requests go through `apiFetch` in `src/api/client.ts`.
+- Feature APIs live under `src/api/*.api.ts`.
+- Query keys are defined only in `src/api/queryKeys.ts`.
+- Cross-app types come from `@my-games/shared`.
+- User-facing error messages should use the `isApiError` guard.
+
+## Testing
+
+```bash
+yarn test:run
+```
+
+When changing UI state or mutation behavior, add or update the relevant hook or component test. Cache behavior is especially important for add, edit, delete, favorite, status, notification, and screenshot mutations.

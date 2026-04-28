@@ -125,16 +125,18 @@ export function ImportExportModal({
     runImportMutation.isError,
   ]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Transition from step 1 to step 2 after successful parse
+  useEffect(() => {
+    if (parseMutation.isSuccess) {
+      setImportStep(2);
+      parseMutation.reset();
+    }
+  }, [parseMutation.isSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function handleImportNext() {
     if (importStep === 1) {
       if (!importState.file) return;
       parse(importState.file);
-      // After parse, we still stay on step 1 until parse completes
-      // Once parse succeeds, move to step 2
-      const listener = (result: unknown) => {
-        setImportStep(2);
-        parseMutation.reset();
-      };
       return;
     }
     if (importStep === 2) {

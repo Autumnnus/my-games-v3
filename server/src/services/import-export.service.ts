@@ -77,11 +77,17 @@ export function parseImportFile(
     return { columns, rows: raw };
   } else {
     const text = buffer.toString("utf-8");
-    const parsed = Papa.parse(text, { header: true, skipEmptyLines: true });
-    if (!parsed.data || !Array.isArray(parsed.data) || !parsed.data.length) {
+    // Parse as JSON array of objects
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch {
+      throw new AppError("IMPORT_PARSE_ERROR", "Invalid JSON format", 400);
+    }
+    if (!Array.isArray(parsed) || !parsed.length) {
       throw new AppError("IMPORT_EMPTY_FILE", "Uploaded file is empty", 400);
     }
-    const rows = parsed.data as Record<string, unknown>[];
+    const rows = parsed as Record<string, unknown>[];
     const columns = Object.keys(rows[0]);
     return { columns, rows };
   }
