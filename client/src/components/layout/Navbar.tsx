@@ -13,25 +13,28 @@ import {
   Bell,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { useAuthStore } from "@/store/auth.store";
 import { Avatar } from "@/components/ui/Avatar";
 import { GlassButton } from "@/components/ui/GlassButton";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { NotificationPanel } from "@/components/notifications/NotificationPanel";
 import { ThemeControls } from "@/components/theme/ThemeControls";
 import { useUnreadCount } from "@/hooks/useNotifications";
 
 const NAV_LINKS_AUTHED = [
-  { to: "/games", label: "Kütüphane", icon: BookOpen },
-  { to: "/screenshots", label: "Ekran Görüntüleri", icon: Image },
-  { to: "/social", label: "Sosyal", icon: Activity },
-  { to: "/users", label: "Kullanıcılar", icon: Users },
+  { to: "/games", labelKey: "navbar.library", icon: BookOpen },
+  { to: "/screenshots", labelKey: "navbar.screenshots", icon: Image },
+  { to: "/social", labelKey: "navbar.social", icon: Activity },
+  { to: "/users", labelKey: "navbar.users", icon: Users },
 ];
 
 const NAV_LINKS_PUBLIC = [
-  { to: "/users", label: "Kullanıcılar", icon: Users },
+  { to: "/users", labelKey: "navbar.users", icon: Users },
 ];
 
 export function Navbar() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const token = useAuthStore((s) => s.token);
   const clearAuth = useAuthStore((s) => s.clearAuth);
@@ -73,7 +76,7 @@ export function Navbar() {
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1">
           {(authed ? NAV_LINKS_AUTHED : NAV_LINKS_PUBLIC).map(
-            ({ to, label, icon: Icon }) => (
+            ({ to, labelKey, icon: Icon }) => (
               <Link
                 key={to}
                 to={to}
@@ -87,7 +90,7 @@ export function Navbar() {
                 }}
               >
                 <Icon size={15} />
-                {label}
+                {t(labelKey)}
               </Link>
             ),
           )}
@@ -97,7 +100,7 @@ export function Navbar() {
         <div className="flex items-center gap-2 ml-auto">
           {authed && user ? (
             <>
-              {/* Bildirim zili */}
+              {/* Notification bell */}
               <div className="relative">
                 <button
                   onClick={() => {
@@ -110,7 +113,7 @@ export function Navbar() {
                       ? "var(--theme-text-primary)"
                       : "var(--theme-text-muted)",
                   }}
-                  aria-label="Bildirimler"
+                  aria-label={t("navbar.notifications")}
                 >
                   <Bell size={18} />
                   {unreadCount > 0 && (
@@ -131,7 +134,7 @@ export function Navbar() {
                 />
               </div>
 
-              {/* Profil */}
+              {/* Profile */}
               <div className="relative">
                 <button
                   onClick={() => {
@@ -157,7 +160,7 @@ export function Navbar() {
                         onClick={() => setProfileOpen(false)}
                       />
                       <motion.div
-                        className="absolute right-0 top-full mt-2 w-64 glass-card p-1 z-20"
+                        className="absolute right-0 top-full mt-2 w-64 p-1 z-20"
                         initial={{ opacity: 0, y: -6, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -4, scale: 0.97 }}
@@ -165,6 +168,14 @@ export function Navbar() {
                           type: "spring",
                           stiffness: 400,
                           damping: 30,
+                        }}
+                        style={{
+                          background: "rgba(20, 22, 30, 0.75)",
+                          backdropFilter: "blur(60px) saturate(220%)",
+                          WebkitBackdropFilter: "blur(60px) saturate(220%)",
+                          border: "1px solid rgba(255, 255, 255, 0.12)",
+                          borderRadius: "14px",
+                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 25px 60px rgba(0,0,0,0.4)",
                         }}
                       >
                         <Link
@@ -174,7 +185,7 @@ export function Navbar() {
                           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5"
                           style={{ color: "var(--theme-text-secondary)" }}
                         >
-                          <User size={15} /> Profil
+                          <User size={15} /> {t("users.profile")}
                         </Link>
                         <Link
                           to="/profile"
@@ -182,17 +193,19 @@ export function Navbar() {
                           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5"
                           style={{ color: "var(--theme-text-secondary)" }}
                         >
-                          <User size={15} /> Hesap Ayarları
+                          <User size={15} /> {t("navbar.accountSettings")}
                         </Link>
                         <div className="my-1 border-t border-white/8" />
                         <ThemeControls />
+                        <div className="my-1 border-t border-white/8" />
+                        <LanguageSwitcher />
                         <div className="my-1 border-t border-white/8" />
                         <button
                           onClick={handleLogout}
                           className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-red-500/10 text-left"
                           style={{ color: "rgba(239,68,68,0.85)" }}
                         >
-                          <LogOut size={15} /> Çıkış Yap
+                          <LogOut size={15} /> {t("navbar.signOut")}
                         </button>
                       </motion.div>
                     </>
@@ -206,14 +219,14 @@ export function Navbar() {
                 size="sm"
                 onClick={() => router.navigate({ to: "/login" })}
               >
-                Giriş Yap
+                {t("navbar.signIn")}
               </GlassButton>
               <GlassButton
                 size="sm"
                 variant="primary"
                 onClick={() => router.navigate({ to: "/register" })}
               >
-                Kayıt Ol
+                {t("navbar.register")}
               </GlassButton>
             </div>
           )}
@@ -222,7 +235,7 @@ export function Navbar() {
           <button
             className="md:hidden glass-btn p-1.5 rounded-lg"
             onClick={() => setMobileOpen((p) => !p)}
-            aria-label="Menü"
+            aria-label="Menu"
           >
             {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
@@ -239,7 +252,7 @@ export function Navbar() {
             exit={{ opacity: 0, height: 0 }}
           >
             {(authed ? NAV_LINKS_AUTHED : NAV_LINKS_PUBLIC).map(
-              ({ to, label, icon: Icon }) => (
+              ({ to, labelKey, icon: Icon }) => (
               <Link
                 key={to}
                 to={to}
@@ -253,7 +266,7 @@ export function Navbar() {
                   },
                 }}
               >
-                <Icon size={16} /> {label}
+                <Icon size={16} /> {t(labelKey)}
               </Link>
             ))}
           </motion.div>

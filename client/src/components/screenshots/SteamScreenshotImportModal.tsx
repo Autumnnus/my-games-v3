@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CheckSquare, Square } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { GlassModal } from "@/components/ui/GlassModal";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -26,6 +27,7 @@ function ScreenshotThumb({
   selected: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation();
   const thumb = item.previewUrl || item.fileUrl;
 
   return (
@@ -40,7 +42,7 @@ function ScreenshotThumb({
       {thumb ? (
         <img
           src={thumb}
-          alt={item.title || "Steam ekran görüntüsü"}
+          alt={item.title || t('screenshots.steamScreenshot')}
           className="w-full h-full object-cover"
           loading="lazy"
         />
@@ -111,6 +113,7 @@ export function SteamScreenshotImportModal({
   onClose,
   inline = false,
 }: Props) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const importMutation = useImportSteamScreenshots(gameId);
 
@@ -171,7 +174,7 @@ export function SteamScreenshotImportModal({
   const errorMessage = error
     ? isApiError(error)
       ? error.message
-      : "Steam ekran görüntüleri yüklenemedi"
+      : t('screenshots.steamLoadFailed')
     : null;
 
   const content = isLoading ? (
@@ -190,13 +193,13 @@ export function SteamScreenshotImportModal({
       className="text-center py-12 text-sm"
       style={{ color: "rgba(255,255,255,0.4)" }}
     >
-      Bu oyun için public Steam ekran görüntüsü bulunamadı.
+      {t('screenshots.noPublicScreenshots')}
       <br />
       <span
         className="text-xs mt-1 block"
         style={{ color: "rgba(255,255,255,0.25)" }}
       >
-        Yalnızca herkese açık paylaşılan ekran görüntüleri görünür.
+        {t('screenshots.onlyPublicHint')}
       </span>
     </div>
   ) : (
@@ -204,7 +207,7 @@ export function SteamScreenshotImportModal({
       {/* Header row */}
       <div className="flex items-center justify-between">
         <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
-          {screenshots.length} ekran görüntüsü
+          {screenshots.length} {t('screenshots.count')}
         </span>
         <button
           onClick={toggleAll}
@@ -212,7 +215,7 @@ export function SteamScreenshotImportModal({
           style={{ color: allSelected ? "#a855f7" : "rgba(255,255,255,0.5)" }}
         >
           {allSelected ? <CheckSquare size={14} /> : <Square size={14} />}
-          {allSelected ? "Seçimi kaldır" : "Tümünü seç"}
+          {allSelected ? t('screenshots.deselectAll') : t('screenshots.selectAll')}
         </button>
       </div>
 
@@ -237,8 +240,8 @@ export function SteamScreenshotImportModal({
         className="w-full"
       >
         {selected.size > 0
-          ? `${selected.size} ekran görüntüsü ekle`
-          : "Ekran görüntüsü seç"}
+          ? t('screenshots.addN', { count: selected.size })
+          : t('screenshots.selectToAdd')}
       </GlassButton>
     </div>
   );
@@ -249,7 +252,7 @@ export function SteamScreenshotImportModal({
     <GlassModal
       open={open}
       onClose={handleClose}
-      title="Steam'den Ekran Görüntüsü Ekle"
+      title={t('screenshots.steamTitle')}
       size="lg"
     >
       {content}

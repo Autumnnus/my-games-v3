@@ -1,11 +1,24 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Activity, RefreshCw } from "lucide-react";
-import type { ActivityFeedResponse, ActivityType } from "@my-games/shared";
+import type { ActivityFeedResponse } from "@my-games/shared";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ActivityItem } from "./ActivityItem";
-import { FILTER_OPTIONS, type ActivityFilter } from "./activityConfig";
+import type { ActivityFilter } from "./activityConfig";
+
+const FILTER_OPTION_KEYS: { labelKey: string; value: ActivityFilter }[] = [
+  { labelKey: "activity.all", value: "all" },
+  { labelKey: "activity.added", value: "game_added" },
+  { labelKey: "activity.completed", value: "game_completed" },
+  { labelKey: "activity.dropped", value: "game_abandoned" },
+  { labelKey: "activity.rated", value: "game_rated" },
+  { labelKey: "activity.reviewed", value: "game_reviewed" },
+  { labelKey: "activity.screenshot", value: "screenshot_added" },
+  { labelKey: "activity.steamSync", value: "steam_synced" },
+  { labelKey: "activity.milestone", value: "milestone_playtime" },
+];
 
 interface Props {
   data: ActivityFeedResponse | undefined;
@@ -24,6 +37,7 @@ export function ActivityFeed({
   onPageChange,
   onRefresh,
 }: Props) {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<ActivityFilter>("all");
 
   const items = data?.items ?? [];
@@ -34,7 +48,7 @@ export function ActivityFeed({
     <div className="flex flex-col gap-4">
       {/* Filter chips */}
       <div className="flex flex-wrap gap-2">
-        {FILTER_OPTIONS.map((opt) => (
+        {FILTER_OPTION_KEYS.map((opt) => (
           <button
             key={opt.value}
             onClick={() => setFilter(opt.value)}
@@ -53,11 +67,10 @@ export function ActivityFeed({
                   }
             }
           >
-            {opt.label}
+            {t(opt.labelKey)}
           </button>
         ))}
 
-        {/* Refresh button */}
         <button
           onClick={onRefresh}
           disabled={isFetching}
@@ -69,7 +82,7 @@ export function ActivityFeed({
           }}
         >
           <RefreshCw size={11} className={isFetching ? "animate-spin" : ""} />
-          Yenile
+          {t("activity.refresh")}
         </button>
       </div>
 
@@ -129,6 +142,7 @@ function ActivitySkeleton() {
 }
 
 function EmptyFeed({ filter }: { filter: ActivityFilter }) {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -145,7 +159,7 @@ function EmptyFeed({ filter }: { filter: ActivityFilter }) {
         <Activity size={20} style={{ color: "rgba(255,255,255,0.3)" }} />
       </div>
       <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
-        {filter === "all" ? "Henüz aktivite yok." : "Bu filtrede aktivite yok."}
+        {filter === "all" ? t("activity.noActivity") : t("activity.noActivityFiltered")}
       </p>
     </motion.div>
   );

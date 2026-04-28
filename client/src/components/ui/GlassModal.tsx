@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { modalOverlay, modalContent } from "@/lib/motion";
 import { GlassButton } from "./GlassButton";
 
@@ -24,6 +25,7 @@ export function GlassModal({
   hideClose = false,
   allowOverflow = false,
 }: GlassModalProps) {
+  const { t } = useTranslation();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -91,7 +93,7 @@ export function GlassModal({
                     size="sm"
                     onClick={onClose}
                     className="ml-auto p-1.5 rounded-lg"
-                    aria-label="Kapat"
+                    aria-label={t('common.aria.close')}
                   >
                     <X size={16} />
                   </GlassButton>

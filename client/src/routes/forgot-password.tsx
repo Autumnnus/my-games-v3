@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { motion, AnimatePresence } from "framer-motion";
 import { Mail, CheckCircle, ArrowLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlassInput } from "@/components/ui/GlassInput";
 import { GlassButton } from "@/components/ui/GlassButton";
@@ -15,12 +16,12 @@ export const Route = createFileRoute("/forgot-password")({
   component: ForgotPasswordPage,
 });
 
-const schema = z.object({ email: z.string().email("Geçerli bir e-posta gir") });
-type FormData = z.infer<typeof schema>;
-
 function ForgotPasswordPage() {
+  const { t } = useTranslation();
   const forgot = useForgotPassword();
   const [sent, setSent] = useState(false);
+  const schema = z.object({ email: z.string().email(t('auth.emailInvalid')) });
+  type FormData = z.infer<typeof schema>;
   const {
     register,
     handleSubmit,
@@ -54,13 +55,13 @@ function ForgotPasswordPage() {
                     className="text-xl font-bold"
                     style={{ color: "rgba(255,255,255,0.95)" }}
                   >
-                    Şifreni mi unuttun?
+                    {t('forgotPassword.title')}
                   </h1>
                   <p
                     className="text-sm mt-1"
                     style={{ color: "rgba(255,255,255,0.5)" }}
                   >
-                    E-posta adresine sıfırlama bağlantısı göndereceğiz.
+                    {t('forgotPassword.subtitle')}
                   </p>
                 </div>
                 <form
@@ -70,9 +71,9 @@ function ForgotPasswordPage() {
                   className="flex flex-col gap-4"
                 >
                   <GlassInput
-                    label="E-posta"
+                    label={t('common.labels.email')}
                     type="email"
-                    placeholder="sen@example.com"
+                    placeholder={t('auth.emailPlaceholder')}
                     leftIcon={<Mail size={15} />}
                     error={errors.email?.message}
                     {...register("email")}
@@ -83,7 +84,7 @@ function ForgotPasswordPage() {
                     loading={forgot.isPending}
                     className="w-full"
                   >
-                    Sıfırlama Bağlantısı Gönder
+                    {t('common.buttons.sendResetLink')}
                   </GlassButton>
                 </form>
               </motion.div>
@@ -109,13 +110,13 @@ function ForgotPasswordPage() {
                     className="text-lg font-semibold"
                     style={{ color: "rgba(255,255,255,0.95)" }}
                   >
-                    E-posta gönderildi
+                    {t('forgotPassword.successTitle')}
                   </h2>
                   <p
                     className="text-sm mt-1"
                     style={{ color: "rgba(255,255,255,0.5)" }}
                   >
-                    Gelen kutunu kontrol et ve şifreni sıfırla.
+                    {t('forgotPassword.successSubtitle')}
                   </p>
                 </div>
               </motion.div>
@@ -129,7 +130,7 @@ function ForgotPasswordPage() {
             className="flex items-center gap-1.5 text-sm hover:underline"
             style={{ color: "rgba(255,255,255,0.45)" }}
           >
-            <ArrowLeft size={14} /> Giriş sayfasına dön
+            <ArrowLeft size={14} /> {t('forgotPassword.backToLogin')}
           </Link>
         </div>
       </div>

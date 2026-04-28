@@ -7,6 +7,7 @@ import {
   Gamepad2,
   ExternalLink,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { Screenshot } from "@/api/types";
 import { GlassButton } from "@/components/ui/GlassButton";
 
@@ -49,6 +50,7 @@ export function ScreenshotLightbox({
   onClose,
   onNavigate,
 }: ScreenshotLightboxProps) {
+  const { t } = useTranslation();
   const current = index !== null ? screenshots[index] : null;
 
   useEffect(() => {
@@ -96,7 +98,7 @@ export function ScreenshotLightbox({
               className="shrink-0 p-2 rounded-xl"
               onClick={() => onNavigate(index - 1)}
               disabled={index === 0}
-              aria-label="Önceki"
+              aria-label={t('common.aria.previous')}
             >
               <ChevronLeft size={18} />
             </GlassButton>
@@ -146,7 +148,7 @@ export function ScreenshotLightbox({
               className="shrink-0 p-2 rounded-xl"
               onClick={() => onNavigate(index + 1)}
               disabled={index === screenshots.length - 1}
-              aria-label="Sonraki"
+              aria-label={t('common.aria.next')}
             >
               <ChevronRight size={18} />
             </GlassButton>
@@ -164,7 +166,7 @@ export function ScreenshotLightbox({
               size="sm"
               className="p-1.5 rounded-xl"
               onClick={onClose}
-              aria-label="Kapat"
+              aria-label={t('common.aria.close')}
             >
               <X size={16} />
             </GlassButton>
@@ -194,7 +196,7 @@ export function ScreenshotLightbox({
                     size="sm"
                     className="p-1.5 rounded-xl"
                     onClick={() => (window.location.href = `/games/${entryId}`)}
-                    title="Oyuna git"
+                    title={t('screenshots.lightbox.goToGame')}
                   >
                     <ExternalLink size={14} />
                   </GlassButton>

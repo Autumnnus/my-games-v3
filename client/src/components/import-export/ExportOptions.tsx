@@ -99,7 +99,7 @@ export function ExportOptions({
         </div>
         <GlassSwitch
           checked={includeScreenshots}
-          onChange={(e) => onIncludeScreenshotsChange(e.target.checked)}
+          onChange={(checked) => onIncludeScreenshotsChange(checked)}
         />
       </div>
 

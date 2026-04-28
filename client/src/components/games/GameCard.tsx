@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Edit2, Trash2, Star } from "lucide-react";
 import type { GameListItem } from "@/api/types";
 import { formatCoverUrl } from "@/lib/formatters";
@@ -23,6 +24,7 @@ export function GameCard({
   onDelete,
   readonly = false,
 }: GameCardProps) {
+  const { t } = useTranslation();
   const [hovered, setHovered] = useState(false);
   const steamOrPrimaryCoverUrl = game.photo
     ? formatCoverUrl(game.photo, "big")
@@ -90,7 +92,7 @@ export function GameCard({
                     onEdit(game);
                   }}
                   className="glass-btn p-2 rounded-xl"
-                  aria-label="Düzenle"
+                  aria-label={t("common.buttons.edit")}
                 >
                   <Edit2 size={15} />
                 </button>
@@ -102,7 +104,7 @@ export function GameCard({
                     onDelete(game);
                   }}
                   className="glass-btn glass-btn-danger p-2 rounded-xl"
-                  aria-label="Sil"
+                  aria-label={t("common.buttons.delete")}
                 >
                   <Trash2 size={15} />
                 </button>

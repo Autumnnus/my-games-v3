@@ -1,0 +1,421 @@
+{
+  "common": {
+    "buttons": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "edit": "Edit",
+      "close": "Close",
+      "confirm": "Confirm",
+      "add": "Add",
+      "remove": "Remove",
+      "search": "Search",
+      "filter": "Filter",
+      "export": "Export",
+      "import": "Import",
+      "loading": "Loading..."
+    },
+    "labels": {
+      "name": "Name",
+      "status": "Status",
+      "platform": "Platform",
+      "rating": "Rating",
+      "review": "Review",
+      "favorite": "Favorite",
+      "lastPlayDate": "Last Play Date",
+      "completionDate": "Completion Date",
+      "playTime": "Play Time",
+      "genre": "Genre"
+    },
+    "errors": {
+      "required": "This field is required",
+      "invalidDate": "Invalid date",
+      "generic": "Something went wrong"
+    },
+    "empty": {
+      "noGames": "No games yet",
+      "noResults": "No results found"
+    },
+    "aria": {
+      "closeModal": "Close modal",
+      "openMenu": "Open menu"
+    }
+  },
+  "hero": {
+    "badge": "Oyun kütüphaneni yönet",
+    "titleWord1": "Oyun",
+    "titleWord2": "Kütüphaneni",
+    "titleWord3": "Keşfet",
+    "subtitle": "Tüm oyunlarını tek bir yerde takip et. İlerleme kaydet, puan ver, ekran görüntüsü sakla, istatistiklerini keşfet.",
+    "ctaFree": "Ücretsiz Başla",
+    "ctaSignIn": "Giriş Yap",
+    "featureSteam": "Steam Entegrasyonu",
+    "featureIgdb": "IGDB Metadata",
+    "featureScreenshots": "Ekran Görüntüsü",
+    "featureStats": "İstatistikler"
+  },
+  "navbar": {
+    "home": "Home",
+    "library": "Library",
+    "users": "Users",
+    "profile": "Profile",
+    "signOut": "Sign Out",
+    "signIn": "Sign In",
+    "register": "Register",
+    "screenshots": "Screenshots",
+    "social": "Social",
+    "notifications": "Notifications",
+    "accountSettings": "Account Settings"
+  },
+  "games": {
+    "form": {
+      "addTitle": "Add Game",
+      "editTitle": "Edit Game",
+      "namePlaceholder": "Game name...",
+      "platformPlaceholder": "Select platform",
+      "statusPlaceholder": "Select status",
+      "reviewPlaceholder": "Write your thoughts about the game...",
+      "hoursLabel": "Hours",
+      "minutesLabel": "Minutes",
+      "hoursPlaceholder": "0",
+      "minutesPlaceholder": "0",
+      "ratingPlaceholder": "0.0",
+      "gameName": "Game Name",
+      "coverUrl": "Cover URL",
+      "coverUrlPlaceholder": "https://...",
+      "platform": "Platform",
+      "status": "Status",
+      "playTime": "Play Time",
+      "rating": "Rating",
+      "review": "Review",
+      "lastPlayDate": "Last Play Date",
+      "completionDate": "Completion Date",
+      "addToFavorites": "Add to favorites",
+      "totalTime": "Total: {{time}} ({{minutes}} min)"
+    },
+    "status": {
+      "activePlaying": "Playing",
+      "completed": "Completed",
+      "backlog": "Backlog",
+      "dropped": "Dropped",
+      "abandoned": "Dropped",
+      "toBeCompleted": "To Be Completed"
+    },
+    "sort": {
+      "lastPlayed": "Last Played",
+      "createdAt": "Date Added",
+      "name": "A-Z",
+      "highestRated": "Highest Rated",
+      "mostPlayed": "Most Played"
+    },
+    "view": {
+      "grid": "Grid view",
+      "list": "List view"
+    },
+    "platform": {
+      "steam": "Steam",
+      "epicGames": "Epic Games",
+      "ubisoft": "Ubisoft Connect",
+      "xboxPc": "Xbox PC",
+      "eaGames": "EA Games",
+      "torrent": "Torrent",
+      "playstation": "PlayStation",
+      "xboxSeries": "Xbox Series",
+      "nintendo": "Nintendo",
+      "mobile": "Mobile",
+      "otherPlatforms": "Other"
+    },
+    "stats": {
+      "totalGames": "Total Games",
+      "completedGames": "Completed",
+      "totalPlayTime": "Total Play Time",
+      "favoriteCount": "Favorites"
+    },
+    "detail": {
+      "lastPlayed": "Last played",
+      "completedOn": "Completed on",
+      "addToFavorites": "Add to favorites",
+      "removeFromFavorites": "Remove from favorites",
+      "editGame": "Edit game",
+      "deleteGame": "Delete game",
+      "playTimeLabel": "Play time"
+    },
+    "recentlyPlayed": {
+      "title": "Recently Played",
+      "viewAll": "View all"
+    },
+    "statusLabel": {
+      "completed": "Completed",
+      "playing": "Playing",
+      "paused": "Paused",
+      "backlog": "Backlog",
+      "dropped": "Dropped"
+    },
+    "deleteConfirm": {
+      "title": "Remove Game",
+      "message": " will be removed from your library. This cannot be undone."
+    }
+  },
+  "import": {
+    "conflict": {
+      "title": "{{count}} oyun zaten kütüphanende var",
+      "applyToAll": "Tümüne uygula:",
+      "skip": "Atla",
+      "update": "Güncelle",
+      "keepBoth": "Her İkini Tut"
+    },
+    "result": {
+      "added": "Eklendi",
+      "updated": "Güncellendi",
+      "skipped": "Atlandı",
+      "errors": "Hata",
+      "errorTitle": "Hatalar ({{count}})",
+      "rowError": "Satır {{row}}: {{message}}",
+      "moreErrors": "...ve {{count}} hata daha"
+    },
+    "igdbHint": "IGDB'de ara, Steam kütüphanenden seç veya elle gir.",
+    "addFromSteam": "Steam kütüphaneden ekle",
+    "addManually": "IGDB olmadan elle ekle",
+    "igdbSelected": "IGDB seçildi"
+  },
+  "export": {
+    "title": "Oyunları Dışa Aktar",
+    "selectFormat": "Format seç",
+    "csv": "CSV",
+    "json": "JSON",
+    "exportButton": "Dışa Aktar",
+    "ready": "Dışa aktarma hazır",
+    "formatLabel": "Format",
+    "includeScreenshots": "Ekran görüntülerini dahil et",
+    "statusFilter": "Durum filtresi",
+    "platformFilter": "Platform filtresi",
+    "all": "Tümü",
+    "exportComplete": "Dışa aktarma tamamlandı!",
+    "fileDownloaded": "Dosya indirildi.",
+    "exporting": "Dışa aktarılıyor...",
+    "yes": "Evet",
+    "no": "Hayır",
+    "startImport": "İçe Aktarı Başlat",
+    "checkConflicts": "Çakışma Kontrolü"
+  },
+  "users": {
+    "title": "Users",
+    "addUser": "Add User",
+    "editUser": "Edit User",
+    "username": "Username",
+    "password": "Password",
+    "role": "Role",
+    "admin": "Admin",
+    "user": "User"
+  },
+  "auth": {
+    "signInTitle": "Sign In",
+    "username": "Username",
+    "password": "Password",
+    "signInButton": "Sign In",
+    "signOut": "Sign Out"
+  },
+  "register": {
+    "title": "Hesap oluştur",
+    "subtitle": "Oyun kütüphaneni oluşturmaya başla",
+    "alreadyHaveAccount": "Zaten hesabın var mı?",
+    "logIn": "Giriş yap",
+    "nameTooShort": "İsim en az 2 karakter olmalı",
+    "nameTooLong": "İsim çok uzun",
+    "passwordTooLong": "Şifre çok uzun",
+    "createButton": "Hesap Oluştur"
+  },
+  "forgotPassword": {
+    "title": "Şifreni mi unuttun?",
+    "subtitle": "E-posta adresine sıfırlama bağlantısı göndereceğiz.",
+    "successTitle": "E-posta gönderildi",
+    "successSubtitle": "Gelen kutunu kontrol et ve şifreni sıfırla.",
+    "backToLogin": "Giriş sayfasına dön"
+  },
+  "resetPassword": {
+    "title": "Yeni şifre belirle",
+    "hint": "En az 6 karakter olmalı",
+    "button": "Şifremi Güncelle",
+    "invalidToken": "Geçersiz veya eksik sıfırlama tokeni.",
+    "requestNewLink": "Yeni bağlantı iste",
+    "newPassword": "Yeni Şifre",
+    "confirmPassword": "Şifreyi Onayla",
+    "passwordMismatch": "Şifreler eşleşmiyor"
+  },
+  "profile": {
+    "title": "Profile",
+    "favoriteGames": "Favorite Games",
+    "activity": "Activity"
+  },
+  "favorite": {
+    "title": "Favorilere Ekle",
+    "searchPlaceholder": "Oyun ara...",
+    "gamesAvailable": "{{count}} oyun favorilere eklenebilir",
+    "noResults": "Sonuç bulunamadı",
+    "allFavorited": "Tüm oyunlar zaten favorilerde",
+    "close": "Kapat",
+    "sectionTitle": "Favori Oyunlar",
+    "emptyTitle": "Henüz favori oyun yok",
+    "emptyHint": "En fazla 3 oyun favorine ekleyebilirsin",
+    "addButton": "Ekle",
+    "remove": "Kaldır",
+    "maxFavorites": "{{current}}/{{max}} favoriler",
+    "addedToFavorites": "Favorilere eklendi",
+    "removedFromFavorites": "Favorilerden kaldırıldı",
+    "couldNotAdd": "Eklenemedi",
+    "couldNotRemove": "Kaldırılamadı",
+    "gamesLoaded": "oyun favorilere eklenebilir"
+  },
+  "activity": {
+    "refresh": "Refresh",
+    "noActivity": "No activity yet.",
+    "noActivityFiltered": "No activity for this filter.",
+    "all": "All",
+    "added": "Added",
+    "completed": "Completed",
+    "dropped": "Dropped",
+    "rated": "Rated",
+    "reviewed": "Reviewed",
+    "screenshot": "Screenshot",
+    "steamSync": "Steam",
+    "milestone": "Milestone",
+    "edited": "edited",
+    "hoursAbbrev": "hours",
+    "labels": {
+      "game_added": "added to library",
+      "game_completed": "completed",
+      "game_abandoned": "dropped",
+      "status_changed": "changed status",
+      "game_rated": "rated",
+      "game_reviewed": "reviewed",
+      "screenshot_added": "added screenshot",
+      "game_favorited": "favorited",
+      "steam_synced": "Steam synced",
+      "milestone_playtime": "milestone reached"
+    }
+  },
+  "screenshots": {
+    "addTitle": "Add Screenshot",
+    "fromSteam": "From Steam",
+    "addFromDevice": "Add from device",
+    "noScreenshots": "No screenshots yet",
+    "deleteConfirm": {
+      "title": "Delete Screenshot",
+      "message": "Are you sure you want to delete this screenshot?"
+    }
+  },
+  "steamImport": {
+    "title": "Steam Kütüphanesini İçe Aktar",
+    "searchPlaceholder": "Oyun ara...",
+    "selectAll": "Hepsini Seç",
+    "deselectAll": "Hepsini Kaldır",
+    "totalGames": "{{count}} oyun",
+    "selected": "{{count}} seçili",
+    "notAdded": "eklenmemiş",
+    "hasConflicts": "{{count}} çakışma",
+    "viewFilters": "Görünüm filtreleri",
+    "conflictResolution": "Çakışma çözümü",
+    "conflictHigher": "En yükseği al",
+    "conflictHigherDesc": "Mevcut ve Steam süresinden büyük olanı kullan",
+    "conflictSteam": "Steam'i üzerine yaz",
+    "conflictSteamDesc": "Her zaman Steam'deki süreyi kullan",
+    "conflictKeep": "Mevcut koru",
+    "conflictKeepDesc": "Zaten ekli oyunlara dokunma",
+    "notAddedGames": "Eklenmemişler",
+    "conflictingGames": "Çakışanlar",
+    "alreadyAddedGames": "Ekli olanlar",
+    "alreadyAddedToggle": "Ekli olanlar (gizle/göster)",
+    "current": "Mevcut",
+    "steam": "Steam",
+    "diff": "Fark",
+    "zeroPlaytime": "0 dk",
+    "conflict": "Çakışma",
+    "added": "Eklendi",
+    "noGamesFound": "Oyun bulunamadı",
+    "syncStarted": "{{count}} oyun için tarama başlatıldı, arka planda devam ediyor...",
+    "syncFailed": "Senkronizasyon başarısız",
+    "loadFailed": "Steam kütüphanesi yüklenemedi",
+    "retry": "Tekrar Dene",
+    "importN": "{{count}} Oyunu İçe Aktar",
+    "takeHigher": "En yükseği al",
+    "overwriteSteam": "Steam'i üzerine yaz",
+    "keepExisting": "Mevcut koru"
+  },
+  "pages": {
+    "dashboard": {
+      "welcome": "Hoş geldin, {{name}}",
+      "continueLibrary": "Kütüphanene devam et.",
+      "emptyLibrary": "Kütüphanen henüz boş",
+      "addFirstGame": "İlk Oyununu Ekle",
+      "recentlyPlayed": "Son Oynananlar",
+      "favorites": "⭐ Favoriler"
+    },
+    "games": {
+      "emptyTitle": "Kütüphanen boş",
+      "emptyDesc": "İlk oyununu ekleyerek başla!"
+    },
+    "screenshots": {
+      "emptyTitle": "Ekran görüntüsü yok",
+      "emptyDesc": "Oyun sayfalarından ekran görüntüsü ekleyebilirsin."
+    },
+    "social": {
+      "showAll": "Herkesi Gör",
+      "myActivities": "Aktivitelerim"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme"
+  },
+  "notifications": {
+    "markAllAsRead": "Tümünü okundu işaretle",
+    "empty": "Henüz bildirim yok"
+  },
+  "verifyAccount": {
+    "loading": "Hesabın doğrulanıyor...",
+    "successTitle": "Hesabın doğrulandı!",
+    "goToLogin": "Giriş yap",
+    "errorTitle": "Doğrulama başarısız",
+    "errorSubtitle": "Bağlantı geçersiz veya süresi dolmuş."
+  },
+  "steam": {
+    "callback": {
+      "loginFailedWithReason": "Steam girişi başarısız: {{error}}",
+      "loginSuccess": "Steam ile giriş yapıldı!",
+      "invalidData": "Geçersiz veri",
+      "couldNotProcessData": "Steam verisi işlenemedi",
+      "loading": "Steam ile giriş yapılıyor..."
+    }
+  },
+  "gameDetail": {
+    "gameNotFound": "Oyun bulunamadı.",
+    "igdbInfo": "IGDB Bilgisi",
+    "releaseDate": "Çıkış Tarihi",
+    "igdbRating": "IGDB Puanı",
+    "genres": "Türler",
+    "gameModes": "Oyun Modu",
+    "duration": "Süre",
+    "score": "Puan",
+    "completion": "Tamamlanma",
+    "lastPlay": "Son Oynama",
+    "steamSyncConflict": "Steam senkronizasyon çakışması var",
+    "steamLogged": "Steam",
+    "youEntered": "sen",
+    "takeSteam": "Steam'i Al",
+    "keepMine": "Benimki Kalsın",
+    "ignore": "Yoksay",
+    "steamSyncExclude": "Steam senkronizasyonundan çıkar",
+    "steamSyncExcludeHint": "Bu oyunun oynama süresi Steam tarafından güncellenmez",
+    "screenshots": "Ekran Görüntüleri ({{count}})",
+    "addScreenshot": "Ekle",
+    "delete": "Sil",
+    "noScreenshots": "Henüz ekran görüntüsü yok",
+    "back": "Geri",
+    "edit": "Düzenle",
+    "remove": "Kaldır",
+    "selected": "seçili",
+    "deleteSelected": "Seçilenleri Sil",
+    "cancel": "İptal"
+  }
+}

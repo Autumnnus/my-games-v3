@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { useTranslation } from "react-i18next";
 import type { GameListItem } from "@/api/types";
 import type { AddGameInput } from "@/api/games.api";
 import { GlassInput } from "@/components/ui/GlassInput";
@@ -12,13 +13,12 @@ import { RatingStars } from "@/components/ui/RatingStars";
 import {
   ALL_PLATFORMS,
   ALL_STATUSES,
-  PLATFORM_LABELS,
-  STATUS_LABELS,
 } from "@/lib/constants";
 import { formatPlayTime } from "@/lib/formatters";
 
 const schema = z.object({
   name: z.string().min(1, "Oyun adı gerekli").max(200),
+  photo: z.string().url("Geçerli bir URL girin").optional().or(z.literal("")),
   platform: z.enum([
     "steam",
     "epicGames",
@@ -56,8 +56,9 @@ export function GameForm({
   defaultValues,
   onSubmit,
   isLoading,
-  submitLabel = "Kaydet",
+  submitLabel,
 }: GameFormProps) {
+  const { t } = useTranslation();
   const initialPlayTime = defaultValues?.playTime ?? 0;
   const initialHours = Math.floor(initialPlayTime / 60);
   const initialMinutes = initialPlayTime % 60;
@@ -73,6 +74,7 @@ export function GameForm({
     resolver: zodResolver(schema),
     defaultValues: {
       name: defaultValues?.name ?? "",
+      photo: defaultValues?.photo ?? "",
       platform: defaultValues?.platform ?? "steam",
       status: defaultValues?.status ?? "activePlaying",
       playTime: initialPlayTime,
@@ -88,7 +90,6 @@ export function GameForm({
 
   const currentStatus = watch("status");
   const totalMinutes = watch("playTime") ?? 0;
-
   const playTimeHours = watch("playTimeHours");
   const playTimeMinutes = watch("playTimeMinutes");
 
@@ -116,43 +117,69 @@ export function GameForm({
     }
   }, [playTimeHours, playTimeMinutes, setValue]);
 
-  // Show completionDate only when status is activePlaying or completed
   const showCompletionDate = currentStatus === "activePlaying" || currentStatus === "completed";
 
-  // Clear completionDate when status leaves or enters activePlaying
   useEffect(() => {
     if (!showCompletionDate) {
       setValue("completionDate", "", { shouldDirty: true });
     }
-    // When switching TO activePlaying, also clear (it should only be set when actually completed)
-    // The "completed" status is handled by the user explicitly setting it
   }, [currentStatus, showCompletionDate, setValue]);
+
+  const platformOptions = ALL_PLATFORMS.map((p) => ({
+    value: p,
+    label: t(`games.platform.${p}`),
+  }));
+
+  const statusOptions = ALL_STATUSES.map((s) => ({
+    value: s,
+    label: t(`games.status.${s}`),
+  }));
+
+  const displaySubmitLabel = submitLabel ?? t("common.buttons.save");
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       <GlassInput
-        label="Oyun Adı"
-        placeholder="Oyun adı"
+        label={t("games.form.gameName")}
+        placeholder={t("games.form.namePlaceholder")}
         error={errors.name?.message}
         {...register("name")}
       />
 
+      <div className="flex flex-col gap-2">
+        <GlassInput
+          label={t("games.form.coverUrl")}
+          placeholder={t("games.form.coverUrlPlaceholder")}
+          error={errors.photo?.message}
+          {...register("photo")}
+        />
+        {(() => {
+          const fieldValue = watch("photo") ?? "";
+          const [imgError, setImgError] = useState(false);
+          if (!fieldValue || imgError) return null;
+          return (
+            <div className="relative w-24 h-32 rounded-lg overflow-hidden border border-white/10">
+              <img
+                src={fieldValue}
+                alt="cover preview"
+                className="w-full h-full object-cover"
+                onError={() => setImgError(true)}
+              />
+            </div>
+          );
+        })()}
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
         <GlassSelect
-          label="Platform"
-          options={ALL_PLATFORMS.map((p) => ({
-            value: p,
-            label: PLATFORM_LABELS[p],
-          }))}
+          label={t("games.form.platform")}
+          options={platformOptions}
           error={errors.platform?.message}
           {...register("platform")}
         />
         <GlassSelect
-          label="Durum"
-          options={ALL_STATUSES.map((s) => ({
-            value: s,
-            label: STATUS_LABELS[s],
-          }))}
+          label={t("games.form.status")}
+          options={statusOptions}
           error={errors.status?.message}
           {...register("status")}
         />
@@ -163,14 +190,14 @@ export function GameForm({
           className="text-sm font-medium"
           style={{ color: "rgba(255,255,255,0.75)" }}
         >
-          Oynama Süresi
+          {t("games.form.playTime")}
         </label>
         <div className="grid grid-cols-2 gap-3">
           <GlassInput
-            label="Saat"
+            label={t("games.form.hoursLabel")}
             type="number"
             min={0}
-            placeholder="0"
+            placeholder={t('games.form.hoursPlaceholder')}
             {...register("playTimeHours", {
               valueAsNumber: true,
               setValueAs: (v) => {
@@ -183,11 +210,11 @@ export function GameForm({
             })}
           />
           <GlassInput
-            label="Dakika"
+            label={t("games.form.minutesLabel")}
             type="number"
             min={0}
             max={59}
-            placeholder="0"
+            placeholder={t('games.form.minutesPlaceholder')}
             error={errors.playTime?.message}
             {...register("playTimeMinutes", {
               valueAsNumber: true,
@@ -201,7 +228,7 @@ export function GameForm({
           />
         </div>
         <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
-          Toplam: {formatPlayTime(totalMinutes)} ({totalMinutes} dk)
+          {t("games.form.totalTime", { time: formatPlayTime(totalMinutes), minutes: totalMinutes })}
         </p>
       </div>
 
@@ -210,7 +237,7 @@ export function GameForm({
           className="text-sm font-medium"
           style={{ color: "rgba(255,255,255,0.75)" }}
         >
-          Puan
+          {t("games.form.rating")}
         </label>
         <Controller
           name="rating"
@@ -228,7 +255,7 @@ export function GameForm({
                     min={0}
                     max={10}
                     step={0.1}
-                    placeholder="0.0"
+                    placeholder={t('games.form.ratingPlaceholder')}
                     value={field.value ?? ""}
                     onBlur={field.onBlur}
                     onChange={(e) => {
@@ -261,12 +288,12 @@ export function GameForm({
           className="text-sm font-medium"
           style={{ color: "rgba(255,255,255,0.75)" }}
         >
-          İnceleme
+          {t("games.form.review")}
         </label>
         <textarea
           className="glass-input px-3 py-2.5 text-sm resize-none"
           rows={3}
-          placeholder="Oyun hakkında düşüncelerini yaz..."
+          placeholder={t("games.form.reviewPlaceholder")}
           {...register("review")}
         />
       </div>
@@ -276,7 +303,7 @@ export function GameForm({
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           control={control as any}
           name="lastPlayDate"
-          label="Son Oynama"
+          label={t("games.form.lastPlayDate")}
           error={errors.lastPlayDate?.message as string | undefined}
         />
         {showCompletionDate && (
@@ -284,7 +311,7 @@ export function GameForm({
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             control={control as any}
             name="completionDate"
-            label="Tamamlanma"
+            label={t("games.form.completionDate")}
             error={errors.completionDate?.message as string | undefined}
           />
         )}
@@ -297,7 +324,7 @@ export function GameForm({
           {...register("isFavorite")}
         />
         <span className="text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
-          Favorilere ekle
+          {t("games.form.addToFavorites")}
         </span>
       </label>
 
@@ -307,7 +334,7 @@ export function GameForm({
         loading={isLoading}
         className="w-full mt-1"
       >
-        {submitLabel}
+        {displaySubmitLabel}
       </GlassButton>
     </form>
   );

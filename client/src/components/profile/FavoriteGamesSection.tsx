@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { Star, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlassButton } from "@/components/ui/GlassButton";
@@ -14,7 +15,7 @@ import { useAuthStore } from "@/store/auth.store";
 import { formatCoverUrl, formatPlayTime } from "@/lib/formatters";
 import { fadeUp, staggerContainer } from "@/lib/motion";
 import { FavoriteGamesModal } from "./FavoriteGamesModal";
-import type { GameListItem } from "@/api/games.api";
+import type { GameListItem } from "@/api/types";
 
 interface Props {
   favoriteGames: GameListItem[];
@@ -28,6 +29,7 @@ function FavoriteGameCard({
   game: GameListItem;
   onRemove: (id: string) => void;
 }) {
+  const { t } = useTranslation();
   const cover = game.photo ? formatCoverUrl(game.photo, "thumb") : null;
 
   return (
@@ -36,7 +38,6 @@ function FavoriteGameCard({
       className="group relative flex flex-col gap-2 p-3 rounded-xl border border-transparent hover:border-white/10 transition-all"
       style={{ background: "rgba(255,255,255,0.03)" }}
     >
-      {/* Star badge */}
       <div className="absolute top-2 right-2">
         <Star
           size={14}
@@ -46,7 +47,6 @@ function FavoriteGameCard({
         />
       </div>
 
-      {/* Cover */}
       <Link to="/games/$id" params={{ id: game._id }} className="shrink-0">
         <div className="w-full aspect-[3/4] rounded-lg overflow-hidden">
           {cover ? (
@@ -67,7 +67,6 @@ function FavoriteGameCard({
         </div>
       </Link>
 
-      {/* Name */}
       <Link
         to="/games/$id"
         params={{ id: game._id }}
@@ -77,7 +76,6 @@ function FavoriteGameCard({
         {game.name}
       </Link>
 
-      {/* Meta */}
       {game.playTime > 0 && (
         <p
           className="text-xs text-center"
@@ -87,7 +85,6 @@ function FavoriteGameCard({
         </p>
       )}
 
-      {/* Remove button */}
       <button
         onClick={() => onRemove(game._id)}
         className="mt-1 w-full py-1.5 rounded-lg text-xs opacity-0 group-hover:opacity-100 transition-opacity border"
@@ -97,34 +94,30 @@ function FavoriteGameCard({
           color: "rgba(239,68,68,0.8)",
         }}
       >
-        Kaldır
+        {t("favorite.remove")}
       </button>
     </motion.div>
   );
 }
 
 export function FavoriteGamesSection({ favoriteGames, isLoading }: Props) {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const [modalOpen, setModalOpen] = useState(false);
-  const [removing, setRemoving] = useState<string | null>(null);
 
   async function handleRemove(entryId: string) {
-    setRemoving(entryId);
     try {
       await gamesApi.editGame(entryId, { isFavorite: false });
       queryClient.invalidateQueries({ queryKey: ["games", "favorites", user?._id] });
-      toast.success("Favorilerden kaldırıldı");
+      toast.success(t("favorite.removedFromFavorites"));
     } catch (err) {
-      toast.error(isApiError(err) ? err.message : "Kaldırılamadı");
-    } finally {
-      setRemoving(null);
+      toast.error(isApiError(err) ? err.message : t("favorite.couldNotRemove"));
     }
   }
 
-  function handleToggle(entryId: string, isFavorite: boolean) {
-    // Called after modal adds a game — the query cache will handle refresh
-    // but we can optimistically signal if needed
+  function handleToggle(entryId: string, _isFavorite: boolean) {
+    // query cache handles refresh
   }
 
   if (isLoading) {
@@ -146,7 +139,6 @@ export function FavoriteGamesSection({ favoriteGames, isLoading }: Props) {
           initial="initial"
           animate="animate"
         >
-          {/* Header */}
           <motion.div
             variants={fadeUp}
             className="flex items-center justify-between"
@@ -157,7 +149,7 @@ export function FavoriteGamesSection({ favoriteGames, isLoading }: Props) {
                 className="text-sm font-semibold"
                 style={{ color: "rgba(255,255,255,0.85)" }}
               >
-                Favori Oyunlar
+                {t("favorite.sectionTitle")}
               </h3>
               <GlassBadge color="#f59e0b">{favoriteGames.length}/3</GlassBadge>
             </div>
@@ -168,12 +160,11 @@ export function FavoriteGamesSection({ favoriteGames, isLoading }: Props) {
                 onClick={() => setModalOpen(true)}
                 leftIcon={<Plus size={13} />}
               >
-                Ekle
+                {t("favorite.addButton")}
               </GlassButton>
             )}
           </motion.div>
 
-          {/* Empty state */}
           {favoriteGames.length === 0 && (
             <motion.div
               variants={fadeUp}
@@ -190,13 +181,13 @@ export function FavoriteGamesSection({ favoriteGames, isLoading }: Props) {
                   className="text-sm font-medium"
                   style={{ color: "rgba(255,255,255,0.7)" }}
                 >
-                  Henüz favori oyun yok
+                  {t("favorite.emptyTitle")}
                 </p>
                 <p
                   className="text-xs mt-1"
                   style={{ color: "rgba(255,255,255,0.4)" }}
                 >
-                  En fazla 3 oyun favorine ekleyebilirsin
+                  {t("favorite.emptyHint")}
                 </p>
               </div>
               <GlassButton
@@ -205,12 +196,11 @@ export function FavoriteGamesSection({ favoriteGames, isLoading }: Props) {
                 onClick={() => setModalOpen(true)}
                 leftIcon={<Plus size={13} />}
               >
-                Favori Ekle
+                {t("profile.addFavorite")}
               </GlassButton>
             </motion.div>
           )}
 
-          {/* Favorite game grid */}
           {favoriteGames.length > 0 && (
             <motion.div
               variants={fadeUp}

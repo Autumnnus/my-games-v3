@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bell, CheckCheck, Inbox } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import {
   useNotifications,
   useMarkAsRead,
@@ -14,6 +15,7 @@ interface Props {
 }
 
 export function NotificationPanel({ open, onClose }: Props) {
+  const { t } = useTranslation();
   const panelRef = useRef<HTMLDivElement>(null);
   const { data, isLoading } = useNotifications(1);
   const markAsRead = useMarkAsRead();
@@ -61,7 +63,7 @@ export function NotificationPanel({ open, onClose }: Props) {
                 className="text-sm font-semibold"
                 style={{ color: "rgba(255,255,255,0.9)" }}
               >
-                Bildirimler
+                {t("navbar.notifications")}
               </span>
               {unreadCount > 0 && (
                 <span
@@ -80,7 +82,7 @@ export function NotificationPanel({ open, onClose }: Props) {
                 style={{ color: "rgba(255,255,255,0.4)" }}
               >
                 <CheckCheck size={13} />
-                Tümünü okundu işaretle
+                {t("notifications.markAllAsRead")}
               </button>
             )}
           </div>
@@ -124,11 +126,12 @@ function NotificationSkeleton() {
 }
 
 function EmptyNotifications() {
+  const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center gap-2 py-12">
       <Inbox size={28} style={{ color: "rgba(255,255,255,0.2)" }} />
       <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
-        Henüz bildirim yok
+        {t("notifications.empty")}
       </p>
     </div>
   );

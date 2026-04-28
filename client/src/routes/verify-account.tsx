@@ -3,6 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { CheckCircle, XCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { authApi } from "@/api/auth.api";
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/verify-account")({
 });
 
 function VerifyAccountPage() {
+  const { t } = useTranslation();
   const { verificationToken } = Route.useSearch();
   const [state, setState] = useState<"loading" | "success" | "error">(
     "loading",
@@ -42,7 +44,7 @@ function VerifyAccountPage() {
           <div className="flex flex-col items-center gap-3">
             <LoadingSpinner size="lg" />
             <p style={{ color: "rgba(255,255,255,0.6)" }}>
-              Hesabın doğrulanıyor...
+              {t("verifyAccount.loading")}
             </p>
           </div>
         )}
@@ -53,14 +55,14 @@ function VerifyAccountPage() {
               className="text-lg font-semibold"
               style={{ color: "rgba(255,255,255,0.95)" }}
             >
-              Hesabın doğrulandı!
+              {t("verifyAccount.successTitle")}
             </h2>
             <Link
               to="/login"
               className="text-sm hover:underline"
               style={{ color: "rgba(168,85,247,0.9)" }}
             >
-              Giriş yap
+              {t("verifyAccount.goToLogin")}
             </Link>
           </div>
         )}
@@ -71,10 +73,10 @@ function VerifyAccountPage() {
               className="text-lg font-semibold"
               style={{ color: "rgba(255,255,255,0.95)" }}
             >
-              Doğrulama başarısız
+              {t("verifyAccount.errorTitle")}
             </h2>
             <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
-              Bağlantı geçersiz veya süresi dolmuş.
+              {t("verifyAccount.errorSubtitle")}
             </p>
           </div>
         )}

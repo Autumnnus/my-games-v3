@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 import {
   Gamepad2,
   Trophy,
@@ -370,6 +371,7 @@ function EditProfileSection({
   email?: string;
   profileImage?: string;
 }) {
+  const { t } = useTranslation();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const updateUser = useAuthStore((s) => s.updateUser);
@@ -434,9 +436,9 @@ function EditProfileSection({
           className="flex flex-col gap-3 pt-1"
         >
           <GlassInput
-            label="Kullanıcı Adı"
+            label={t('profile.username')}
             defaultValue={name}
-            placeholder="Adınızı değiştirin..."
+            placeholder={t('profile.usernamePlaceholder')}
             id="profile-name"
           />
           <div className="flex justify-end gap-2">
@@ -445,7 +447,7 @@ function EditProfileSection({
               variant="ghost"
               onClick={() => setEditing(false)}
             >
-              İptal
+              {t('common.buttons.cancel')}
             </GlassButton>
             <GlassButton
               size="sm"
@@ -453,7 +455,7 @@ function EditProfileSection({
               loading={saving}
               onClick={handleSave}
             >
-              Kaydet
+              {t('common.buttons.save')}
             </GlassButton>
           </div>
         </motion.div>

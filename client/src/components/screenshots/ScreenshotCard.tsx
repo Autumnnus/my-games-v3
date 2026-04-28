@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Expand, ImageOff, Trash2, Gamepad2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { Screenshot } from "@/api/types";
 import { scaleIn } from "@/lib/motion";
 
@@ -43,6 +44,7 @@ export function ScreenshotCard({
   selected = false,
   onSelect,
 }: ScreenshotCardProps) {
+  const { t } = useTranslation();
   const [hovered, setHovered] = useState(false);
   const [imgError, setImgError] = useState(false);
 
@@ -147,7 +149,7 @@ export function ScreenshotCard({
                 onClick();
               }}
               className="glass-btn p-2 rounded-xl"
-              aria-label="Büyüt"
+              aria-label={t('common.aria.zoom')}
             >
               <Expand size={15} />
             </button>
@@ -159,7 +161,7 @@ export function ScreenshotCard({
                 onDelete(screenshot._id);
               }}
               className="glass-btn glass-btn-danger p-2 rounded-xl"
-              aria-label="Sil"
+              aria-label={t('common.aria.delete')}
             >
               <Trash2 size={15} />
             </button>

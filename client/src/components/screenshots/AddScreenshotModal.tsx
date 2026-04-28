@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { Upload, Link as LinkIcon, Gamepad2, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { GlassModal } from "@/components/ui/GlassModal";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { GlassInput } from "@/components/ui/GlassInput";
@@ -34,6 +35,7 @@ export function AddScreenshotModal({
   open,
   onClose,
 }: AddScreenshotModalProps) {
+  const { t } = useTranslation();
   const [tab, setTab] = useState<Tab>("image");
   const [dragging, setDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -138,32 +140,32 @@ export function AddScreenshotModal({
     <GlassModal
       open={open}
       onClose={handleClose}
-      title="Ekran Görüntüsü Ekle"
+      title={t('screenshots.addTitle')}
       size="md"
     >
       {/* Tabs */}
       <div className="flex items-center glass-card-sm p-0.5 gap-0.5 mb-5">
         {(
           ["image", "text", ...(steamAppId ? ["steam" as Tab] : [])] as Tab[]
-        ).map((t) => (
+        ).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm rounded-xl transition-all ${tab === t ? "glass-btn-primary" : ""}`}
-            style={{ color: tab === t ? "white" : "rgba(255,255,255,0.5)" }}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm rounded-xl transition-all ${tab === tabKey ? "glass-btn-primary" : ""}`}
+            style={{ color: tab === tabKey ? "white" : "rgba(255,255,255,0.5)" }}
           >
-            {t === "image" ? (
+            {tabKey === "image" ? (
               <Upload size={14} />
-            ) : t === "text" ? (
+            ) : tabKey === "text" ? (
               <LinkIcon size={14} />
             ) : (
               <Gamepad2 size={14} />
             )}
-            {t === "image"
-              ? "Resim Yükle"
-              : t === "text"
-                ? "URL / Metin"
-                : "Steam"}
+            {tabKey === "image"
+              ? t('screenshots.tabImage')
+              : tabKey === "text"
+                ? t('screenshots.tabText')
+                : t('screenshots.fromSteam')}
           </button>
         ))}
       </div>
@@ -321,8 +323,8 @@ export function AddScreenshotModal({
 
           {/* URL input */}
           <GlassInput
-            label="URL veya Metin"
-            placeholder="https://... veya not metni"
+            label={t('screenshots.urlOrText')}
+            placeholder={t('screenshots.urlPlaceholder')}
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             onKeyDown={(e) => {
@@ -333,7 +335,7 @@ export function AddScreenshotModal({
             }}
           />
           <GlassButton
-            variant="secondary"
+            variant="default"
             disabled={!urlInput.trim()}
             onClick={addUrlItem}
             className="w-full"

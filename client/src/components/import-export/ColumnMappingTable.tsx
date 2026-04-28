@@ -1,24 +1,25 @@
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { GlassSelect } from "@/components/ui/GlassSelect";
 import type { ImportField, ImportPreset } from "@/api/importExport";
 
-const FIELD_OPTIONS: Array<{ value: ImportField; label: string }> = [
-  { value: "name", label: "İsim (name) *" },
-  { value: "status", label: "Durum (status)" },
-  { value: "rating", label: "Puan (rating)" },
-  { value: "playTime", label: "Oynama Süresi (playTime)" },
-  { value: "platforms", label: "Platformlar (platforms)" },
-  { value: "genres", label: "Türler (genres)" },
-  { value: "tags", label: "Etiketler (tags)" },
-  { value: "notes", label: "Notlar (notes)" },
-  { value: "coverImage", label: "Kapak Görseli (coverImage)" },
-  { value: "screenshots", label: "Ekran Görüntüleri (screenshots)" },
-  { value: "steamAppId", label: "Steam App ID (steamAppId)" },
-  { value: "ignore", label: "Yoksay (ignore)" },
+const FIELD_OPTIONS_KEYS: Array<{ value: ImportField; labelKey: string }> = [
+  { value: "name", labelKey: "import.nameField" },
+  { value: "status", labelKey: "import.statusField" },
+  { value: "rating", labelKey: "import.ratingField" },
+  { value: "playTime", labelKey: "import.playTimeField" },
+  { value: "platforms", labelKey: "import.platformsField" },
+  { value: "genres", labelKey: "import.genresField" },
+  { value: "tags", labelKey: "import.tagsField" },
+  { value: "notes", labelKey: "import.notesField" },
+  { value: "coverImage", labelKey: "import.coverImageField" },
+  { value: "screenshots", labelKey: "import.screenshotsField" },
+  { value: "steamAppId", labelKey: "import.steamAppIdField" },
+  { value: "ignore", labelKey: "import.ignoreField" },
 ];
 
-const PRESET_LABELS: Record<ImportPreset, string> = {
+const PRESET_LABELS_KEYS: Record<ImportPreset, string> = {
   steam: "Steam",
   psn: "PlayStation",
   retroachievements: "RetroAchievements",
@@ -38,13 +39,13 @@ export function ColumnMappingTable({
   onMappingChange,
   detectedPreset,
 }: ColumnMappingTableProps) {
+  const { t } = useTranslation();
   const [showIgnored, setShowIgnored] = useState(false);
 
   function handleChange(col: string, value: ImportField) {
     onMappingChange({ ...mapping, [col]: value });
   }
 
-  // Split columns into "active" (not ignored) and "ignored"
   const activeColumns = detectedColumns.filter(
     (col) => (mapping[col] ?? "ignore") !== "ignore",
   );
@@ -57,7 +58,6 @@ export function ColumnMappingTable({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Preset detection banner */}
       {detectedPreset && (
         <div
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium self-start"
@@ -68,11 +68,10 @@ export function ColumnMappingTable({
           }}
         >
           <span>●</span>
-          {PRESET_LABELS[detectedPreset]} hazır ayarı otomatik eşleştirildi
+          {t("import.presetDetected", { preset: t(PRESET_LABELS_KEYS[detectedPreset]) })}
         </div>
       )}
 
-      {/* Info callout */}
       <div
         className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-xs leading-relaxed"
         style={{
@@ -88,22 +87,18 @@ export function ColumnMappingTable({
           ⚡
         </span>
         <span>
-          Yalnızca eşleştirmek istediğin sütunları seç — diğerleri otomatik olarak
-          yoksayılır.{" "}
+          {t("import.columnMappingHint")}{" "}
           <span style={{ color: "rgba(255,255,255,0.75)", fontWeight: 600 }}>
-            İsim (name)
-          </span>{" "}
-          alanı zorunludur.
+            {t("import.nameRequired")}
+          </span>
         </span>
       </div>
 
-      {/* Active mapping table */}
       {hasActive && (
         <div
           className="rounded-xl overflow-hidden"
           style={{ border: "1px solid rgba(255,255,255,0.08)" }}
         >
-          {/* Header */}
           <div
             className="grid grid-cols-2 gap-4 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
             style={{
@@ -111,14 +106,13 @@ export function ColumnMappingTable({
               color: "rgba(255,255,255,0.4)",
             }}
           >
-            <span>Kaynak Sütun</span>
-            <span>Hedef Alan</span>
+            <span>{t("import.sourceColumn")}</span>
+            <span>{t("import.targetField")}</span>
           </div>
 
-          {/* Rows */}
           <div
             className="divide-y"
-            style={{ divideColor: "rgba(255,255,255,0.05)" }}
+            style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
           >
             {activeColumns.map((col) => {
               const isName = mapping[col] === "name";
@@ -144,7 +138,7 @@ export function ColumnMappingTable({
                           color: "rgba(251,191,36,0.9)",
                         }}
                       >
-                        Zorunlu
+                        {t("import.required")}
                       </span>
                     )}
                   </div>
@@ -153,7 +147,10 @@ export function ColumnMappingTable({
                     onChange={(e) =>
                       handleChange(col, e.target.value as ImportField)
                     }
-                    options={FIELD_OPTIONS}
+                    options={FIELD_OPTIONS_KEYS.map((opt) => ({
+                      value: opt.value,
+                      label: t(opt.labelKey),
+                    }))}
                   />
                 </div>
               );
@@ -162,7 +159,6 @@ export function ColumnMappingTable({
         </div>
       )}
 
-      {/* No active columns state */}
       {!hasActive && (
         <div
           className="flex flex-col items-center gap-2 py-8 rounded-xl text-center"
@@ -172,14 +168,10 @@ export function ColumnMappingTable({
           }}
         >
           <span className="text-2xl">📋</span>
-          <p className="text-sm">
-            Hiçbir sütun eşleştirilmedi. Aşağıdaki toggle ile yoksayılan
-            sütunları görüntüle.
-          </p>
+          <p className="text-sm">{t("import.noMatchedRowsHint")}</p>
         </div>
       )}
 
-      {/* Ignored columns toggle / section */}
       {hasIgnored && (
         <div className="flex flex-col gap-2">
           <button
@@ -202,8 +194,8 @@ export function ColumnMappingTable({
               ▶
             </span>
             {showIgnored
-              ? "Yoksayılan sütunları gizle"
-              : "Yoksayılan sütunları göster"}
+              ? t("import.hideIgnored")
+              : t("import.showIgnored")}
             <span
               className="ml-1 px-1.5 py-0.5 rounded text-xs"
               style={{
@@ -234,12 +226,12 @@ export function ColumnMappingTable({
                       color: "rgba(255,255,255,0.25)",
                     }}
                   >
-                    <span>Kaynak Sütun</span>
-                    <span>Hedef Alan</span>
+                    <span>{t("import.sourceColumn")}</span>
+                    <span>{t("import.targetField")}</span>
                   </div>
                   <div
                     className="divide-y"
-                    style={{ divideColor: "rgba(255,255,255,0.03)" }}
+                    style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}
                   >
                     {ignoredColumns.map((col) => (
                       <div
@@ -258,7 +250,10 @@ export function ColumnMappingTable({
                           onChange={(e) =>
                             handleChange(col, e.target.value as ImportField)
                           }
-                          options={FIELD_OPTIONS}
+                          options={FIELD_OPTIONS_KEYS.map((opt) => ({
+                            value: opt.value,
+                            label: t(opt.labelKey),
+                          }))}
                         />
                       </div>
                     ))}

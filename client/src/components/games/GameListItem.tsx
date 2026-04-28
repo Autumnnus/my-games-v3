@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Edit2, Trash2, Star } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { GameListItem as GameListItemType } from "@/api/types";
 import { formatCoverUrl, formatRating } from "@/lib/formatters";
 import { fadeUp } from "@/lib/motion";
@@ -22,6 +23,7 @@ export function GameListItem({
   onDelete,
   readonly = false,
 }: GameListItemProps) {
+  const { t } = useTranslation();
   const steamOrPrimaryCoverUrl = game.photo
     ? formatCoverUrl(game.photo, "thumb")
     : null;
@@ -108,7 +110,7 @@ export function GameListItem({
             <button
               onClick={() => onEdit(game)}
               className="glass-btn p-1.5 rounded-lg"
-              aria-label="Düzenle"
+              aria-label={t("common.aria.edit")}
             >
               <Edit2 size={13} />
             </button>
@@ -117,7 +119,7 @@ export function GameListItem({
             <button
               onClick={() => onDelete(game)}
               className="glass-btn glass-btn-danger p-1.5 rounded-lg"
-              aria-label="Sil"
+              aria-label={t("common.aria.delete")}
             >
               <Trash2 size={13} />
             </button>

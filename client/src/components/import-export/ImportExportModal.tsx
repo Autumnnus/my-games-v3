@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   ChevronLeft,
   ChevronRight,
-  ArrowRight,
   Download,
   Upload,
 } from "lucide-react";
@@ -30,20 +30,25 @@ interface ImportExportModalProps {
   defaultTab?: "import" | "export";
 }
 
-const IMPORT_STEPS = [
-  "Dosya Yükle",
-  "Sütun Eşleştir",
-  "Önizleme",
-  "Çakışmalar",
-  "Sonuç",
-];
-const EXPORT_STEPS = ["Format Seç", "Seçenekler", "İndir"];
+const IMPORT_STEPS_KEYS = [
+  "import.uploadFile",
+  "import.step2",
+  "import.step3",
+  "import.checkConflicts",
+  "import.success",
+] as const;
+const EXPORT_STEPS_KEYS = [
+  "export.selectFormat",
+  "export.formatLabel",
+  "export.exportComplete",
+] as const;
 
 export function ImportExportModal({
   open,
   onClose,
   defaultTab = "import",
 }: ImportExportModalProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"import" | "export">(defaultTab);
   const [importStep, setImportStep] = useState<ImportStep>(1);
   const [exportStep, setExportStep] = useState<1 | 2 | 3>(1);
@@ -61,7 +66,6 @@ export function ImportExportModal({
   >("parsing");
   const [progressCurrent, setProgressCurrent] = useState(0);
   const [progressTotal, setProgressTotal] = useState(0);
-  const [progressItem, setProgressItem] = useState("");
 
   const {
     importState,
@@ -70,7 +74,6 @@ export function ImportExportModal({
     runImport,
     setFile,
     setColumnMapping,
-    setConflictStrategy,
     setImportScreenshots,
     setRows,
     setConflicts,
@@ -82,7 +85,6 @@ export function ImportExportModal({
     exportMutation,
   } = useImportExport();
 
-  // Sync defaultTab when modal opens
   useEffect(() => {
     if (open) {
       setActiveTab(defaultTab);
@@ -95,16 +97,12 @@ export function ImportExportModal({
     }
   }, [open, defaultTab, resetImport]);
 
-  // Detect conflicts after parse
   useEffect(() => {
     if (importState.parseResult && importState.rows.length > 0) {
-      // In a real implementation, this would call an API to detect conflicts.
-      // For now we leave conflicts empty and skip to preview.
       setConflicts([]);
     }
-  }, [importState.parseResult, importState.rows]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [importState.parseResult, importState.rows, setConflicts]);
 
-  // Track import progress
   useEffect(() => {
     if (runImportMutation.isPending) {
       setProgressStatus("importing");
@@ -123,15 +121,15 @@ export function ImportExportModal({
     runImportMutation.isPending,
     runImportMutation.isSuccess,
     runImportMutation.isError,
-  ]); // eslint-disable-line react-hooks/exhaustive-deps
+    importState.rows.length,
+  ]);
 
-  // Transition from step 1 to step 2 after successful parse
   useEffect(() => {
     if (parseMutation.isSuccess) {
       setImportStep(2);
       parseMutation.reset();
     }
-  }, [parseMutation.isSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [parseMutation.isSuccess, parseMutation]);
 
   function handleImportNext() {
     if (importStep === 1) {
@@ -140,14 +138,12 @@ export function ImportExportModal({
       return;
     }
     if (importStep === 2) {
-      // Validate name mapping exists
       const hasName = Object.values(importState.columnMapping).includes("name");
       if (!hasName) return;
       setImportStep(3);
       return;
     }
     if (importStep === 3) {
-      // If conflicts exist, go to step 4; otherwise start import
       if (importState.conflicts.length > 0) {
         setImportStep(4);
       } else {
@@ -168,25 +164,13 @@ export function ImportExportModal({
 
   function handleImportBack() {
     if (importStep === 1) return;
-    if (importStep === 2) {
-      setImportStep(1);
-      return;
-    }
-    if (importStep === 3) {
-      setImportStep(2);
-      return;
-    }
-    if (importStep === 4) {
-      setImportStep(3);
-      return;
-    }
+    if (importStep === 2) { setImportStep(1); return; }
+    if (importStep === 3) { setImportStep(2); return; }
+    if (importStep === 4) { setImportStep(3); return; }
   }
 
   function handleExportNext() {
-    if (exportStep === 1) {
-      setExportStep(2);
-      return;
-    }
+    if (exportStep === 1) { setExportStep(2); return; }
     if (exportStep === 2) {
       setExportStep(3);
       exportMutation.mutate();
@@ -209,11 +193,11 @@ export function ImportExportModal({
 
   const isImportLoading = parseMutation.isPending;
   const isExportLoading = exportMutation.isPending;
-
-  // Derive conflicts from rows (mock — in real impl, this comes from API)
   const detectedConflicts = importState.conflicts;
 
-  const currentSteps = activeTab === "import" ? IMPORT_STEPS : EXPORT_STEPS;
+  const currentSteps = activeTab === "import"
+    ? IMPORT_STEPS_KEYS.map((k) => t(k))
+    : EXPORT_STEPS_KEYS.map((k) => t(k));
   const currentStep = activeTab === "import" ? importStep : exportStep;
 
   return (
@@ -231,7 +215,7 @@ export function ImportExportModal({
             className="text-lg font-semibold"
             style={{ color: "rgba(255,255,255,0.95)" }}
           >
-            İçe / Dışa Aktar
+            {t("import.titleImportExport")}
           </h2>
           <div
             className="flex gap-1 p-1 rounded-xl"
@@ -241,13 +225,13 @@ export function ImportExportModal({
               active={activeTab === "import"}
               onClick={() => setActiveTab("import")}
             >
-              <Upload size={14} /> İçe Aktar
+              <Upload size={14} /> {t("import.import")}
             </TabBtn>
             <TabBtn
               active={activeTab === "export"}
               onClick={() => setActiveTab("export")}
             >
-              <Download size={14} /> Dışa Aktar
+              <Download size={14} /> {t("import.export")}
             </TabBtn>
           </div>
         </div>
@@ -261,7 +245,6 @@ export function ImportExportModal({
           style={{ color: "rgba(255,255,255,0.8)" }}
         >
           <AnimatePresence mode="wait">
-            {/* ── IMPORT ── */}
             {activeTab === "import" && (
               <motion.div
                 key={`import-${importStep}`}
@@ -270,15 +253,13 @@ export function ImportExportModal({
                 animate="animate"
                 exit="exit"
               >
-                {/* Step 1: File upload */}
                 {importStep === 1 && (
                   <div className="flex flex-col gap-4">
                     <p
                       className="text-sm"
                       style={{ color: "rgba(255,255,255,0.5)" }}
                     >
-                      Steam, PlayStation, Excel veya manuel olarak hazırlanmış
-                      dosyayı yükle.
+                      {t("import.step1Hint")}
                     </p>
                     <FileDropper
                       onFileSelected={handleFileSelected}
@@ -291,14 +272,13 @@ export function ImportExportModal({
                           className="text-xs"
                           style={{ color: "rgba(255,255,255,0.4)" }}
                         >
-                          Dosya işleniyor...
+                          {t("import.fileProcessing")}
                         </span>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Step 2: Column mapping */}
                 {importStep === 2 && importState.parseResult && (
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
@@ -306,13 +286,13 @@ export function ImportExportModal({
                         className="text-sm"
                         style={{ color: "rgba(255,255,255,0.5)" }}
                       >
-                        Kaynak sütunları kütüphane alanlarıyla eşleştir.
+                        {t("import.matchColumns")}
                       </p>
                       <div
                         className="flex items-center gap-3 text-xs"
                         style={{ color: "rgba(255,255,255,0.35)" }}
                       >
-                        <span>{importState.parseResult.totalRows} satır</span>
+                        <span>{importState.parseResult.totalRows} {t("import.rows")}</span>
                         <span>•</span>
                         <span>
                           {importState.parseResult.format.toUpperCase()}
@@ -330,7 +310,6 @@ export function ImportExportModal({
                   </div>
                 )}
 
-                {/* Step 3: Preview */}
                 {importStep === 3 && (
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
@@ -338,19 +317,19 @@ export function ImportExportModal({
                         className="text-sm"
                         style={{ color: "rgba(255,255,255,0.5)" }}
                       >
-                        Verileri kontrol et ve düzenle.
+                        {t("import.checkData")}
                       </p>
                       <div className="flex items-center gap-3">
                         <span
                           className="text-xs"
                           style={{ color: "rgba(255,255,255,0.35)" }}
                         >
-                          Ekran görüntülerini içe aktar
+                          {t("import.importScreenshots")}
                         </span>
                         <GlassSwitch
                           checked={importState.importScreenshots}
-                          onChange={(e) =>
-                            setImportScreenshots(e.target.checked)
+                          onChange={(checked) =>
+                            setImportScreenshots(checked)
                           }
                         />
                       </div>
@@ -360,7 +339,6 @@ export function ImportExportModal({
                       mapping={importState.columnMapping}
                       onRowEdit={(rowIdx, field, value) => {
                         const updated = [...importState.rows];
-                        // Update mapped value back to raw row
                         const sourceCol = Object.entries(
                           importState.columnMapping,
                         ).find(([, f]) => f === field)?.[0];
@@ -376,7 +354,6 @@ export function ImportExportModal({
                   </div>
                 )}
 
-                {/* Step 4: Conflicts */}
                 {importStep === 4 && (
                   <ConflictResolver
                     conflicts={detectedConflicts}
@@ -387,7 +364,6 @@ export function ImportExportModal({
                   />
                 )}
 
-                {/* Step 5: Result */}
                 {importStep === 5 && importResult && (
                   <ImportResult
                     result={importResult}
@@ -399,19 +375,17 @@ export function ImportExportModal({
                   />
                 )}
 
-                {/* Progress (shown during import) */}
                 {importStep < 5 && runImportMutation.isPending && (
                   <ImportProgress
                     total={progressTotal}
                     current={progressCurrent}
-                    currentItem={progressItem}
+                    currentItem=""
                     status={progressStatus}
                   />
                 )}
               </motion.div>
             )}
 
-            {/* ── EXPORT ── */}
             {activeTab === "export" && (
               <motion.div
                 key={`export-${exportStep}`}
@@ -443,7 +417,7 @@ export function ImportExportModal({
                       className="text-sm"
                       style={{ color: "rgba(255,255,255,0.5)" }}
                     >
-                      Dışa aktarma hazır. Dosya formatı:{" "}
+                      {t("export.ready")} {t("export.formatLabel")}:{" "}
                       <strong style={{ color: "rgba(255,255,255,0.8)" }}>
                         {exportState.format.toUpperCase()}
                       </strong>
@@ -456,31 +430,31 @@ export function ImportExportModal({
                       }}
                     >
                       <SummaryRow
-                        label="Format"
+                        label={t("export.formatLabel")}
                         value={exportState.format.toUpperCase()}
                       />
                       <SummaryRow
-                        label="Ekran görüntüleri"
+                        label={t("export.includeScreenshots")}
                         value={
                           exportState.filters.includeScreenshots
-                            ? "Evet"
-                            : "Hayır"
+                            ? t("export.yes")
+                            : t("export.no")
                         }
                       />
                       <SummaryRow
-                        label="Durum filtresi"
+                        label={t("export.statusFilter")}
                         value={
                           exportState.filters.status?.length
                             ? exportState.filters.status.join(", ")
-                            : "Tümü"
+                            : t("export.all")
                         }
                       />
                       <SummaryRow
-                        label="Platform filtresi"
+                        label={t("export.platformFilter")}
                         value={
                           exportState.filters.platforms?.length
                             ? exportState.filters.platforms.join(", ")
-                            : "Tümü"
+                            : t("export.all")
                         }
                       />
                     </div>
@@ -495,7 +469,7 @@ export function ImportExportModal({
                           className="text-sm"
                           style={{ color: "rgba(255,255,255,0.4)" }}
                         >
-                          Dışa aktarılıyor...
+                          {t("export.exporting")}
                         </p>
                       </>
                     ) : (
@@ -513,13 +487,13 @@ export function ImportExportModal({
                           className="text-sm font-medium"
                           style={{ color: "rgba(255,255,255,0.8)" }}
                         >
-                          Dışa aktarma tamamlandı!
+                          {t("export.exportComplete")}
                         </p>
                         <p
                           className="text-xs"
                           style={{ color: "rgba(255,255,255,0.35)" }}
                         >
-                          Dosyan indirildi.
+                          {t("export.fileDownloaded")}
                         </p>
                       </>
                     )}
@@ -544,7 +518,7 @@ export function ImportExportModal({
                 disabled={importStep === 1}
                 leftIcon={<ChevronLeft size={15} />}
               >
-                Geri
+                {t("import.back")}
               </GlassButton>
               <GlassButton
                 variant="primary"
@@ -563,10 +537,10 @@ export function ImportExportModal({
                 loading={isImportLoading || runImportMutation.isPending}
               >
                 {importStep === 4
-                  ? "İçe Aktarı Başlat"
+                  ? t("export.startImport")
                   : importStep === 3
-                    ? "Çakışma Kontrolü"
-                    : "Devam"}
+                    ? t("export.checkConflicts")
+                    : t("import.continue")}
               </GlassButton>
             </div>
           )}
@@ -582,7 +556,7 @@ export function ImportExportModal({
               disabled={exportStep === 1}
               leftIcon={<ChevronLeft size={15} />}
             >
-              Geri
+              {t("import.back")}
             </GlassButton>
             <GlassButton
               variant="primary"
@@ -596,7 +570,7 @@ export function ImportExportModal({
               }
               loading={isExportLoading}
             >
-              {exportStep === 2 ? "Dışa Aktar" : "Devam"}
+              {exportStep === 2 ? t("export.exportButton") : t("import.continue")}
             </GlassButton>
           </div>
         )}

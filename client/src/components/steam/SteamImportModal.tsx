@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Search, CheckSquare, Square, ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { GlassModal } from "@/components/ui/GlassModal";
 import { GlassButton } from "@/components/ui/GlassButton";
@@ -15,24 +16,6 @@ interface Props {
   onClose: () => void;
 }
 
-const CONFLICT_OPTIONS: {
-  value: ConflictResolution;
-  label: string;
-  desc: string;
-}[] = [
-  {
-    value: "higher",
-    label: "En yükseği al",
-    desc: "Mevcut ve Steam süresinden büyük olanı kullan",
-  },
-  {
-    value: "steam",
-    label: "Steam'i üzerine yaz",
-    desc: "Her zaman Steam'deki süreyi kullan",
-  },
-  { value: "keep", label: "Mevcut koru", desc: "Zaten ekli oyunlara dokunma" },
-];
-
 function GameRow({
   item,
   selected,
@@ -42,6 +25,7 @@ function GameRow({
   selected: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation();
   const hasConflict =
     item.existingPlaytimeMinutes !== undefined &&
     item.existingPlaytimeMinutes !== item.playtimeMinutes;
@@ -108,7 +92,7 @@ function GameRow({
         <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
           {item.playtimeMinutes > 0
             ? formatPlayTime(item.playtimeMinutes)
-            : "0 dk"}
+            : t('steamImport.zeroPlaytime')}
         </span>
         {hasConflict && (
           <span
@@ -123,7 +107,7 @@ function GameRow({
         )}
         {item.existingPlaytimeMinutes !== undefined && !hasConflict && (
           <span className="text-xs" style={{ color: "rgba(134,239,172,0.7)" }}>
-            Eklendi
+            {t('steamImport.added')}
           </span>
         )}
       </div>
@@ -132,8 +116,31 @@ function GameRow({
 }
 
 export function SteamImportModal({ open, onClose }: Props) {
+  const { t } = useTranslation();
   const { data: library, isLoading, error, refetch } = useSteamLibrary(open);
   const syncMutation = useSyncSteam();
+
+  const CONFLICT_OPTIONS: {
+    value: ConflictResolution;
+    label: string;
+    desc: string;
+  }[] = [
+    {
+      value: "higher",
+      label: t('steamImport.conflictHigher'),
+      desc: t('steamImport.conflictHigherDesc'),
+    },
+    {
+      value: "steam",
+      label: t('steamImport.conflictSteam'),
+      desc: t('steamImport.conflictSteamDesc'),
+    },
+    {
+      value: "keep",
+      label: t('steamImport.conflictKeep'),
+      desc: t('steamImport.conflictKeepDesc'),
+    },
+  ];
 
   const [search, setSearch] = useState("");
   const [conflictResolution, setConflictResolution] =
@@ -272,12 +279,12 @@ export function SteamImportModal({ open, onClose }: Props) {
             <GlassInput
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Oyun ara..."
+              placeholder={t('steamImport.searchPlaceholder')}
               leftIcon={<Search size={13} />}
               className="flex-1"
             />
             <GlassButton size="sm" onClick={toggleAll} variant="ghost">
-              {allFilteredSelected ? "Hepsini Kaldır" : "Hepsini Seç"}
+              {allFilteredSelected ? t('steamImport.deselectAll') : t('steamImport.selectAll')}
             </GlassButton>
           </div>
 

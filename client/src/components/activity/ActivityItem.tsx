@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import { Pencil } from "lucide-react";
 import type { Activity } from "@my-games/shared";
 import { Avatar } from "@/components/ui/Avatar";
@@ -11,7 +12,6 @@ interface Props {
   index: number;
 }
 
-// Upsert yapılan tipler: updatedAt > createdAt ise "düzenlendi" göster
 const UPSERT_TYPES = new Set([
   "game_rated",
   "game_reviewed",
@@ -21,12 +21,12 @@ const UPSERT_TYPES = new Set([
 ]);
 
 export function ActivityItem({ activity, index }: Props) {
+  const { t } = useTranslation();
   const config = ACTIVITY_CONFIG[activity.type];
   const user = activity.user;
   const game = activity.game;
   const entryId = activity.libraryEntry;
 
-  // updatedAt createdAt'tan en az 10 saniye sonraysa "düzenlendi" say
   const wasEdited =
     UPSERT_TYPES.has(activity.type) &&
     new Date(activity.updatedAt).getTime() -
@@ -49,10 +49,10 @@ export function ActivityItem({ activity, index }: Props) {
       {/* Left color strip */}
       <div
         className="absolute left-0 top-4 bottom-4 w-0.5 rounded-full opacity-60"
-        style={{ background: config.rawColor }}
+        style={{ background: config?.rawColor ?? "#888" }}
       />
 
-      {/* User avatar → kullanıcı profiline gider */}
+      {/* User avatar */}
       <Link
         to="/users/$id"
         params={{ id: user._id }}
@@ -65,7 +65,6 @@ export function ActivityItem({ activity, index }: Props) {
       <div className="flex-1 min-w-0">
         {/* Action line */}
         <div className="flex flex-wrap items-center gap-1.5 text-sm leading-snug">
-          {/* Kullanıcı adı */}
           <Link
             to="/users/$id"
             params={{ id: user._id }}
@@ -75,20 +74,18 @@ export function ActivityItem({ activity, index }: Props) {
             {user.name}
           </Link>
 
-          {/* Activity badge */}
           <span
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
             style={{
-              background: config.bgColor,
-              border: `1px solid ${config.borderColor}`,
-              color: config.rawColor,
+              background: config?.bgColor ?? "rgba(255,255,255,0.05)",
+              border: `1px solid ${config?.borderColor ?? "rgba(255,255,255,0.1)"}`,
+              color: config?.rawColor ?? "rgba(255,255,255,0.6)",
             }}
           >
-            <span>{config.icon}</span>
-            <span>{config.label(activity)}</span>
+            <span>{config?.icon}</span>
+            <span>{t(config?.labelKey ?? "activity.all")}</span>
           </span>
 
-          {/* Oyun adı → oyun detay sayfasına gider */}
           {game && (
             <>
               <span style={{ color: "rgba(255,255,255,0.3)" }}>·</span>
@@ -115,20 +112,18 @@ export function ActivityItem({ activity, index }: Props) {
           )}
         </div>
 
-        {/* Review snippet */}
         {activity.type === "game_reviewed" && activity.metadata.review && (
           <p
             className="mt-2 text-sm italic line-clamp-2 pl-2 border-l-2"
             style={{
               color: "rgba(255,255,255,0.5)",
-              borderColor: config.rawColor + "66",
+              borderColor: (config?.rawColor ?? "#888") + "66",
             }}
           >
             "{activity.metadata.review}"
           </p>
         )}
 
-        {/* Screenshot thumbnail — oyun sayfasına gider */}
         {activity.type === "screenshot_added" &&
           activity.metadata.firstScreenshotUrl && (
             <div className="mt-2">
@@ -152,7 +147,6 @@ export function ActivityItem({ activity, index }: Props) {
             </div>
           )}
 
-        {/* Rating dots */}
         {activity.type === "game_rated" && activity.metadata.rating && (
           <div className="mt-1.5 flex items-center gap-0.5">
             {Array.from({ length: 10 }).map((_, i) => (
@@ -173,7 +167,14 @@ export function ActivityItem({ activity, index }: Props) {
           </div>
         )}
 
-        {/* Timestamp + düzenlendi */}
+        {activity.type === "milestone_playtime" && activity.metadata.hours && (
+          <p className="mt-1.5 text-xs font-medium" style={{ color: config?.rawColor ?? "rgba(255,255,255,0.6)" }}>
+            {activity.metadata.hours >= 1000
+              ? `${(activity.metadata.hours / 1000).toFixed(1)}k`
+              : activity.metadata.hours} {t("activity.hoursAbbrev")}
+          </p>
+        )}
+
         <div className="mt-1.5 flex items-center gap-1.5">
           <p className="text-xs" style={{ color: "rgba(255,255,255,0.28)" }}>
             {timeAgo(displayTime)}
@@ -185,13 +186,12 @@ export function ActivityItem({ activity, index }: Props) {
               title="Bu aktivite güncellendi"
             >
               <Pencil size={9} />
-              düzenlendi
+              {t("activity.edited")}
             </span>
           )}
         </div>
       </div>
 
-      {/* Game cover → oyun sayfasına gider */}
       {game?.coverUrl && (
         <div className="shrink-0 hidden sm:block">
           {entryId ? (
