@@ -35,6 +35,7 @@ import { FavoriteGamesSection } from "@/components/profile/FavoriteGamesSection"
 import { pageTransition, fadeUp, staggerContainer } from "@/lib/motion";
 import { formatPlayTime, formatDate, formatCoverUrl } from "@/lib/formatters";
 import { gamesApi } from "@/api/games.api";
+import { statisticsApi } from "@/api/statistics.api";
 import { useQuery } from "@tanstack/react-query";
 import { authApi } from "@/api/auth.api";
 import type { GameListItem } from "@/api/types";
@@ -506,8 +507,25 @@ function ProfilePage() {
   });
 
   const favoriteGames = favoriteGamesData?.items ?? [];
-
   const recentGames = recentGamesData?.items ?? [];
+
+  // Fetch user statistics to get avgRating and totalPlayTime
+  const { data: statsData } = useQuery({
+    queryKey: ["statistics", "user", user?._id],
+    queryFn: () => (user?._id ? statisticsApi.getByUser(user._id) : Promise.resolve(null)),
+    enabled: !!user?._id,
+    staleTime: 60_000,
+  });
+
+  // Compute avg rating and total play time from statistics data
+  const avgRating = statsData?.statistics?.myGamesRatingStats
+    ? statsData.statistics.myGamesRatingStats.reduce((sum, b) => sum + (b.averageRating ?? 0) * b.count, 0) /
+      (statsData.statistics.myGamesRatingStats.reduce((sum, b) => sum + b.count, 0) || 1)
+    : 0;
+
+  const totalPlayTimeHours = statsData?.statistics?.statusStats
+    ? statsData.statistics.statusStats.reduce((sum, s) => sum + (s.playTime > 0 ? s.playTime / 60 : 0), 0)
+    : 0;
 
   useEffect(() => {
     if (steamLinked === "true") {
@@ -539,13 +557,13 @@ function ProfilePage() {
     {
       icon: Clock,
       label: "Toplam Süre",
-      value: "—",
+      value: totalPlayTimeHours > 0 ? `${totalPlayTimeHours.toLocaleString("tr-TR")} saat` : "—",
       color: "#3b82f6",
     },
     {
       icon: Star,
       label: "Ort. Puan",
-      value: "—",
+      value: avgRating > 0 ? avgRating.toFixed(1) : "—",
       color: "#f59e0b",
     },
   ];

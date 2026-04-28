@@ -215,7 +215,161 @@ async function updateCatalogGameIgdb(gameId: string, igdbGame: IGDBData) {
   );
 }
 
-async function getGameStatistics(userId?: string): Promise<Statistics> {
+async function getUserAggregateStatistics(userId: string) {
+  const objectId = new mongoose.Types.ObjectId(userId);
+
+  const [
+    summaryResult,
+    platformResult,
+    genreResult,
+    ratingResult,
+    monthlyResult,
+  ] = await Promise.all([
+    // 1. Overall summary
+    LibraryEntry.aggregate([
+      { $match: { user: objectId } },
+      {
+        $group: {
+          _id: null,
+          totalGames: { $sum: 1 },
+          totalPlayTime: { $sum: { $ifNull: ["$playTimeMinutes", 0] } },
+          avgRating: { $avg: "$rating" },
+          completedCount: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "completed"] }, 1, 0],
+            },
+          },
+          playingCount: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "activePlaying"] }, 1, 0],
+            },
+          },
+          backlogCount: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "toBeCompleted"] }, 1, 0],
+            },
+          },
+          droppedCount: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "abandoned"] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]),
+    // 2. Platform distribution
+    LibraryEntry.aggregate([
+      { $match: { user: objectId } },
+      {
+        $group: {
+          _id: "$platform",
+          count: { $sum: 1 },
+          playTime: { $sum: { $ifNull: ["$playTimeMinutes", 0] } },
+        },
+      },
+      { $sort: { playTime: -1 } },
+    ]),
+    // 3. Genre distribution (from igdb.genres array)
+    LibraryEntry.aggregate([
+      { $match: { user: objectId } },
+      { $unwind: { path: "$game.metadata.igdb.genres", preserveNullAndEmptyArrays: true } },
+      {
+        $group: {
+          _id: "$game.metadata.igdb.genres.name",
+          count: { $sum: 1 },
+        },
+      },
+      { $match: { _id: { $ne: null } } },
+      { $sort: { count: -1 } },
+    ]),
+    // 4. Rating distribution (buckets: 0-4, 4-6, 6-8, 8-10)
+    LibraryEntry.aggregate([
+      { $match: { user: objectId, rating: { $exists: true, $ne: null } } },
+      {
+        $bucket: {
+          groupBy: "$rating",
+          boundaries: [0, 4, 6, 8, 10, 11],
+          default: "unrated",
+          output: { count: { $sum: 1 } },
+        },
+      },
+    ]),
+    // 5. Monthly completion trend (last 6 months)
+    LibraryEntry.aggregate([
+      {
+        $match: {
+          user: objectId,
+          status: "completed",
+          completionDate: { $exists: true },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: { format: "%Y-%m", date: "$completionDate" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: -1 } },
+      { $limit: 6 },
+    ]),
+  ]);
+
+  const summary = summaryResult[0] || {
+    totalGames: 0,
+    totalPlayTime: 0,
+    avgRating: 0,
+    completedCount: 0,
+    playingCount: 0,
+    backlogCount: 0,
+    droppedCount: 0,
+  };
+
+  const ratingMap: Record<string, number> = {};
+  for (const bucket of ratingResult) {
+    const id = bucket._id;
+    if (id === "unrated" || id === "Others") continue;
+    const parts = String(id).split("-");
+    if (parts.length === 2) {
+      const key = `${parts[0]}-${parts[1]}`;
+      ratingMap[key] = (ratingMap[key] || 0) + bucket.count;
+    }
+  }
+  const orderedRatingRanges = ["0-4", "4-6", "6-8", "8-10"];
+  const ratingStats = orderedRatingRanges.map((range) => ({
+    range,
+    count: ratingMap[range] || 0,
+  }));
+
+  const monthlyCompletions = monthlyResult
+    .slice()
+    .reverse()
+    .map((m) => ({ month: m._id, count: m.count }));
+
+  return {
+    summary: {
+      totalGames: summary.totalGames || 0,
+      totalPlayTime: summary.totalPlayTime || 0,
+      avgRating: summary.avgRating || 0,
+      completedCount: summary.completedCount || 0,
+      playingCount: summary.playingCount || 0,
+      backlogCount: summary.backlogCount || 0,
+      droppedCount: summary.droppedCount || 0,
+    },
+    platformStats: platformResult.map((p) => ({
+      platform: p._id || "Unknown",
+      count: p.count,
+      playTime: p.playTime,
+    })),
+    genreStats: genreResult.map((g) => ({
+      genre: g._id || "Unknown",
+      count: g.count,
+    })),
+    ratingStats,
+    monthlyCompletions,
+  };
+}
   const matchStage = userId
     ? { $match: { user: new mongoose.Types.ObjectId(userId) } }
     : { $match: {} };
@@ -410,4 +564,5 @@ export default {
   updateEntryGameMetadata,
   getCatalogGamesWithIgdb,
   updateCatalogGameIgdb,
+  getUserAggregateStatistics,
 };

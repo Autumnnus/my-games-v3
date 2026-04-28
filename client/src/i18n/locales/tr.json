@@ -320,6 +320,8 @@
     "cancel": "İptal",
     "profileUpdated": "Profil güncellendi",
     "profileUpdateFailed": "Güncelleme başarısız",
+    "avgRating": "Ort. Puan",
+    "totalPlayTime": "Toplam Süre",
     "steamScanComplete": "Steam kütüphanesi tarandı!",
     "steamUnlinkSuccess": "Steam hesabı bağlantısı kaldırıldı",
     "steamUnlinkFailed": "Bağlantı kaldırılamadı"
@@ -341,6 +343,7 @@
     "removedFromFavorites": "Favorilerden kaldırıldı",
     "couldNotAdd": "Eklenemedi",
     "couldNotRemove": "Kaldırılamadı",
+    "favoriteLimitReached": "Maksimum 3 favori ekleyebilirsin",
     "gamesLoaded": "oyun favorilere eklenebilir"
   },
   "activity": {
@@ -490,5 +493,16 @@
     "selected": "seçili",
     "deleteSelected": "Seçilenleri Sil",
     "cancel": "İptal"
+  },
+  "statistics": {
+    "title": "İstatistikler",
+    "totalGames": "Toplam Oyun",
+    "completed": "Tamamlanan",
+    "totalPlayTime": "Toplam Süre",
+    "avgRating": "Ort. Puan",
+    "platformDistribution": "Platform Dağılımı",
+    "genreDistribution": "Tür Dağılımı",
+    "statusDistribution": "Durum Dağılımı",
+    "hoursAbbrev": "saat"
   }
 }

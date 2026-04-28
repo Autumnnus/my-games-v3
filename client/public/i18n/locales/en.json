@@ -417,16 +417,5 @@
     "selected": "seçili",
     "deleteSelected": "Seçilenleri Sil",
     "cancel": "İptal"
-  },
-  "statistics": {
-    "title": "Statistics",
-    "totalGames": "Total Games",
-    "completed": "Completed",
-    "totalPlayTime": "Total Play Time",
-    "avgRating": "Avg. Rating",
-    "platformDistribution": "Platform Distribution",
-    "genreDistribution": "Genre Distribution",
-    "statusDistribution": "Status Distribution",
-    "hoursAbbrev": "hours"
   }
 }

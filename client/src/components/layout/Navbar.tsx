@@ -11,6 +11,7 @@ import {
   Users,
   Activity,
   Bell,
+  BarChart3,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Search, Plus, X } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
@@ -68,7 +68,12 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
       onToggle(game._id, true);
       toast.success(t("favorite.addedToFavorites"));
     } catch (err) {
-      toast.error(isApiError(err) ? err.message : t("favorite.couldNotAdd"));
+      const msg = isApiError(err) ? err.message : t("favorite.couldNotAdd");
+      if (isApiError(err) && err.httpStatus === 400 && err.message.toLowerCase().includes("favorite")) {
+        toast.error(t("favorite.favoriteLimitReached"));
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setSaving(null);
     }

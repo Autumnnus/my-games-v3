@@ -26,3 +26,42 @@ export type StatisticsData = {
   createdAt: Date
   updatedAt: Date
 }
+
+export type UserStatisticsSummary = {
+  totalGames: number
+  totalPlayTime: number
+  avgRating: number
+  completedCount: number
+  playingCount: number
+  backlogCount: number
+  droppedCount: number
+}
+
+export type UserStatisticsPlatform = {
+  platform: string
+  count: number
+  playTime: number
+}
+
+export type UserStatisticsGenre = {
+  genre: string
+  count: number
+}
+
+export type UserStatisticsRating = {
+  range: string
+  count: number
+}
+
+export type UserStatisticsMonthly = {
+  month: string
+  count: number
+}
+
+export type UserAggregateStatistics = {
+  summary: UserStatisticsSummary
+  platformStats: UserStatisticsPlatform[]
+  genreStats: UserStatisticsGenre[]
+  ratingStats: UserStatisticsRating[]
+  monthlyCompletions: UserStatisticsMonthly[]
+}
