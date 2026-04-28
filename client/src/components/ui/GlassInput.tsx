@@ -20,7 +20,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
           <label
             htmlFor={inputId}
             className="glass-input-label text-sm font-medium"
-            style={{ color: "rgba(255,255,255,0.75)" }}
+            style={{ color: "var(--theme-text-secondary)" }}
           >
             {label}
           </label>
@@ -29,7 +29,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
           {leftIcon && (
             <span
               className="glass-input-icon absolute left-3 flex items-center"
-              style={{ color: "rgba(255,255,255,0.4)" }}
+              style={{ color: "var(--theme-text-muted)" }}
             >
               {leftIcon}
             </span>
@@ -43,7 +43,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
           {rightIcon && (
             <span
               className="glass-input-icon absolute right-3 flex items-center"
-              style={{ color: "rgba(255,255,255,0.4)" }}
+              style={{ color: "var(--theme-text-muted)" }}
             >
               {rightIcon}
             </span>
@@ -51,7 +51,7 @@ export const GlassInput = forwardRef<HTMLInputElement, GlassInputProps>(
         </div>
         {error && <p className="text-xs text-red-400">{error}</p>}
         {hint && !error && (
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <p className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
             {hint}
           </p>
         )}

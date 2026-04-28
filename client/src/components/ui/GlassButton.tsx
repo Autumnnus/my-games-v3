@@ -28,7 +28,7 @@ export const GlassButton = forwardRef<HTMLButtonElement, GlassButtonProps>(
       default: "glass-btn",
       primary: "glass-btn glass-btn-primary",
       danger: "glass-btn glass-btn-danger",
-      ghost: "glass-btn border-transparent bg-transparent hover:bg-white/5",
+      ghost: "glass-btn glass-btn-ghost",
     }[variant];
 
     const sizeClass = {

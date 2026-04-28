@@ -19,7 +19,7 @@ export const GlassSelect = forwardRef<HTMLSelectElement, GlassSelectProps>(
           <label
             htmlFor={selectId}
             className="text-sm font-medium"
-            style={{ color: "rgba(255,255,255,0.75)" }}
+            style={{ color: "var(--theme-text-secondary)" }}
           >
             {label}
           </label>
@@ -29,7 +29,7 @@ export const GlassSelect = forwardRef<HTMLSelectElement, GlassSelectProps>(
           id={selectId}
           className={`glass-input glass-select w-full px-3 py-2.5 text-sm appearance-none cursor-pointer ${error ? "glass-input-error" : ""} ${className}`}
           style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.4)' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
             backgroundRepeat: "no-repeat",
             backgroundPosition: "right 12px center",
           }}

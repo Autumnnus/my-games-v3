@@ -80,7 +80,7 @@ export function GlassModal({
                 {title && (
                   <h2
                     className="text-lg font-semibold"
-                    style={{ color: "rgba(255,255,255,0.95)" }}
+                    style={{ color: "var(--theme-text-primary)" }}
                   >
                     {title}
                   </h2>

@@ -5,6 +5,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { routeTree } from "./routeTree.gen";
 import { queryClient } from "./lib/queryClient";
 import { useAuthStore } from "./store/auth.store";
+import { ThemeProvider } from "./components/theme/ThemeProvider";
 import "./styles/globals.css";
 
 // PWA service worker registration
@@ -43,10 +44,12 @@ function App() {
   const auth = useAuthStore();
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider
-        router={router}
-        context={{ auth: auth as ReturnType<typeof useAuthStore.getState> }}
-      />
+      <ThemeProvider>
+        <RouterProvider
+          router={router}
+          context={{ auth: auth as ReturnType<typeof useAuthStore.getState> }}
+        />
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

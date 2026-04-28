@@ -11,7 +11,8 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { GlassSwitch } from "@/components/ui/GlassSwitch";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { RatingStars } from "@/components/ui/RatingStars";
-import { useGame, useEditGame } from "@/hooks/useGames";
+import { useGame } from "@/hooks/useGames";
+import { useDynamicGameTheme } from "@/hooks/useDynamicGameTheme";
 import { useGameScreenshots } from "@/hooks/useScreenshots";
 import { useDeleteMultipleScreenshots } from "@/api/screenshots.api";
 import { steamSyncApi } from "@/api/steamSync";
@@ -49,9 +50,17 @@ function GameDetailPage() {
   );
 
   const deleteMutation = useDeleteMultipleScreenshots(id);
-  const editGame = useEditGame();
-
   const screenshots = screenshotsData?.items ?? [];
+  const dynamicThemeCoverUrl = game?.photo
+    ? formatCoverUrl(game.photo, "hero")
+    : game?.igdb?.cover?.url
+      ? formatCoverUrl(game.igdb.cover.url, "hero")
+      : null;
+
+  useDynamicGameTheme(
+    dynamicThemeCoverUrl,
+    game ? `${game.name}-${game.platform}-${game.status}` : id,
+  );
 
   const authed = isAuthenticated();
   const isOwner = authed && game?.userId === user?._id;
@@ -116,7 +125,7 @@ function GameDetailPage() {
       <PageContainer>
         <div
           className="text-center py-20"
-          style={{ color: "rgba(255,255,255,0.5)" }}
+          style={{ color: "var(--theme-text-muted)" }}
         >
           Oyun bulunamadı.
         </div>
@@ -152,7 +161,7 @@ function GameDetailPage() {
             className="w-full h-full"
             style={{
               background:
-                "linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.2))",
+                "linear-gradient(135deg, var(--theme-mesh-a), var(--theme-mesh-b))",
             }}
           />
         )}
@@ -160,7 +169,7 @@ function GameDetailPage() {
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(transparent 30%, var(--color-bg-base) 100%)",
+              "linear-gradient(transparent 30%, var(--theme-bg-base) 100%)",
           }}
         />
         <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-4">
@@ -211,26 +220,26 @@ function GameDetailPage() {
               <GlassCard className="p-4 flex flex-col gap-3">
                 <h3
                   className="text-xs font-semibold uppercase tracking-wide"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  style={{ color: "var(--theme-text-muted)" }}
                 >
                   IGDB Bilgisi
                 </h3>
                 {igdb.first_release_date && (
                   <div className="flex items-center justify-between text-sm">
-                    <span style={{ color: "rgba(255,255,255,0.5)" }}>
+                    <span style={{ color: "var(--theme-text-muted)" }}>
                       Çıkış Tarihi
                     </span>
-                    <span style={{ color: "rgba(255,255,255,0.8)" }}>
+                    <span style={{ color: "var(--theme-text-secondary)" }}>
                       {formatUnixDate(igdb.first_release_date)}
                     </span>
                   </div>
                 )}
                 {igdb.aggregated_rating && (
                   <div className="flex items-center justify-between text-sm">
-                    <span style={{ color: "rgba(255,255,255,0.5)" }}>
+                    <span style={{ color: "var(--theme-text-muted)" }}>
                       IGDB Puanı
                     </span>
-                    <span style={{ color: "rgba(255,255,255,0.8)" }}>
+                    <span style={{ color: "var(--theme-text-secondary)" }}>
                       {igdb.aggregated_rating.toFixed(0)}/100
                     </span>
                   </div>
@@ -239,7 +248,7 @@ function GameDetailPage() {
                   <div className="flex flex-col gap-1">
                     <span
                       className="text-xs"
-                      style={{ color: "rgba(255,255,255,0.4)" }}
+                      style={{ color: "var(--theme-text-muted)" }}
                     >
                       Türler
                     </span>
@@ -249,9 +258,9 @@ function GameDetailPage() {
                           key={g.id}
                           className="text-xs px-2 py-0.5 rounded-full"
                           style={{
-                            background: "rgba(168,85,247,0.15)",
-                            color: "rgba(168,85,247,0.9)",
-                            border: "1px solid rgba(168,85,247,0.3)",
+                            background: "var(--theme-accent-soft)",
+                            color: "var(--theme-accent)",
+                            border: "1px solid var(--theme-glass-border-hover)",
                           }}
                         >
                           {g.name}
@@ -264,7 +273,7 @@ function GameDetailPage() {
                   <div className="flex flex-col gap-1">
                     <span
                       className="text-xs"
-                      style={{ color: "rgba(255,255,255,0.4)" }}
+                      style={{ color: "var(--theme-text-muted)" }}
                     >
                       Oyun Modu
                     </span>
@@ -273,7 +282,7 @@ function GameDetailPage() {
                         <span
                           key={m.id}
                           className="text-xs px-2 py-0.5 rounded-full glass-card-sm"
-                          style={{ color: "rgba(255,255,255,0.6)" }}
+                          style={{ color: "var(--theme-text-secondary)" }}
                         >
                           {m.name}
                         </span>
@@ -290,7 +299,7 @@ function GameDetailPage() {
             <div>
               <h1
                 className="text-3xl font-bold"
-                style={{ color: "rgba(255,255,255,0.95)" }}
+                style={{ color: "var(--theme-text-primary)" }}
               >
                 {game.name}
               </h1>
@@ -379,13 +388,13 @@ function GameDetailPage() {
               <GlassCard size="sm" className="p-3 flex flex-col gap-1">
                 <span
                   className="text-xs"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  style={{ color: "var(--theme-text-muted)" }}
                 >
                   Süre
                 </span>
                 <span
                   className="text-lg font-semibold"
-                  style={{ color: "rgba(255,255,255,0.9)" }}
+                  style={{ color: "var(--theme-text-primary)" }}
                 >
                   {formatPlayTime(game.playTime)}
                 </span>
@@ -393,7 +402,7 @@ function GameDetailPage() {
               <GlassCard size="sm" className="p-3 flex flex-col gap-1">
                 <span
                   className="text-xs"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  style={{ color: "var(--theme-text-muted)" }}
                 >
                   Puan
                 </span>
@@ -403,7 +412,7 @@ function GameDetailPage() {
                   ) : (
                     <span
                       className="text-sm"
-                      style={{ color: "rgba(255,255,255,0.35)" }}
+                      style={{ color: "var(--theme-text-muted)" }}
                     >
                       —
                     </span>
@@ -414,13 +423,13 @@ function GameDetailPage() {
                 <GlassCard size="sm" className="p-3 flex flex-col gap-1">
                   <span
                     className="text-xs"
-                    style={{ color: "rgba(255,255,255,0.4)" }}
+                    style={{ color: "var(--theme-text-muted)" }}
                   >
                     Tamamlanma
                   </span>
                   <span
                     className="text-sm"
-                    style={{ color: "rgba(255,255,255,0.7)" }}
+                    style={{ color: "var(--theme-text-secondary)" }}
                   >
                     {formatDate(game.completionDate)}
                   </span>
@@ -430,13 +439,13 @@ function GameDetailPage() {
                 <GlassCard size="sm" className="p-3 flex flex-col gap-1">
                   <span
                     className="text-xs"
-                    style={{ color: "rgba(255,255,255,0.4)" }}
+                    style={{ color: "var(--theme-text-muted)" }}
                   >
                     Son Oynama
                   </span>
                   <span
                     className="text-sm"
-                    style={{ color: "rgba(255,255,255,0.7)" }}
+                    style={{ color: "var(--theme-text-secondary)" }}
                   >
                     {formatDate(game.lastPlayDate)}
                   </span>

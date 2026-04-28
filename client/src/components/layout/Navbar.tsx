@@ -17,6 +17,7 @@ import { useAuthStore } from "@/store/auth.store";
 import { Avatar } from "@/components/ui/Avatar";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { NotificationPanel } from "@/components/notifications/NotificationPanel";
+import { ThemeControls } from "@/components/theme/ThemeControls";
 import { useUnreadCount } from "@/hooks/useNotifications";
 
 const NAV_LINKS_AUTHED = [
@@ -59,11 +60,14 @@ export function Navbar() {
         >
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #a855f7, #3b82f6)" }}
+            style={{
+              background:
+                "linear-gradient(135deg, var(--theme-accent), var(--theme-accent-2))",
+            }}
           >
             <Gamepad2 size={15} className="text-white" />
           </div>
-          <span style={{ color: "rgba(255,255,255,0.9)" }}>MyGames</span>
+          <span style={{ color: "var(--theme-text-primary)" }}>MyGames</span>
         </Link>
 
         {/* Desktop nav */}
@@ -74,11 +78,11 @@ export function Navbar() {
                 key={to}
                 to={to}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors"
-                style={{ color: "rgba(255,255,255,0.6)" }}
+                style={{ color: "var(--theme-text-secondary)" }}
                 activeProps={{
                   style: {
-                    color: "rgba(255,255,255,0.95)",
-                    background: "rgba(255,255,255,0.07)",
+                    color: "var(--theme-text-primary)",
+                    background: "var(--theme-glass-surface-hover)",
                   },
                 }}
               >
@@ -103,8 +107,8 @@ export function Navbar() {
                   className="relative p-2 rounded-xl transition-colors hover:bg-white/5"
                   style={{
                     color: notifOpen
-                      ? "rgba(255,255,255,0.9)"
-                      : "rgba(255,255,255,0.5)",
+                      ? "var(--theme-text-primary)"
+                      : "var(--theme-text-muted)",
                   }}
                   aria-label="Bildirimler"
                 >
@@ -112,7 +116,10 @@ export function Navbar() {
                   {unreadCount > 0 && (
                     <span
                       className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
-                      style={{ background: "#a855f7", color: "#fff" }}
+                      style={{
+                        background: "var(--theme-accent)",
+                        color: "#fff",
+                      }}
                     >
                       {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
@@ -136,7 +143,7 @@ export function Navbar() {
                   <Avatar src={user.profileImage} name={user.name} size="sm" />
                   <span
                     className="hidden sm:block text-sm"
-                    style={{ color: "rgba(255,255,255,0.8)" }}
+                    style={{ color: "var(--theme-text-secondary)" }}
                   >
                     {user.name}
                   </span>
@@ -150,7 +157,7 @@ export function Navbar() {
                         onClick={() => setProfileOpen(false)}
                       />
                       <motion.div
-                        className="absolute right-0 top-full mt-2 w-52 glass-card p-1 z-20"
+                        className="absolute right-0 top-full mt-2 w-64 glass-card p-1 z-20"
                         initial={{ opacity: 0, y: -6, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -4, scale: 0.97 }}
@@ -165,7 +172,7 @@ export function Navbar() {
                           params={{ id: user._id }}
                           onClick={() => setProfileOpen(false)}
                           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5"
-                          style={{ color: "rgba(255,255,255,0.75)" }}
+                          style={{ color: "var(--theme-text-secondary)" }}
                         >
                           <User size={15} /> Profil
                         </Link>
@@ -173,10 +180,12 @@ export function Navbar() {
                           to="/profile"
                           onClick={() => setProfileOpen(false)}
                           className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5"
-                          style={{ color: "rgba(255,255,255,0.75)" }}
+                          style={{ color: "var(--theme-text-secondary)" }}
                         >
                           <User size={15} /> Hesap Ayarları
                         </Link>
+                        <div className="my-1 border-t border-white/8" />
+                        <ThemeControls />
                         <div className="my-1 border-t border-white/8" />
                         <button
                           onClick={handleLogout}
@@ -236,11 +245,11 @@ export function Navbar() {
                 to={to}
                 onClick={() => setMobileOpen(false)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
-                style={{ color: "rgba(255,255,255,0.7)" }}
+                style={{ color: "var(--theme-text-secondary)" }}
                 activeProps={{
                   style: {
-                    color: "rgba(255,255,255,0.95)",
-                    background: "rgba(255,255,255,0.07)",
+                    color: "var(--theme-text-primary)",
+                    background: "var(--theme-glass-surface-hover)",
                   },
                 }}
               >

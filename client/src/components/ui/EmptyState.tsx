@@ -28,21 +28,21 @@ export function EmptyState({
       {icon && (
         <div
           className="w-16 h-16 rounded-2xl flex items-center justify-center glass-card-sm mb-2"
-          style={{ color: "rgba(255,255,255,0.3)" }}
+          style={{ color: "var(--theme-text-muted)" }}
         >
           {icon}
         </div>
       )}
       <h3
         className="text-lg font-semibold"
-        style={{ color: "rgba(255,255,255,0.75)" }}
+        style={{ color: "var(--theme-text-secondary)" }}
       >
         {title}
       </h3>
       {description && (
         <p
           className="text-sm max-w-xs"
-          style={{ color: "rgba(255,255,255,0.4)" }}
+          style={{ color: "var(--theme-text-muted)" }}
         >
           {description}
         </p>

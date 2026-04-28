@@ -1,9 +1,15 @@
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import {
+  createRootRouteWithContext,
+  Outlet,
+  useRouterState,
+} from "@tanstack/react-router";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/store/auth.store";
 import { Navbar } from "@/components/layout/Navbar";
+import { setRouteThemeSeed } from "@/components/theme/ThemeProvider";
 
 interface RouterContext {
   auth: ReturnType<typeof useAuthStore.getState>;
@@ -14,6 +20,12 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 });
 
 function RootLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  useEffect(() => {
+    setRouteThemeSeed(pathname);
+  }, [pathname]);
+
   return (
     <div className="gradient-mesh min-h-dvh">
       <Navbar />
@@ -24,10 +36,10 @@ function RootLayout() {
         position="bottom-right"
         toastOptions={{
           style: {
-            background: "rgba(15, 15, 26, 0.95)",
-            border: "1px solid rgba(255,255,255,0.12)",
+            background: "var(--theme-bg-overlay)",
+            border: "1px solid var(--theme-glass-border)",
             backdropFilter: "blur(20px)",
-            color: "rgba(255,255,255,0.95)",
+            color: "var(--theme-text-primary)",
           },
         }}
       />
