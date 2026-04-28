@@ -35,6 +35,7 @@ export function toLegacyGameResponse(entry: ILibraryEntry): GameListItem & {
     name: game?.title ?? "",
     photo: game?.coverUrl,
     lastPlay: entry.lastPlayedAt,
+    lastPlayDate: entry.lastPlayDate,
     platform: entry.platform,
     review: entry.review,
     rating: entry.rating,
@@ -44,6 +45,7 @@ export function toLegacyGameResponse(entry: ILibraryEntry): GameListItem & {
     userId: entry.user?.toString(),
     isFavorite: entry.isFavorite,
     firstFinished: entry.firstCompletedAt,
+    completionDate: entry.completionDate,
     slug: game?.slug ?? "",
     igdb: game?.metadata?.igdb,
     steamAppId: game?.sourceIds?.steamAppId,
@@ -86,7 +88,9 @@ function buildEntryData(
     review: data.review,
     playTimeMinutes: data.playTime,
     lastPlayedAt: data.lastPlay,
+    lastPlayDate: data.lastPlayDate,
     firstCompletedAt: data.firstFinished,
+    completionDate: data.completionDate ?? null,
     isFavorite: data.isFavorite,
   };
 }

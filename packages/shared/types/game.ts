@@ -69,7 +69,9 @@ export type LibraryEntry = {
   review?: string
   playTimeMinutes: number
   lastPlayedAt: Date
+  lastPlayDate?: Date
   firstCompletedAt?: Date
+  completionDate?: Date | null
   isFavorite: boolean
   screenshotCount: number
   legacyGameId?: string

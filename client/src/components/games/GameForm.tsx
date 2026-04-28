@@ -5,6 +5,7 @@ import { z } from "zod";
 import type { GameListItem } from "@/api/types";
 import type { AddGameInput } from "@/api/games.api";
 import { GlassInput } from "@/components/ui/GlassInput";
+import { DateInputField } from "@/components/ui/DateInput";
 import { GlassSelect } from "@/components/ui/GlassSelect";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { RatingStars } from "@/components/ui/RatingStars";
@@ -38,6 +39,8 @@ const schema = z.object({
   rating: z.number().min(0).max(10).optional(),
   review: z.string().max(2000).optional(),
   isFavorite: z.boolean(),
+  lastPlayDate: z.string().optional(),
+  completionDate: z.string().optional(),
 });
 
 type FormData = z.infer<typeof schema>;
@@ -78,9 +81,12 @@ export function GameForm({
       rating: defaultValues?.rating ?? undefined,
       review: defaultValues?.review ?? "",
       isFavorite: defaultValues?.isFavorite ?? false,
+      lastPlayDate: defaultValues?.lastPlayDate ? String(defaultValues.lastPlayDate) : "",
+      completionDate: defaultValues?.completionDate ? String(defaultValues.completionDate) : "",
     },
   });
 
+  const currentStatus = watch("status");
   const totalMinutes = watch("playTime") ?? 0;
 
   const playTimeHours = watch("playTimeHours");
@@ -109,6 +115,18 @@ export function GameForm({
       });
     }
   }, [playTimeHours, playTimeMinutes, setValue]);
+
+  // Show completionDate only when status is activePlaying or completed
+  const showCompletionDate = currentStatus === "activePlaying" || currentStatus === "completed";
+
+  // Clear completionDate when status leaves or enters activePlaying
+  useEffect(() => {
+    if (!showCompletionDate) {
+      setValue("completionDate", "", { shouldDirty: true });
+    }
+    // When switching TO activePlaying, also clear (it should only be set when actually completed)
+    // The "completed" status is handled by the user explicitly setting it
+  }, [currentStatus, showCompletionDate, setValue]);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
@@ -251,6 +269,25 @@ export function GameForm({
           placeholder="Oyun hakkında düşüncelerini yaz..."
           {...register("review")}
         />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <DateInputField
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          control={control as any}
+          name="lastPlayDate"
+          label="Son Oynama"
+          error={errors.lastPlayDate?.message as string | undefined}
+        />
+        {showCompletionDate && (
+          <DateInputField
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            control={control as any}
+            name="completionDate"
+            label="Tamamlanma"
+            error={errors.completionDate?.message as string | undefined}
+          />
+        )}
       </div>
 
       <label className="flex items-center gap-2 cursor-pointer">

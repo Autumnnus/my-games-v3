@@ -14,6 +14,8 @@ export interface GameListItem {
   userId?: string;
   isFavorite: boolean;
   firstFinished?: Date;
+  lastPlayDate?: Date;
+  completionDate?: Date | null;
   slug?: string;
   igdb?: IGDBData;
   steamAppId?: number;

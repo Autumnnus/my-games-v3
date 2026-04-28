@@ -92,7 +92,9 @@ async function editGameService(
     review: EditGameInput["review"];
     playTimeMinutes: number;
     lastPlayedAt: Date;
+    lastPlayDate: Date;
     firstCompletedAt: Date;
+    completionDate: Date | null;
     isFavorite: boolean;
   }> = {};
   if (data.platform !== undefined) update.platform = data.platform;
@@ -101,11 +103,30 @@ async function editGameService(
   if (data.review !== undefined) update.review = data.review;
   if (data.playTime !== undefined) update.playTimeMinutes = data.playTime;
   if (data.lastPlay !== undefined) update.lastPlayedAt = data.lastPlay;
+  if (data.lastPlayDate !== undefined) update.lastPlayDate = data.lastPlayDate;
+  if (data.completionDate !== undefined) update.completionDate = data.completionDate;
   if (data.firstFinished !== undefined)
     update.firstCompletedAt = data.firstFinished;
   if (data.isFavorite !== undefined) {
     await assertFavoriteLimit(userId, data.isFavorite, libraryEntryId);
     update.isFavorite = data.isFavorite;
+  }
+
+  // Auto-set or clear completionDate based on status transitions
+  if (data.status !== undefined && data.status !== prevStatus) {
+    if (data.status === "completed") {
+      // Only set completionDate if not already set (first time marking completed)
+      if (!entry.completionDate) {
+        update.completionDate = new Date();
+      }
+    } else if (
+      (data.status === "toBeCompleted" || data.status === "abandoned") &&
+      prevStatus === "completed"
+    ) {
+      // Reset completionDate when moving away from completed (except activePlaying)
+      update.completionDate = null;
+    }
+    // activePlaying from completed: keep completionDate as-is (do nothing)
   }
 
   Object.assign(entry, update);

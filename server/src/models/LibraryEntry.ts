@@ -19,7 +19,9 @@ export interface ILibraryEntry extends Document {
   steamPlaytimeMinutes?: number;
   syncedFromSteam: boolean;
   lastPlayedAt: Date;
+  lastPlayDate?: Date;
   firstCompletedAt?: Date;
+  completionDate?: Date | null;
   isFavorite: boolean;
   legacyGameId?: mongoose.Types.ObjectId;
   steamPlayTime: number | null;
@@ -66,7 +68,9 @@ const LibraryEntrySchema = new Schema<ILibraryEntry>(
     steamPlaytimeMinutes: Number,
     syncedFromSteam: { type: Boolean, default: false },
     lastPlayedAt: { type: Date, default: Date.now },
+    lastPlayDate: Date,
     firstCompletedAt: Date,
+    completionDate: { type: Date, default: null },
     isFavorite: { type: Boolean, default: false },
     legacyGameId: { type: mongoose.Schema.ObjectId, index: true },
     steamPlayTime: { type: Number, default: null },

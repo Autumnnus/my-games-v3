@@ -26,6 +26,8 @@ export const addGameSchema = z.object({
   name: z.string().min(1).max(200),
   photo: z.string().optional(),
   lastPlay: z.coerce.date().optional(),
+  lastPlayDate: z.coerce.date().optional(),
+  completionDate: z.coerce.date().optional().nullable(),
   platform: platformEnum,
   review: z.string().optional(),
   rating: z.number().min(0).max(10).optional(),

@@ -11,6 +11,8 @@ export interface GameListItem {
   name: string;
   photo?: string;
   lastPlay?: string;
+  lastPlayDate?: string;
+  completionDate?: string | null;
   platform: Platform;
   review?: string;
   rating?: number;

@@ -32,6 +32,8 @@ export interface AddGameInput {
   isFavorite?: boolean;
   firstFinished?: string;
   lastPlay?: string;
+  lastPlayDate?: string;
+  completionDate?: string | null;
   igdb?: object;
   steamAppId?: number;
 }

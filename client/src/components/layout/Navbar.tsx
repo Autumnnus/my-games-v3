@@ -19,20 +19,26 @@ import { GlassButton } from "@/components/ui/GlassButton";
 import { NotificationPanel } from "@/components/notifications/NotificationPanel";
 import { useUnreadCount } from "@/hooks/useNotifications";
 
-const NAV_LINKS = [
+const NAV_LINKS_AUTHED = [
   { to: "/games", label: "Kütüphane", icon: BookOpen },
   { to: "/screenshots", label: "Ekran Görüntüleri", icon: Image },
   { to: "/social", label: "Sosyal", icon: Activity },
   { to: "/users", label: "Kullanıcılar", icon: Users },
 ];
 
+const NAV_LINKS_PUBLIC = [
+  { to: "/users", label: "Kullanıcılar", icon: Users },
+];
+
 export function Navbar() {
-  const { user, clearAuth, isAuthenticated } = useAuthStore();
+  const user = useAuthStore((s) => s.user);
+  const token = useAuthStore((s) => s.token);
+  const clearAuth = useAuthStore((s) => s.clearAuth);
   const router = useRouter();
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
-  const authed = isAuthenticated();
+  const authed = !!token && !!user;
 
   const { data: unreadData } = useUnreadCount();
   const unreadCount = unreadData?.count ?? 0;
@@ -61,9 +67,9 @@ export function Navbar() {
         </Link>
 
         {/* Desktop nav */}
-        {authed && (
-          <nav className="hidden md:flex items-center gap-1">
-            {NAV_LINKS.map(({ to, label, icon: Icon }) => (
+        <nav className="hidden md:flex items-center gap-1">
+          {(authed ? NAV_LINKS_AUTHED : NAV_LINKS_PUBLIC).map(
+            ({ to, label, icon: Icon }) => (
               <Link
                 key={to}
                 to={to}
@@ -79,9 +85,9 @@ export function Navbar() {
                 <Icon size={15} />
                 {label}
               </Link>
-            ))}
-          </nav>
-        )}
+            ),
+          )}
+        </nav>
 
         {/* Right side */}
         <div className="flex items-center gap-2 ml-auto">
@@ -204,28 +210,27 @@ export function Navbar() {
           )}
 
           {/* Mobile menu toggle */}
-          {authed && (
-            <button
-              className="md:hidden glass-btn p-1.5 rounded-lg"
-              onClick={() => setMobileOpen((p) => !p)}
-              aria-label="Menü"
-            >
-              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
-          )}
+          <button
+            className="md:hidden glass-btn p-1.5 rounded-lg"
+            onClick={() => setMobileOpen((p) => !p)}
+            aria-label="Menü"
+          >
+            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
         </div>
       </div>
 
       {/* Mobile nav */}
       <AnimatePresence>
-        {mobileOpen && authed && (
+        {mobileOpen && (
           <motion.div
             className="md:hidden border-t border-white/8 px-4 py-3 flex flex-col gap-1"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
-            {NAV_LINKS.map(({ to, label, icon: Icon }) => (
+            {(authed ? NAV_LINKS_AUTHED : NAV_LINKS_PUBLIC).map(
+              ({ to, label, icon: Icon }) => (
               <Link
                 key={to}
                 to={to}

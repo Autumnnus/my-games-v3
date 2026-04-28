@@ -295,7 +295,7 @@ function GameDetailPage() {
                 {game.name}
               </h1>
               <div className="flex items-center gap-2 mt-2">
-                <StatusBadge status={game.status} />
+                <StatusBadge status={game.status} completionDate={game.completionDate} />
                 <PlatformIcon platform={game.platform} showLabel />
                 {game.isFavorite && (
                   <Star size={14} className="fill-yellow-400 text-yellow-400" />
@@ -410,19 +410,35 @@ function GameDetailPage() {
                   )}
                 </div>
               </GlassCard>
-              {game.firstFinished && (
+              {game.completionDate && (
                 <GlassCard size="sm" className="p-3 flex flex-col gap-1">
                   <span
                     className="text-xs"
                     style={{ color: "rgba(255,255,255,0.4)" }}
                   >
-                    İlk Bitiş
+                    Tamamlanma
                   </span>
                   <span
                     className="text-sm"
                     style={{ color: "rgba(255,255,255,0.7)" }}
                   >
-                    {formatDate(game.firstFinished)}
+                    {formatDate(game.completionDate)}
+                  </span>
+                </GlassCard>
+              )}
+              {game.lastPlayDate && (
+                <GlassCard size="sm" className="p-3 flex flex-col gap-1">
+                  <span
+                    className="text-xs"
+                    style={{ color: "rgba(255,255,255,0.4)" }}
+                  >
+                    Son Oynama
+                  </span>
+                  <span
+                    className="text-sm"
+                    style={{ color: "rgba(255,255,255,0.7)" }}
+                  >
+                    {formatDate(game.lastPlayDate)}
                   </span>
                 </GlassCard>
               )}
