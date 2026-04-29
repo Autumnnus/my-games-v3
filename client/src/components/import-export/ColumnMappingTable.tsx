@@ -75,9 +75,9 @@ export function ColumnMappingTable({
       <div
         className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-xs leading-relaxed"
         style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          color: "rgba(255,255,255,0.45)",
+          background: "var(--theme-surface-subtle)",
+          border: "1px solid var(--theme-glass-border)",
+          color: "var(--theme-text-muted)",
         }}
       >
         <span
@@ -88,7 +88,7 @@ export function ColumnMappingTable({
         </span>
         <span>
           {t("import.columnMappingHint")}{" "}
-          <span style={{ color: "rgba(255,255,255,0.75)", fontWeight: 600 }}>
+          <span style={{ color: "var(--theme-text-secondary)", fontWeight: 600 }}>
             {t("import.nameRequired")}
           </span>
         </span>
@@ -97,13 +97,13 @@ export function ColumnMappingTable({
       {hasActive && (
         <div
           className="rounded-xl overflow-hidden"
-          style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ border: "1px solid var(--theme-glass-border)" }}
         >
           <div
             className="grid grid-cols-2 gap-4 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              color: "rgba(255,255,255,0.4)",
+              background: "var(--theme-surface-subtle)",
+              color: "var(--theme-text-muted)",
             }}
           >
             <span>{t("import.sourceColumn")}</span>
@@ -112,7 +112,7 @@ export function ColumnMappingTable({
 
           <div
             className="divide-y"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}
+            style={{ borderTop: "1px solid var(--theme-surface-subtle)" }}
           >
             {activeColumns.map((col) => {
               const isName = mapping[col] === "name";
@@ -124,7 +124,7 @@ export function ColumnMappingTable({
                   <div className="flex items-center gap-2 min-w-0">
                     <span
                       className="text-sm truncate"
-                      style={{ color: "rgba(255,255,255,0.75)" }}
+                      style={{ color: "var(--theme-text-secondary)" }}
                       title={col}
                     >
                       {col}
@@ -163,8 +163,8 @@ export function ColumnMappingTable({
         <div
           className="flex flex-col items-center gap-2 py-8 rounded-xl text-center"
           style={{
-            border: "1px dashed rgba(255,255,255,0.1)",
-            color: "rgba(255,255,255,0.3)",
+            border: "1px dashed var(--theme-glass-border)",
+            color: "var(--theme-text-muted)",
           }}
         >
           <span className="text-2xl">📋</span>
@@ -178,7 +178,7 @@ export function ColumnMappingTable({
             onClick={() => setShowIgnored((v) => !v)}
             className="flex items-center gap-1.5 text-xs transition-all cursor-pointer w-fit"
             style={{
-              color: "rgba(255,255,255,0.35)",
+              color: "var(--theme-text-muted)",
               background: "none",
               border: "none",
               padding: "2px 0",
@@ -199,8 +199,8 @@ export function ColumnMappingTable({
             <span
               className="ml-1 px-1.5 py-0.5 rounded text-xs"
               style={{
-                background: "rgba(255,255,255,0.07)",
-                color: "rgba(255,255,255,0.4)",
+                background: "var(--theme-surface-strong)",
+                color: "var(--theme-text-muted)",
               }}
             >
               {ignoredColumns.length}
@@ -216,14 +216,14 @@ export function ColumnMappingTable({
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden rounded-xl"
-                style={{ border: "1px solid rgba(255,255,255,0.05)" }}
+                style={{ border: "1px solid var(--theme-surface-subtle)" }}
               >
                 <div style={{ opacity: 0.65 }}>
                   <div
                     className="grid grid-cols-2 gap-4 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
                     style={{
-                      background: "rgba(255,255,255,0.02)",
-                      color: "rgba(255,255,255,0.25)",
+                      background: "var(--theme-surface-subtle)",
+                      color: "var(--theme-text-muted)",
                     }}
                   >
                     <span>{t("import.sourceColumn")}</span>
@@ -231,7 +231,7 @@ export function ColumnMappingTable({
                   </div>
                   <div
                     className="divide-y"
-                    style={{ borderTop: "1px solid rgba(255,255,255,0.03)" }}
+                    style={{ borderTop: "1px solid var(--theme-surface-subtle)" }}
                   >
                     {ignoredColumns.map((col) => (
                       <div
@@ -240,7 +240,7 @@ export function ColumnMappingTable({
                       >
                         <span
                           className="text-xs truncate"
-                          style={{ color: "rgba(255,255,255,0.35)" }}
+                          style={{ color: "var(--theme-text-muted)" }}
                           title={col}
                         >
                           {col}

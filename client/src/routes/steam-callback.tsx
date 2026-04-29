@@ -63,7 +63,7 @@ function SteamCallbackPage() {
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center gap-4">
       <LoadingSpinner size="lg" />
-      <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+      <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
         {t("steam.callback.loading")}
       </p>
     </div>

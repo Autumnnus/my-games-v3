@@ -49,8 +49,7 @@ export function GameListItem({
         className="flex items-center gap-3 flex-1 min-w-0"
       >
         <div
-          className="w-10 h-14 rounded-lg overflow-hidden shrink-0"
-          style={{ background: "rgba(255,255,255,0.04)" }}
+          className="w-10 h-14 rounded-lg overflow-hidden shrink-0 theme-cover-placeholder"
         >
           {imageSrc ? (
             <img
@@ -82,7 +81,7 @@ export function GameListItem({
             )}
             <p
               className="text-sm font-medium truncate"
-              style={{ color: "rgba(255,255,255,0.9)" }}
+              style={{ color: "var(--theme-text-primary)" }}
             >
               {game.name}
             </p>
@@ -98,7 +97,7 @@ export function GameListItem({
       {game.rating !== undefined && game.rating !== null && (
         <div
           className="shrink-0 text-sm font-medium"
-          style={{ color: "rgba(255,255,255,0.6)" }}
+          style={{ color: "var(--theme-text-secondary)" }}
         >
           ⭐ {formatRating(game.rating)}
         </div>

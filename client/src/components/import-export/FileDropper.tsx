@@ -85,10 +85,10 @@ export function FileDropper({
     dropState === "error"
       ? "rgba(239,68,68,0.5)"
       : dropState === "dragover"
-        ? "rgba(59,130,246,0.6)"
+        ? "var(--theme-accent-2)"
         : dropState === "selected"
           ? "rgba(34,197,94,0.4)"
-          : "rgba(255,255,255,0.12)";
+          : "var(--theme-glass-border)";
 
   const borderStyle =
     dropState === "dragover" || dropState === "selected" ? "dashed" : "dashed";
@@ -102,8 +102,8 @@ export function FileDropper({
             border: `2px ${borderStyle} ${borderColor}`,
             background:
               dropState === "dragover"
-                ? "rgba(59,130,246,0.06)"
-                : "rgba(255,255,255,0.02)",
+                ? "var(--theme-mesh-b)"
+                : "var(--theme-surface-subtle)",
           }}
           onDragOver={onDragOver}
           onDragLeave={onDragLeave}
@@ -120,20 +120,20 @@ export function FileDropper({
             style={{
               background:
                 dropState === "dragover"
-                  ? "rgba(59,130,246,0.15)"
-                  : "rgba(255,255,255,0.06)",
+                  ? "var(--theme-mesh-b)"
+                  : "var(--theme-glass-border)",
             }}
           >
             {dropState === "dragover" ? (
-              <Upload size={22} style={{ color: "rgba(59,130,246,0.8)" }} />
+              <Upload size={22} style={{ color: "var(--theme-accent-2)" }} />
             ) : (
-              <Upload size={22} style={{ color: "rgba(255,255,255,0.35)" }} />
+              <Upload size={22} style={{ color: "var(--theme-text-muted)" }} />
             )}
           </div>
           <div className="text-center">
             <p
               className="text-sm font-medium"
-              style={{ color: "rgba(255,255,255,0.75)" }}
+              style={{ color: "var(--theme-text-secondary)" }}
             >
               {dropState === "dragover"
                 ? "Bırak dosyayı"
@@ -141,7 +141,7 @@ export function FileDropper({
             </p>
             <p
               className="text-xs mt-1"
-              style={{ color: "rgba(255,255,255,0.3)" }}
+              style={{ color: "var(--theme-text-muted)" }}
             >
               .xlsx, .json, .csv — maks. {maxSizeMB}MB
             </p>
@@ -164,11 +164,11 @@ export function FileDropper({
           <div className="flex-1 min-w-0">
             <p
               className="text-sm font-medium truncate"
-              style={{ color: "rgba(255,255,255,0.85)" }}
+              style={{ color: "var(--theme-text-secondary)" }}
             >
               {selectedFile?.name}
             </p>
-            <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+            <p className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
               {(selectedFile?.size ?? 0) > 1024 * 1024
                 ? `${((selectedFile?.size ?? 0) / (1024 * 1024)).toFixed(1)} MB`
                 : `${Math.round((selectedFile?.size ?? 0) / 1024)} KB`}
@@ -179,7 +179,7 @@ export function FileDropper({
             className="p-1.5 rounded-lg transition-colors hover:bg-white/10 shrink-0"
             aria-label="Dosyayı kaldır"
           >
-            <X size={15} style={{ color: "rgba(255,255,255,0.4)" }} />
+            <X size={15} style={{ color: "var(--theme-text-muted)" }} />
           </button>
         </div>
       )}

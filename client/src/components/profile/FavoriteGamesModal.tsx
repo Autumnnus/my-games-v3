@@ -97,7 +97,7 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
 
         <div
           className="text-xs shrink-0"
-          style={{ color: "rgba(255,255,255,0.4)" }}
+          style={{ color: "var(--theme-text-muted)" }}
         >
           {t("favorite.gamesAvailable", { count: allGames.length })}
         </div>
@@ -109,7 +109,7 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
         ) : filtered.length === 0 ? (
           <p
             className="text-center py-8 text-sm"
-            style={{ color: "rgba(255,255,255,0.4)" }}
+            style={{ color: "var(--theme-text-muted)" }}
           >
             {search ? t("favorite.noResults") : t("favorite.allFavorited")}
           </p>
@@ -121,7 +121,7 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="group flex items-center gap-3 px-3 py-2.5 rounded-lg border border-transparent hover:border-white/10 transition-all cursor-pointer"
-                style={{ background: "rgba(255,255,255,0.02)" }}
+                style={{ background: "var(--theme-surface-subtle)" }}
                 onClick={() => saving === null && handleAddToFavorites(game)}
               >
                 <div className="shrink-0 w-8 h-10 rounded overflow-hidden">
@@ -135,7 +135,7 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
                   ) : (
                     <div
                       className="w-full h-full flex items-center justify-center text-sm"
-                      style={{ background: "rgba(255,255,255,0.05)" }}
+                      style={{ background: "var(--theme-surface-subtle)" }}
                     >
                       🎮
                     </div>
@@ -144,7 +144,7 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
 
                 <span
                   className="flex-1 text-sm truncate"
-                  style={{ color: "rgba(255,255,255,0.85)" }}
+                  style={{ color: "var(--theme-text-secondary)" }}
                 >
                   {game.name}
                 </span>
@@ -154,7 +154,7 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
                 ) : (
                   <span
                     className="shrink-0 text-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ color: "#a855f7" }}
+                    style={{ color: "var(--theme-accent)" }}
                   >
                     <Plus size={15} />
                   </span>

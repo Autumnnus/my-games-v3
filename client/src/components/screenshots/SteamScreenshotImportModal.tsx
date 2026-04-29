@@ -35,7 +35,7 @@ function ScreenshotThumb({
       onClick={onToggle}
       className="relative group rounded-xl overflow-hidden aspect-video"
       style={{
-        outline: selected ? "2px solid #a855f7" : "2px solid transparent",
+        outline: selected ? "2px solid var(--theme-accent)" : "2px solid transparent",
         outlineOffset: "2px",
       }}
     >
@@ -50,8 +50,8 @@ function ScreenshotThumb({
         <div
           className="w-full h-full flex items-center justify-center text-xs"
           style={{
-            background: "rgba(255,255,255,0.05)",
-            color: "rgba(255,255,255,0.3)",
+            background: "var(--theme-surface-subtle)",
+            color: "var(--theme-text-muted)",
           }}
         >
           Önizleme yok
@@ -62,7 +62,7 @@ function ScreenshotThumb({
       <div
         className="absolute inset-0 transition-opacity"
         style={{
-          background: selected ? "rgba(168,85,247,0.25)" : "rgba(0,0,0,0.0)",
+          background: selected ? "var(--theme-accent-soft)" : "rgba(0,0,0,0.0)",
           opacity: selected ? 1 : 0,
         }}
       />
@@ -71,7 +71,7 @@ function ScreenshotThumb({
       <span
         className="absolute top-1.5 right-1.5 transition-opacity"
         style={{
-          color: selected ? "#a855f7" : "rgba(255,255,255,0.5)",
+          color: selected ? "var(--theme-accent)" : "var(--theme-text-muted)",
           opacity: selected ? 1 : 0,
         }}
       >
@@ -84,9 +84,9 @@ function ScreenshotThumb({
         style={{ background: "rgba(0,0,0,0.4)" }}
       >
         {selected ? (
-          <CheckSquare size={24} style={{ color: "#a855f7" }} />
+          <CheckSquare size={24} style={{ color: "var(--theme-accent)" }} />
         ) : (
-          <Square size={24} style={{ color: "rgba(255,255,255,0.8)" }} />
+          <Square size={24} style={{ color: "var(--theme-text-secondary)" }} />
         )}
       </div>
 
@@ -96,7 +96,7 @@ function ScreenshotThumb({
           className="absolute bottom-0 left-0 right-0 px-2 py-1 text-xs truncate opacity-0 group-hover:opacity-100 transition-opacity"
           style={{
             background: "rgba(0,0,0,0.7)",
-            color: "rgba(255,255,255,0.9)",
+            color: "var(--theme-text-primary)",
           }}
         >
           {item.title}
@@ -184,20 +184,20 @@ export function SteamScreenshotImportModal({
   ) : errorMessage ? (
     <div
       className="text-center py-12 text-sm"
-      style={{ color: "rgba(255,255,255,0.4)" }}
+      style={{ color: "var(--theme-text-muted)" }}
     >
       {errorMessage}
     </div>
   ) : !screenshots?.length ? (
     <div
       className="text-center py-12 text-sm"
-      style={{ color: "rgba(255,255,255,0.4)" }}
+      style={{ color: "var(--theme-text-muted)" }}
     >
       {t('screenshots.noPublicScreenshots')}
       <br />
       <span
         className="text-xs mt-1 block"
-        style={{ color: "rgba(255,255,255,0.25)" }}
+        style={{ color: "var(--theme-text-muted)" }}
       >
         {t('screenshots.onlyPublicHint')}
       </span>
@@ -206,13 +206,13 @@ export function SteamScreenshotImportModal({
     <div className="flex flex-col gap-4">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+        <span className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
           {screenshots.length} {t('screenshots.count')}
         </span>
         <button
           onClick={toggleAll}
           className="text-xs flex items-center gap-1.5 transition-colors"
-          style={{ color: allSelected ? "#a855f7" : "rgba(255,255,255,0.5)" }}
+          style={{ color: allSelected ? "var(--theme-accent)" : "var(--theme-text-muted)" }}
         >
           {allSelected ? <CheckSquare size={14} /> : <Square size={14} />}
           {allSelected ? t('screenshots.deselectAll') : t('screenshots.selectAll')}

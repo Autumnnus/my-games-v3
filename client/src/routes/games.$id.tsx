@@ -15,6 +15,7 @@ import { useGame } from "@/hooks/useGames";
 import { useDynamicGameTheme } from "@/hooks/useDynamicGameTheme";
 import { useGameScreenshots } from "@/hooks/useScreenshots";
 import { useDeleteMultipleScreenshots } from "@/api/screenshots.api";
+import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { steamSyncApi } from "@/api/steamSync";
 import {
   formatCoverUrl,
@@ -184,6 +185,15 @@ function GameDetailPage() {
           </Link>
           {isOwner && (
             <div className="flex items-center gap-2">
+              <WishlistButton
+                igdbId={game.igdb?.id ?? game.steamAppId ?? 0}
+                gameName={game.name}
+                coverUrl={coverUrl ?? undefined}
+                platform={game.platform}
+                genres={game.igdb?.genres?.map((g) => g.name) ?? []}
+                variant="detail"
+                steamAppId={game.steamAppId}
+              />
               <GlassButton
                 size="sm"
                 leftIcon={<Edit2 size={13} />}
@@ -331,7 +341,7 @@ function GameDetailPage() {
                 </p>
                 <p
                   className="text-xs"
-                  style={{ color: "rgba(255,255,255,0.5)" }}
+                  style={{ color: "var(--theme-text-muted)" }}
                 >
                   {t("gameDetail.steamLogged")} {formatPlayTime(steamPlayTime)} {t("gameDetail.youEntered")} {formatPlayTime(game.playTime)}.
                 </p>
@@ -459,20 +469,20 @@ function GameDetailPage() {
               <div
                 className="flex items-center justify-between p-3 rounded-xl"
                 style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.07)",
+                  background: "var(--theme-surface-subtle)",
+                  border: "1px solid var(--theme-glass-border)",
                 }}
               >
                 <div className="flex flex-col gap-0.5">
                   <span
                     className="text-sm"
-                    style={{ color: "rgba(255,255,255,0.8)" }}
+                    style={{ color: "var(--theme-text-secondary)" }}
                   >
                     {t("gameDetail.steamSyncExclude")}
                   </span>
                   <span
                     className="text-xs"
-                    style={{ color: "rgba(255,255,255,0.4)" }}
+                    style={{ color: "var(--theme-text-muted)" }}
                   >
                     {t("gameDetail.steamSyncExcludeHint")}
                   </span>
@@ -489,7 +499,7 @@ function GameDetailPage() {
               <GlassCard className="p-4">
                 <p
                   className="text-sm leading-relaxed"
-                  style={{ color: "rgba(255,255,255,0.7)" }}
+                  style={{ color: "var(--theme-text-secondary)" }}
                 >
                   {game.review}
                 </p>
@@ -501,7 +511,7 @@ function GameDetailPage() {
               <div className="flex items-center justify-between">
                 <h2
                   className="text-base font-semibold"
-                  style={{ color: "rgba(255,255,255,0.85)" }}
+                  style={{ color: "var(--theme-text-secondary)" }}
                 >
                   {t("gameDetail.screenshots", { count: screenshots.length })}
                 </h2>
@@ -546,7 +556,7 @@ function GameDetailPage() {
               ) : (
                 <div
                   className="glass-card p-8 text-center"
-                  style={{ color: "rgba(255,255,255,0.35)" }}
+                  style={{ color: "var(--theme-text-muted)" }}
                 >
                   {t("gameDetail.noScreenshots")}
                 </div>
@@ -558,7 +568,7 @@ function GameDetailPage() {
         {/* Delete mode bottom bar */}
         {deleteMode && (
           <div className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-white/10 px-4 py-3 flex items-center justify-between gap-4">
-            <span style={{ color: "rgba(255,255,255,0.85)" }}>
+            <span style={{ color: "var(--theme-text-secondary)" }}>
               {selectedScreenshots.size} {t("gameDetail.selected")}
             </span>
             <div className="flex items-center gap-2">

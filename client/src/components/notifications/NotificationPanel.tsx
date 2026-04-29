@@ -45,30 +45,28 @@ export function NotificationPanel({ open, onClose }: Props) {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -8, scale: 0.97 }}
           transition={{ duration: 0.15 }}
-          className="absolute right-0 top-full mt-2 w-96 max-w-[calc(100vw-1rem)] rounded-2xl border shadow-2xl z-50 overflow-hidden"
-          style={{
-            background: "rgba(15,15,26,0.97)",
-            backdropFilter: "blur(24px)",
-            borderColor: "rgba(255,255,255,0.1)",
-          }}
+          className="glass-card glass-dropdown-menu absolute right-0 top-full mt-2 w-96 max-w-[calc(100vw-1rem)] z-50 overflow-hidden"
         >
           {/* Header */}
           <div
             className="flex items-center justify-between px-4 py-3 border-b"
-            style={{ borderColor: "rgba(255,255,255,0.08)" }}
+            style={{ borderColor: "var(--theme-glass-border)" }}
           >
             <div className="flex items-center gap-2">
-              <Bell size={15} style={{ color: "rgba(255,255,255,0.6)" }} />
+              <Bell size={15} style={{ color: "var(--theme-text-secondary)" }} />
               <span
                 className="text-sm font-semibold"
-                style={{ color: "rgba(255,255,255,0.9)" }}
+                style={{ color: "var(--theme-text-primary)" }}
               >
                 {t("navbar.notifications")}
               </span>
               {unreadCount > 0 && (
                 <span
                   className="text-xs font-bold px-1.5 py-0.5 rounded-full"
-                  style={{ background: "#a855f7", color: "#fff" }}
+                  style={{
+                    background: "var(--theme-accent)",
+                    color: "var(--theme-text-inverse)",
+                  }}
                 >
                   {unreadCount}
                 </span>
@@ -78,8 +76,8 @@ export function NotificationPanel({ open, onClose }: Props) {
               <button
                 onClick={() => markAllAsRead.mutate()}
                 disabled={markAllAsRead.isPending}
-                className="flex items-center gap-1 text-xs transition-colors hover:text-white"
-                style={{ color: "rgba(255,255,255,0.4)" }}
+                className="flex items-center gap-1 text-xs transition-colors hover:text-[var(--theme-accent)]"
+                style={{ color: "var(--theme-text-muted)" }}
               >
                 <CheckCheck size={13} />
                 {t("notifications.markAllAsRead")}
@@ -114,10 +112,10 @@ function NotificationSkeleton() {
     <div className="flex flex-col gap-1 p-3">
       {Array.from({ length: 4 }).map((_, i) => (
         <div key={i} className="flex gap-3 p-2">
-          <div className="w-7 h-7 rounded-full bg-white/10 animate-pulse shrink-0" />
+          <div className="w-7 h-7 rounded-full glass-skeleton shrink-0" />
           <div className="flex-1 flex flex-col gap-2">
-            <div className="h-3 w-3/4 rounded bg-white/10 animate-pulse" />
-            <div className="h-3 w-1/2 rounded bg-white/10 animate-pulse" />
+            <div className="h-3 w-3/4 glass-skeleton" />
+            <div className="h-3 w-1/2 glass-skeleton" />
           </div>
         </div>
       ))}
@@ -129,8 +127,8 @@ function EmptyNotifications() {
   const { t } = useTranslation();
   return (
     <div className="flex flex-col items-center gap-2 py-12">
-      <Inbox size={28} style={{ color: "rgba(255,255,255,0.2)" }} />
-      <p className="text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
+      <Inbox size={28} style={{ color: "var(--theme-text-muted)" }} />
+      <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
         {t("notifications.empty")}
       </p>
     </div>

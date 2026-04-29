@@ -23,8 +23,8 @@ function getInitials(name: string) {
 
 function getAvatarColor(name: string) {
   const colors = [
-    "#a855f7",
-    "#3b82f6",
+    "var(--theme-accent)",
+    "var(--theme-accent-2)",
     "#ec4899",
     "#f59e0b",
     "#22c55e",
@@ -50,15 +50,20 @@ export function Avatar({
         alt={name}
         loading="lazy"
         decoding="async"
-        className={`${sizeClass} rounded-full object-cover border border-white/10 ${className}`}
+        className={`${sizeClass} rounded-full object-cover border ${className}`}
+        style={{ borderColor: "var(--theme-glass-border)" }}
       />
     );
   }
 
   return (
     <div
-      className={`${sizeClass} rounded-full flex items-center justify-center font-semibold border border-white/10 ${className}`}
-      style={{ background: `${color}33`, color }}
+      className={`${sizeClass} rounded-full flex items-center justify-center font-semibold border ${className}`}
+      style={{
+        background: `${color}22`,
+        borderColor: "var(--theme-glass-border)",
+        color,
+      }}
     >
       {getInitials(name)}
     </div>

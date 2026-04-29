@@ -56,14 +56,14 @@ export function ActivityFeed({
             style={
               filter === opt.value
                 ? {
-                    background: "rgba(168,85,247,0.2)",
-                    borderColor: "rgba(168,85,247,0.5)",
-                    color: "#c084fc",
+                    background: "var(--theme-accent-soft)",
+                    borderColor: "var(--theme-accent-soft)",
+                    color: "var(--theme-accent)",
                   }
                 : {
-                    background: "rgba(255,255,255,0.04)",
-                    borderColor: "rgba(255,255,255,0.1)",
-                    color: "rgba(255,255,255,0.5)",
+                    background: "var(--theme-surface-subtle)",
+                    borderColor: "var(--theme-glass-border)",
+                    color: "var(--theme-text-muted)",
                   }
             }
           >
@@ -76,9 +76,9 @@ export function ActivityFeed({
           disabled={isFetching}
           className="ml-auto px-3 py-1 rounded-full text-xs border flex items-center gap-1.5 transition-all"
           style={{
-            background: "rgba(255,255,255,0.04)",
-            borderColor: "rgba(255,255,255,0.1)",
-            color: "rgba(255,255,255,0.4)",
+            background: "var(--theme-surface-subtle)",
+            borderColor: "var(--theme-glass-border)",
+            color: "var(--theme-text-muted)",
           }}
         >
           <RefreshCw size={11} className={isFetching ? "animate-spin" : ""} />
@@ -113,7 +113,7 @@ export function ActivityFeed({
           >
             <ChevronLeft size={14} />
           </GlassButton>
-          <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <span className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
             {page} / {data.totalPages}
           </span>
           <GlassButton
@@ -152,13 +152,13 @@ function EmptyFeed({ filter }: { filter: ActivityFilter }) {
       <div
         className="w-12 h-12 rounded-2xl flex items-center justify-center"
         style={{
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: "var(--theme-surface-subtle)",
+          border: "1px solid var(--theme-glass-border)",
         }}
       >
-        <Activity size={20} style={{ color: "rgba(255,255,255,0.3)" }} />
+        <Activity size={20} style={{ color: "var(--theme-text-muted)" }} />
       </div>
-      <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
+      <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
         {filter === "all" ? t("activity.noActivity") : t("activity.noActivityFiltered")}
       </p>
     </motion.div>

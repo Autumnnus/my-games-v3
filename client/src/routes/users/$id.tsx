@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -29,6 +30,7 @@ export const Route = createFileRoute("/users/$id")({
 type Tab = "games" | "activity";
 
 function UserProfilePage() {
+  const { t } = useTranslation();
   const { id } = Route.useParams();
   const { data: user, isLoading } = useUser(id);
   const { data: gamesData } = useUserGamesById(id);
@@ -57,9 +59,9 @@ function UserProfilePage() {
       <PageContainer>
         <div
           className="text-center py-20"
-          style={{ color: "rgba(255,255,255,0.5)" }}
+          style={{ color: "var(--theme-text-muted)" }}
         >
-          Kullanıcı bulunamadı.
+          {t("users.userNotFound")}
         </div>
       </PageContainer>
     );
@@ -79,9 +81,9 @@ function UserProfilePage() {
             <Link
               to="/users"
               className="inline-flex items-center gap-1.5 text-sm mb-4 hover:underline"
-              style={{ color: "rgba(255,255,255,0.45)" }}
+              style={{ color: "var(--theme-text-muted)" }}
             >
-              <ArrowLeft size={14} /> Kullanıcılar
+              <ArrowLeft size={14} /> {t("users.backToUsers")}
             </Link>
 
             {/* Profile card */}
@@ -91,7 +93,7 @@ function UserProfilePage() {
                 <div className="flex items-center gap-2 justify-center sm:justify-start">
                   <h1
                     className="text-2xl font-bold"
-                    style={{ color: "rgba(255,255,255,0.95)" }}
+                    style={{ color: "var(--theme-text-primary)" }}
                   >
                     {user.name}
                   </h1>
@@ -108,41 +110,41 @@ function UserProfilePage() {
                 <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-start mt-2">
                   <div
                     className="flex items-center gap-1.5 text-sm"
-                    style={{ color: "rgba(255,255,255,0.6)" }}
+                    style={{ color: "var(--theme-text-secondary)" }}
                   >
                     <Gamepad2 size={14} />{" "}
-                    <strong style={{ color: "rgba(255,255,255,0.9)" }}>
+                    <strong style={{ color: "var(--theme-text-primary)" }}>
                       {user.gameSize}
                     </strong>{" "}
-                    oyun
+                    {t("games.game")}
                   </div>
                   <div
                     className="flex items-center gap-1.5 text-sm"
-                    style={{ color: "rgba(255,255,255,0.6)" }}
+                    style={{ color: "var(--theme-text-secondary)" }}
                   >
                     <CheckCircle size={14} />{" "}
-                    <strong style={{ color: "rgba(255,255,255,0.9)" }}>
+                    <strong style={{ color: "var(--theme-text-primary)" }}>
                       {user.completedGameSize}
                     </strong>{" "}
-                    tamamlanan
+                    {t("statistics.completed").toLowerCase()}
                   </div>
                   <div
                     className="flex items-center gap-1.5 text-sm"
-                    style={{ color: "rgba(255,255,255,0.6)" }}
+                    style={{ color: "var(--theme-text-secondary)" }}
                   >
                     <Image size={14} />{" "}
-                    <strong style={{ color: "rgba(255,255,255,0.9)" }}>
+                    <strong style={{ color: "var(--theme-text-primary)" }}>
                       {user.screenshotSize}
                     </strong>{" "}
-                    ekran görüntüsü
+                    {t("navbar.screenshots").toLowerCase()}
                   </div>
                   {totalPlayTime > 0 && (
                     <div
                       className="flex items-center gap-1.5 text-sm"
-                      style={{ color: "rgba(255,255,255,0.6)" }}
+                      style={{ color: "var(--theme-text-secondary)" }}
                     >
                       <Clock size={14} />{" "}
-                      <strong style={{ color: "rgba(255,255,255,0.9)" }}>
+                      <strong style={{ color: "var(--theme-text-primary)" }}>
                         {formatPlayTime(totalPlayTime)}
                       </strong>
                     </div>
@@ -156,21 +158,21 @@ function UserProfilePage() {
           <div
             className="flex gap-1 p-1 rounded-xl"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.08)",
+              background: "var(--theme-surface-subtle)",
+              border: "1px solid var(--theme-glass-border)",
             }}
           >
             <ProfileTabBtn
               active={tab === "games"}
               icon={<Gamepad2 size={14} />}
-              label="Oyunlar"
+              label={t("users.tabsGames")}
               count={games.length}
               onClick={() => setTab("games")}
             />
             <ProfileTabBtn
               active={tab === "activity"}
               icon={<Activity size={14} />}
-              label="Aktiviteler"
+              label={t("users.tabsActivities")}
               count={activityFeed.data?.total}
               onClick={() => setTab("activity")}
             />
@@ -229,11 +231,11 @@ function ProfileTabBtn({
       style={
         active
           ? {
-              background: "rgba(168,85,247,0.2)",
-              color: "#c084fc",
-              border: "1px solid rgba(168,85,247,0.3)",
+              background: "var(--theme-accent-soft)",
+              color: "var(--theme-accent)",
+              border: "1px solid var(--theme-accent-soft)",
             }
-          : { color: "rgba(255,255,255,0.45)", border: "1px solid transparent" }
+          : { color: "var(--theme-text-muted)", border: "1px solid transparent" }
       }
     >
       {icon}
@@ -242,8 +244,8 @@ function ProfileTabBtn({
         <span
           className="ml-1 text-xs px-1.5 py-0.5 rounded-full"
           style={{
-            background: "rgba(255,255,255,0.08)",
-            color: "rgba(255,255,255,0.4)",
+            background: "var(--theme-surface-strong)",
+            color: "var(--theme-text-muted)",
           }}
         >
           {count}

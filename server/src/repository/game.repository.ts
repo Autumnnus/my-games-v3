@@ -370,6 +370,7 @@ async function getUserAggregateStatistics(userId: string) {
     monthlyCompletions,
   };
 }
+async function getGameStatistics(userId?: string) {
   const matchStage = userId
     ? { $match: { user: new mongoose.Types.ObjectId(userId) } }
     : { $match: {} };

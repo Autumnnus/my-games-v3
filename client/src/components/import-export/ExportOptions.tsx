@@ -61,7 +61,7 @@ export function ExportOptions({
       <div className="flex flex-col gap-2">
         <span
           className="text-sm font-medium"
-          style={{ color: "rgba(255,255,255,0.7)" }}
+          style={{ color: "var(--theme-text-secondary)" }}
         >
           Format
         </span>
@@ -86,13 +86,13 @@ export function ExportOptions({
         <div>
           <p
             className="text-sm font-medium"
-            style={{ color: "rgba(255,255,255,0.75)" }}
+            style={{ color: "var(--theme-text-secondary)" }}
           >
             Ekran görüntüsü URL&apos;leri dahil et
           </p>
           <p
             className="text-xs mt-0.5"
-            style={{ color: "rgba(255,255,255,0.3)" }}
+            style={{ color: "var(--theme-text-muted)" }}
           >
             Dışa aktarılan dosyada screenshot linkleri
           </p>
@@ -108,14 +108,14 @@ export function ExportOptions({
         <div className="flex items-center justify-between">
           <span
             className="text-sm font-medium"
-            style={{ color: "rgba(255,255,255,0.7)" }}
+            style={{ color: "var(--theme-text-secondary)" }}
           >
             Duruma göre filtrele
           </span>
           {hasFilters && (
             <button
               className="text-xs transition-colors hover:underline"
-              style={{ color: "rgba(168,85,247,0.7)" }}
+              style={{ color: "var(--theme-accent)" }}
               onClick={() =>
                 onFiltersChange({ ...filters, status: [], platforms: [] })
               }
@@ -134,12 +134,12 @@ export function ExportOptions({
                 className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={{
                   background: active
-                    ? "rgba(168,85,247,0.2)"
-                    : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${active ? "rgba(168,85,247,0.45)" : "rgba(255,255,255,0.08)"}`,
+                    ? "var(--theme-accent-soft)"
+                    : "var(--theme-surface-subtle)",
+                  border: `1px solid ${active ? "var(--theme-accent-soft)" : "var(--theme-glass-border)"}`,
                   color: active
-                    ? "rgba(168,85,247,0.95)"
-                    : "rgba(255,255,255,0.5)",
+                    ? "var(--theme-accent)"
+                    : "var(--theme-text-muted)",
                 }}
               >
                 {opt.label}
@@ -153,7 +153,7 @@ export function ExportOptions({
       <div className="flex flex-col gap-2">
         <span
           className="text-sm font-medium"
-          style={{ color: "rgba(255,255,255,0.7)" }}
+          style={{ color: "var(--theme-text-secondary)" }}
         >
           Platforma göre filtrele
         </span>
@@ -167,12 +167,12 @@ export function ExportOptions({
                 className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={{
                   background: active
-                    ? "rgba(59,130,246,0.2)"
-                    : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${active ? "rgba(59,130,246,0.45)" : "rgba(255,255,255,0.08)"}`,
+                    ? "var(--theme-mesh-b)"
+                    : "var(--theme-surface-subtle)",
+                  border: `1px solid ${active ? "var(--theme-mesh-b)" : "var(--theme-glass-border)"}`,
                   color: active
-                    ? "rgba(59,130,246,0.95)"
-                    : "rgba(255,255,255,0.5)",
+                    ? "var(--theme-accent-2)"
+                    : "var(--theme-text-muted)",
                 }}
               >
                 {opt.label}
@@ -201,9 +201,9 @@ function FormatButton({
       onClick={onClick}
       className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all"
       style={{
-        background: active ? "rgba(168,85,247,0.15)" : "rgba(255,255,255,0.03)",
-        border: `1.5px solid ${active ? "rgba(168,85,247,0.5)" : "rgba(255,255,255,0.08)"}`,
-        color: active ? "rgba(168,85,247,0.95)" : "rgba(255,255,255,0.45)",
+        background: active ? "var(--theme-accent-soft)" : "var(--theme-surface-subtle)",
+        border: `1.5px solid ${active ? "var(--theme-accent-soft)" : "var(--theme-glass-border)"}`,
+        color: active ? "var(--theme-accent)" : "var(--theme-text-muted)",
       }}
     >
       {icon}

@@ -39,13 +39,13 @@ function GameRow({
       className="w-full flex items-start gap-3 px-3 py-2 rounded-lg transition-colors text-left"
       style={{
         background: selected ? "rgba(168,85,247,0.08)" : "transparent",
-        border: `1px solid ${selected ? "rgba(168,85,247,0.25)" : "transparent"}`,
+        border: `1px solid ${selected ? "var(--theme-accent-soft)" : "transparent"}`,
       }}
     >
       {/* Checkbox */}
       <span
         style={{
-          color: selected ? "#a855f7" : "rgba(255,255,255,0.3)",
+          color: selected ? "var(--theme-accent)" : "var(--theme-text-muted)",
           flexShrink: 0,
         }}
       >
@@ -67,14 +67,14 @@ function GameRow({
       <div className="flex-1 min-w-0">
         <p
           className="text-sm truncate"
-          style={{ color: "rgba(255,255,255,0.85)" }}
+          style={{ color: "var(--theme-text-secondary)" }}
         >
           {item.title}
         </p>
         {hasConflict && (
           <div
             className="mt-1.5 text-xs flex flex-wrap items-center gap-x-2 gap-y-1"
-            style={{ color: "rgba(255,255,255,0.55)" }}
+            style={{ color: "var(--theme-text-muted)" }}
           >
             <span>
               Mevcut: {formatPlayTime(item.existingPlaytimeMinutes ?? 0)}
@@ -89,7 +89,7 @@ function GameRow({
 
       {/* Playtime + conflict */}
       <div className="flex flex-col items-end gap-0.5 shrink-0">
-        <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+        <span className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
           {item.playtimeMinutes > 0
             ? formatPlayTime(item.playtimeMinutes)
             : t('steamImport.zeroPlaytime')}
@@ -291,11 +291,11 @@ export function SteamImportModal({ open, onClose }: Props) {
           {/* Stats */}
           <div
             className="flex items-center gap-3 text-sm shrink-0"
-            style={{ color: "rgba(255,255,255,0.5)" }}
+            style={{ color: "var(--theme-text-muted)" }}
           >
             <span>{library?.length ?? 0} oyun</span>
             <span>·</span>
-            <span style={{ color: "#a855f7" }}>{selected.size} seçili</span>
+            <span style={{ color: "var(--theme-accent)" }}>{selected.size} seçili</span>
             <span>·</span>
             <span>{notAddedCount} eklenmemiş</span>
             {conflictCount > 0 && (
@@ -317,11 +317,11 @@ export function SteamImportModal({ open, onClose }: Props) {
               <div className="flex flex-col items-start">
                 <span
                   className="text-xs mb-0.5"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  style={{ color: "var(--theme-text-muted)" }}
                 >
                   Görünüm filtreleri
                 </span>
-                <span style={{ color: "rgba(255,255,255,0.85)" }}>
+                <span style={{ color: "var(--theme-text-secondary)" }}>
                   {showNotAdded ? "Eklenmemişler" : ""}
                   {showNotAdded && showConflicts ? " + " : ""}
                   {showConflicts ? "Çakışanlar" : ""}
@@ -334,7 +334,7 @@ export function SteamImportModal({ open, onClose }: Props) {
               <ChevronDown
                 size={14}
                 style={{
-                  color: "rgba(255,255,255,0.4)",
+                  color: "var(--theme-text-muted)",
                   transform: showViewFilters ? "rotate(180deg)" : "none",
                   transition: "transform 0.2s",
                 }}
@@ -347,10 +347,10 @@ export function SteamImportModal({ open, onClose }: Props) {
                   className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors border"
                   style={{
                     background: showNotAdded
-                      ? "rgba(168,85,247,0.16)"
+                      ? "var(--theme-accent-soft)"
                       : "transparent",
                     borderColor: showNotAdded
-                      ? "rgba(168,85,247,0.45)"
+                      ? "var(--theme-accent-soft)"
                       : "transparent",
                   }}
                 >
@@ -358,8 +358,8 @@ export function SteamImportModal({ open, onClose }: Props) {
                     className="text-sm"
                     style={{
                       color: showNotAdded
-                        ? "rgba(255,255,255,0.97)"
-                        : "rgba(255,255,255,0.85)",
+                        ? "var(--theme-text-primary)"
+                        : "var(--theme-text-secondary)",
                     }}
                   >
                     Eklenmemişler
@@ -368,8 +368,8 @@ export function SteamImportModal({ open, onClose }: Props) {
                     className="text-xs font-medium"
                     style={{
                       color: showNotAdded
-                        ? "#c084fc"
-                        : "rgba(255,255,255,0.45)",
+                        ? "var(--theme-accent)"
+                        : "var(--theme-text-muted)",
                     }}
                   >
                     {notAddedCount}
@@ -391,8 +391,8 @@ export function SteamImportModal({ open, onClose }: Props) {
                     className="text-sm"
                     style={{
                       color: showConflicts
-                        ? "rgba(255,255,255,0.97)"
-                        : "rgba(255,255,255,0.85)",
+                        ? "var(--theme-text-primary)"
+                        : "var(--theme-text-secondary)",
                     }}
                   >
                     Çakışanlar
@@ -402,7 +402,7 @@ export function SteamImportModal({ open, onClose }: Props) {
                     style={{
                       color: showConflicts
                         ? "rgba(251,146,60,0.96)"
-                        : "rgba(255,255,255,0.45)",
+                        : "var(--theme-text-muted)",
                     }}
                   >
                     {conflictCount}
@@ -424,8 +424,8 @@ export function SteamImportModal({ open, onClose }: Props) {
                     className="text-sm"
                     style={{
                       color: showAlreadyAdded
-                        ? "rgba(255,255,255,0.97)"
-                        : "rgba(255,255,255,0.85)",
+                        ? "var(--theme-text-primary)"
+                        : "var(--theme-text-secondary)",
                     }}
                   >
                     Ekli olanlar (gizle/göster)
@@ -435,7 +435,7 @@ export function SteamImportModal({ open, onClose }: Props) {
                     style={{
                       color: showAlreadyAdded
                         ? "rgba(74,222,128,0.95)"
-                        : "rgba(255,255,255,0.45)",
+                        : "var(--theme-text-muted)",
                     }}
                   >
                     {alreadyAddedCount}
@@ -455,18 +455,18 @@ export function SteamImportModal({ open, onClose }: Props) {
                 <div className="flex flex-col items-start">
                   <span
                     className="text-xs mb-0.5"
-                    style={{ color: "rgba(255,255,255,0.4)" }}
+                    style={{ color: "var(--theme-text-muted)" }}
                   >
                     Çakışma çözümü
                   </span>
-                  <span style={{ color: "rgba(255,255,255,0.85)" }}>
+                  <span style={{ color: "var(--theme-text-secondary)" }}>
                     {selectedConflictOption.label}
                   </span>
                 </div>
                 <ChevronDown
                   size={14}
                   style={{
-                    color: "rgba(255,255,255,0.4)",
+                    color: "var(--theme-text-muted)",
                     transform: showConflictPicker ? "rotate(180deg)" : "none",
                     transition: "transform 0.2s",
                   }}
@@ -493,15 +493,15 @@ export function SteamImportModal({ open, onClose }: Props) {
                           style={{
                             color:
                               conflictResolution === opt.value
-                                ? "#a855f7"
-                                : "rgba(255,255,255,0.85)",
+                                ? "var(--theme-accent)"
+                                : "var(--theme-text-secondary)",
                           }}
                         >
                           {opt.label}
                         </span>
                         <span
                           className="text-xs mt-0.5"
-                          style={{ color: "rgba(255,255,255,0.4)" }}
+                          style={{ color: "var(--theme-text-muted)" }}
                         >
                           {opt.desc}
                         </span>
@@ -534,7 +534,7 @@ export function SteamImportModal({ open, onClose }: Props) {
             {filtered.length === 0 && (
               <p
                 className="text-center py-8 text-sm"
-                style={{ color: "rgba(255,255,255,0.4)" }}
+                style={{ color: "var(--theme-text-muted)" }}
               >
                 Oyun bulunamadı
               </p>

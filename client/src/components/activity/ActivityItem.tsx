@@ -42,8 +42,8 @@ export function ActivityItem({ activity, index }: Props) {
       transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.3 }}
       className="group relative flex gap-3 p-4 rounded-xl border transition-all duration-200 hover:border-white/20"
       style={{
-        background: "rgba(255,255,255,0.03)",
-        borderColor: "rgba(255,255,255,0.07)",
+        background: "var(--theme-surface-subtle)",
+        borderColor: "var(--theme-glass-border)",
       }}
     >
       {/* Left color strip */}
@@ -69,7 +69,7 @@ export function ActivityItem({ activity, index }: Props) {
             to="/users/$id"
             params={{ id: user._id }}
             className="font-semibold hover:text-white transition-colors"
-            style={{ color: "rgba(255,255,255,0.9)" }}
+            style={{ color: "var(--theme-text-primary)" }}
           >
             {user.name}
           </Link>
@@ -77,9 +77,9 @@ export function ActivityItem({ activity, index }: Props) {
           <span
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
             style={{
-              background: config?.bgColor ?? "rgba(255,255,255,0.05)",
-              border: `1px solid ${config?.borderColor ?? "rgba(255,255,255,0.1)"}`,
-              color: config?.rawColor ?? "rgba(255,255,255,0.6)",
+              background: config?.bgColor ?? "var(--theme-surface-subtle)",
+              border: `1px solid ${config?.borderColor ?? "var(--theme-glass-border)"}`,
+              color: config?.rawColor ?? "var(--theme-text-secondary)",
             }}
           >
             <span>{config?.icon}</span>
@@ -88,13 +88,13 @@ export function ActivityItem({ activity, index }: Props) {
 
           {game && (
             <>
-              <span style={{ color: "rgba(255,255,255,0.3)" }}>·</span>
+              <span style={{ color: "var(--theme-text-muted)" }}>·</span>
               {entryId ? (
                 <Link
                   to="/games/$id"
                   params={{ id: entryId }}
                   className="font-medium truncate max-w-[200px] text-sm hover:text-white transition-colors"
-                  style={{ color: "rgba(255,255,255,0.75)" }}
+                  style={{ color: "var(--theme-text-secondary)" }}
                   title={game.title}
                 >
                   {game.title}
@@ -102,7 +102,7 @@ export function ActivityItem({ activity, index }: Props) {
               ) : (
                 <span
                   className="font-medium truncate max-w-[200px] text-sm"
-                  style={{ color: "rgba(255,255,255,0.75)" }}
+                  style={{ color: "var(--theme-text-secondary)" }}
                   title={game.title}
                 >
                   {game.title}
@@ -116,7 +116,7 @@ export function ActivityItem({ activity, index }: Props) {
           <p
             className="mt-2 text-sm italic line-clamp-2 pl-2 border-l-2"
             style={{
-              color: "rgba(255,255,255,0.5)",
+              color: "var(--theme-text-muted)",
               borderColor: (config?.rawColor ?? "#888") + "66",
             }}
           >
@@ -157,7 +157,7 @@ export function ActivityItem({ activity, index }: Props) {
                   background:
                     i < activity.metadata.rating!
                       ? "#f59e0b"
-                      : "rgba(255,255,255,0.1)",
+                      : "var(--theme-glass-border)",
                 }}
               />
             ))}
@@ -168,7 +168,7 @@ export function ActivityItem({ activity, index }: Props) {
         )}
 
         {activity.type === "milestone_playtime" && activity.metadata.hours && (
-          <p className="mt-1.5 text-xs font-medium" style={{ color: config?.rawColor ?? "rgba(255,255,255,0.6)" }}>
+          <p className="mt-1.5 text-xs font-medium" style={{ color: config?.rawColor ?? "var(--theme-text-secondary)" }}>
             {activity.metadata.hours >= 1000
               ? `${(activity.metadata.hours / 1000).toFixed(1)}k`
               : activity.metadata.hours} {t("activity.hoursAbbrev")}
@@ -176,13 +176,13 @@ export function ActivityItem({ activity, index }: Props) {
         )}
 
         <div className="mt-1.5 flex items-center gap-1.5">
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.28)" }}>
+          <p className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
             {timeAgo(displayTime)}
           </p>
           {wasEdited && (
             <span
               className="inline-flex items-center gap-0.5 text-xs"
-              style={{ color: "rgba(255,255,255,0.2)" }}
+              style={{ color: "var(--theme-text-muted)" }}
               title="Bu aktivite güncellendi"
             >
               <Pencil size={9} />

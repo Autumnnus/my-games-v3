@@ -152,7 +152,7 @@ export function AddScreenshotModal({
             key={tabKey}
             onClick={() => setTab(tabKey)}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm rounded-xl transition-all ${tab === tabKey ? "glass-btn-primary" : ""}`}
-            style={{ color: tab === tabKey ? "white" : "rgba(255,255,255,0.5)" }}
+            style={{ color: tab === tabKey ? "white" : "var(--theme-text-muted)" }}
           >
             {tabKey === "image" ? (
               <Upload size={14} />
@@ -184,17 +184,17 @@ export function AddScreenshotModal({
               onClick={() => fileRef.current?.click()}
               className={`border-2 border-dashed rounded-2xl p-10 flex flex-col items-center gap-3 cursor-pointer transition-colors ${dragging ? "border-purple-500/60 bg-purple-500/10" : "border-white/15 hover:border-white/25"}`}
             >
-              <Upload size={28} style={{ color: "rgba(255,255,255,0.3)" }} />
+              <Upload size={28} style={{ color: "var(--theme-text-muted)" }} />
               <div className="text-center">
                 <p
                   className="text-sm font-medium"
-                  style={{ color: "rgba(255,255,255,0.7)" }}
+                  style={{ color: "var(--theme-text-secondary)" }}
                 >
                   Dosya sürükle veya tıkla
                 </p>
                 <p
                   className="text-xs mt-1"
-                  style={{ color: "rgba(255,255,255,0.35)" }}
+                  style={{ color: "var(--theme-text-muted)" }}
                 >
                   PNG, JPG, GIF, WebP — maks 10MB
                 </p>
@@ -219,10 +219,10 @@ export function AddScreenshotModal({
               onClick={() => fileRef.current?.click()}
               className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-colors ${dragging ? "border-purple-500/60 bg-purple-500/10" : "border-white/15 hover:border-white/25"}`}
             >
-              <Upload size={18} style={{ color: "rgba(255,255,255,0.3)" }} />
+              <Upload size={18} style={{ color: "var(--theme-text-muted)" }} />
               <p
                 className="text-xs"
-                style={{ color: "rgba(255,255,255,0.35)" }}
+                style={{ color: "var(--theme-text-muted)" }}
               >
                 Daha fazla eklemek için sürükle veya tıkla
               </p>
@@ -258,7 +258,7 @@ export function AddScreenshotModal({
                   <button
                     onClick={() => removeFile(index)}
                     className="p-1.5 rounded-lg hover:bg-white/10 flex-shrink-0 transition-colors"
-                    style={{ color: "rgba(255,255,255,0.5)" }}
+                    style={{ color: "var(--theme-text-muted)" }}
                   >
                     <X size={14} />
                   </button>
@@ -300,7 +300,7 @@ export function AddScreenshotModal({
                     <div className="w-12 h-12 flex items-center justify-center rounded-lg flex-shrink-0 bg-white/5">
                       <LinkIcon
                         size={16}
-                        style={{ color: "rgba(255,255,255,0.4)" }}
+                        style={{ color: "var(--theme-text-muted)" }}
                       />
                     </div>
                   )}
@@ -312,7 +312,7 @@ export function AddScreenshotModal({
                   <button
                     onClick={() => removeUrl(index)}
                     className="p-1.5 rounded-lg hover:bg-white/10 flex-shrink-0 transition-colors"
-                    style={{ color: "rgba(255,255,255,0.5)" }}
+                    style={{ color: "var(--theme-text-muted)" }}
                   >
                     <X size={14} />
                   </button>

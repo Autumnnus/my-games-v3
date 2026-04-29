@@ -29,10 +29,10 @@ export function DeleteAllScreenshotsConfirm({
       size="sm"
     >
       <div className="flex flex-col gap-5">
-        <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
+        <p className="text-sm" style={{ color: "var(--theme-text-secondary)" }}>
           <span
             className="font-semibold"
-            style={{ color: "rgba(255,255,255,0.9)" }}
+            style={{ color: "var(--theme-text-primary)" }}
           >
             {gameName}
           </span>{" "}

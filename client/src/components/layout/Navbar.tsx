@@ -7,6 +7,7 @@ import {
   Menu,
   X,
   BookOpen,
+  Heart,
   Image,
   Users,
   Activity,
@@ -25,6 +26,8 @@ import { useUnreadCount } from "@/hooks/useNotifications";
 
 const NAV_LINKS_AUTHED = [
   { to: "/games", labelKey: "navbar.library", icon: BookOpen },
+  { to: "/wishlist", labelKey: "navbar.wishlist", icon: Heart },
+  { to: "/statistics", labelKey: "navbar.statistics", icon: BarChart3 },
   { to: "/screenshots", labelKey: "navbar.screenshots", icon: Image },
   { to: "/social", labelKey: "navbar.social", icon: Activity },
   { to: "/users", labelKey: "navbar.users", icon: Users },
@@ -176,7 +179,7 @@ export function Navbar() {
                           WebkitBackdropFilter: "blur(60px) saturate(220%)",
                           border: "1px solid rgba(255, 255, 255, 0.12)",
                           borderRadius: "14px",
-                          boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08), 0 25px 60px rgba(0,0,0,0.4)",
+                          boxShadow: "inset 0 1px 0 var(--theme-glass-border), 0 25px 60px rgba(0,0,0,0.4)",
                         }}
                       >
                         <Link

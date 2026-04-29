@@ -25,7 +25,7 @@ export const ACTIVITY_CONFIG: Record<ActivityType, ActivityConfigEntry> = {
   game_added: {
     icon: <Gamepad2 size={13} />,
     rawColor: "#60a5fa",
-    bgColor: "rgba(59,130,246,0.12)",
+    bgColor: "var(--theme-mesh-b)",
     borderColor: "rgba(59,130,246,0.25)",
     labelKey: "activity.labels.game_added",
   },
@@ -47,7 +47,7 @@ export const ACTIVITY_CONFIG: Record<ActivityType, ActivityConfigEntry> = {
     icon: <ArrowRight size={13} />,
     rawColor: "#c084fc",
     bgColor: "rgba(168,85,247,0.12)",
-    borderColor: "rgba(168,85,247,0.25)",
+    borderColor: "var(--theme-accent-soft)",
     labelKey: "activity.labels.status_changed",
   },
   game_rated: {

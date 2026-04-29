@@ -86,7 +86,7 @@ export function AddGameModal({
             exit="exit"
             className="flex flex-col gap-4"
           >
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+            <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
               IGDB'de ara, Steam kütüphanenden seç veya elle gir.
             </p>
             <IGDBSearchCombobox onSelect={handleIGDBSelect} />
@@ -106,7 +106,7 @@ export function AddGameModal({
               <div className="flex-1 border-t border-white/10" />
               <span
                 className="text-xs"
-                style={{ color: "rgba(255,255,255,0.3)" }}
+                style={{ color: "var(--theme-text-muted)" }}
               >
                 veya
               </span>
@@ -149,13 +149,13 @@ export function AddGameModal({
                   <div>
                     <p
                       className="text-sm font-medium"
-                      style={{ color: "rgba(255,255,255,0.9)" }}
+                      style={{ color: "var(--theme-text-primary)" }}
                     >
                       {selectedIGDB.name}
                     </p>
                     <p
                       className="text-xs"
-                      style={{ color: "rgba(255,255,255,0.4)" }}
+                      style={{ color: "var(--theme-text-muted)" }}
                     >
                       IGDB seçildi
                     </p>

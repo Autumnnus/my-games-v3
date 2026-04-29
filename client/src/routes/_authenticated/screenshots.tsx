@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Image } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ScreenshotCard } from "@/components/screenshots/ScreenshotCard";
 import { ScreenshotLightbox } from "@/components/screenshots/ScreenshotLightbox";
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/screenshots")({
 });
 
 function ScreenshotsPage() {
+  const { t } = useTranslation();
   const userId = useAuthStore((s) => s.user?._id ?? "");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { data: screenshots = [], isLoading } = useUserScreenshots(userId);
@@ -32,19 +34,19 @@ function ScreenshotsPage() {
           <div className="flex items-center gap-3">
             <h1
               className="text-2xl font-bold"
-              style={{ color: "rgba(255,255,255,0.95)" }}
+              style={{ color: "var(--theme-text-primary)" }}
             >
-              Ekran Görüntülerim
+              {t("pages.screenshots.title")}
             </h1>
             {!isLoading && (
               <span
                 className="text-sm px-2 py-0.5 rounded-full"
                 style={{
-                  background: "rgba(255,255,255,0.08)",
-                  color: "rgba(255,255,255,0.6)",
+                  background: "var(--theme-surface-strong)",
+                  color: "var(--theme-text-secondary)",
                 }}
               >
-                {screenshots.length} adet
+                {t("pages.screenshots.count", { count: screenshots.length })}
               </span>
             )}
           </div>
@@ -63,8 +65,8 @@ function ScreenshotsPage() {
           ) : screenshots.length === 0 ? (
             <EmptyState
               icon={<Image size={28} />}
-              title="Ekran görüntüsü yok"
-              description="Oyun sayfalarından ekran görüntüsü ekleyebilirsin."
+              title={t("pages.screenshots.emptyTitle")}
+              description={t("pages.screenshots.emptyDesc")}
             />
           ) : (
             <motion.div

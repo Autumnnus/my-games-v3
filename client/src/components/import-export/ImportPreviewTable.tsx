@@ -6,7 +6,7 @@ import type { ImportField } from "@/api/importExport";
 
 const STATUS_OPTIONS_KEYS = [
   { value: "completed", labelKey: "games.status.completed", color: "#22c55e" },
-  { value: "activePlaying", labelKey: "games.status.activePlaying", color: "#3b82f6" },
+  { value: "activePlaying", labelKey: "games.status.activePlaying", color: "var(--theme-accent-2)" },
   { value: "toBeCompleted", labelKey: "games.status.backlog", color: "#f59e0b" },
   { value: "abandoned", labelKey: "games.status.abandoned", color: "#ef4444" },
 ];
@@ -33,7 +33,7 @@ function getMappedValue(
 function StatusBadge({ value }: { value: unknown }) {
   const { t } = useTranslation();
   const status = STATUS_OPTIONS_KEYS.find((o) => o.value === String(value));
-  if (!status) return <span style={{ color: "rgba(255,255,255,0.3)" }}>—</span>;
+  if (!status) return <span style={{ color: "var(--theme-text-muted)" }}>—</span>;
   return (
     <span
       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
@@ -97,8 +97,8 @@ function GamePreviewCard({
       exit={{ opacity: 0, scale: 0.95 }}
       className="flex gap-4 p-4 rounded-xl border transition-all cursor-default"
       style={{
-        background: "rgba(255,255,255,0.03)",
-        borderColor: "rgba(255,255,255,0.06)",
+        background: "var(--theme-surface-subtle)",
+        borderColor: "var(--theme-glass-border)",
       }}
     >
       {/* Cover */}
@@ -116,7 +116,7 @@ function GamePreviewCard({
         ) : (
           <div
             className="w-full h-full flex items-center justify-center text-xl"
-            style={{ background: "rgba(255,255,255,0.05)" }}
+            style={{ background: "var(--theme-surface-subtle)" }}
           >
             🎮
           </div>
@@ -129,8 +129,8 @@ function GamePreviewCard({
           <input
             className="text-sm font-semibold bg-transparent border-b px-1 py-0.5 outline-none"
             style={{
-              borderColor: "rgba(255,255,255,0.2)",
-              color: "rgba(255,255,255,0.9)",
+              borderColor: "var(--theme-text-muted)",
+              color: "var(--theme-text-primary)",
             }}
             value={editValue}
             autoFocus
@@ -141,7 +141,7 @@ function GamePreviewCard({
         ) : (
           <p
             className="text-sm font-semibold truncate cursor-pointer hover:text-white transition-colors"
-            style={{ color: "rgba(255,255,255,0.9)" }}
+            style={{ color: "var(--theme-text-primary)" }}
             onClick={() => startEdit("name", mapped.name)}
             title={name}
           >
@@ -154,8 +154,8 @@ function GamePreviewCard({
             <select
               className="text-xs px-2 py-1 rounded-lg outline-none"
               style={{
-                background: "rgba(255,255,255,0.08)",
-                color: "rgba(255,255,255,0.9)",
+                background: "var(--theme-surface-strong)",
+                color: "var(--theme-text-primary)",
               }}
               autoFocus
               value={String(status ?? "")}
@@ -186,7 +186,7 @@ function GamePreviewCard({
               className="text-xs px-2 py-0.5 rounded-full"
               style={{
                 background: "rgba(124,58,237,0.15)",
-                color: "rgba(168,85,247,0.9)",
+                color: "var(--theme-accent)",
               }}
             >
               {platform}
@@ -198,8 +198,8 @@ function GamePreviewCard({
               key={g}
               className="text-xs px-2 py-0.5 rounded-full"
               style={{
-                background: "rgba(255,255,255,0.05)",
-                color: "rgba(255,255,255,0.4)",
+                background: "var(--theme-surface-subtle)",
+                color: "var(--theme-text-muted)",
               }}
             >
               {g}
@@ -211,13 +211,13 @@ function GamePreviewCard({
           <button
             onClick={() => startEdit("rating", rating)}
             className="flex items-center gap-1 text-xs"
-            style={{ color: "rgba(255,255,255,0.5)" }}
+            style={{ color: "var(--theme-text-muted)" }}
           >
             <Star size={12} style={{ color: "#f59e0b" }} />
             {editingField === "rating" ? (
               <input
                 className="w-10 text-xs bg-transparent border-b outline-none px-1"
-                style={{ borderColor: "rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.9)" }}
+                style={{ borderColor: "var(--theme-text-muted)", color: "var(--theme-text-primary)" }}
                 type="number"
                 min={0}
                 max={10}
@@ -228,7 +228,7 @@ function GamePreviewCard({
                 onKeyDown={(e) => e.key === "Enter" && commitEdit("rating")}
               />
             ) : (
-              <span style={{ color: rating ? "#f59e0b" : "rgba(255,255,255,0.3)" }}>
+              <span style={{ color: rating ? "#f59e0b" : "var(--theme-text-muted)" }}>
                 {rating ? `${rating}/10` : "—"}
               </span>
             )}
@@ -237,13 +237,13 @@ function GamePreviewCard({
           <button
             onClick={() => startEdit("playTime", playTime)}
             className="flex items-center gap-1 text-xs"
-            style={{ color: "rgba(255,255,255,0.5)" }}
+            style={{ color: "var(--theme-text-muted)" }}
           >
             <Clock size={12} />
             {editingField === "playTime" ? (
               <input
                 className="w-14 text-xs bg-transparent border-b outline-none px-1"
-                style={{ borderColor: "rgba(255,255,255,0.2)", color: "rgba(255,255,255,0.9)" }}
+                style={{ borderColor: "var(--theme-text-muted)", color: "var(--theme-text-primary)" }}
                 type="number"
                 min={0}
                 value={editValue}
@@ -260,7 +260,7 @@ function GamePreviewCard({
           {screenshots?.length ? (
             <span
               className="flex items-center gap-1 text-xs"
-              style={{ color: "rgba(255,255,255,0.3)" }}
+              style={{ color: "var(--theme-text-muted)" }}
             >
               <Gamepad2 size={12} />
               {screenshots.length} {t("import.screenshots")}
@@ -271,7 +271,7 @@ function GamePreviewCard({
         {(mapped.notes as string) && (
           <p
             className="text-xs line-clamp-1"
-            style={{ color: "rgba(255,255,255,0.3)" }}
+            style={{ color: "var(--theme-text-muted)" }}
           >
             {(mapped.notes as string).slice(0, 100)}
             {(mapped.notes as string).length > 100 ? "..." : ""}
@@ -283,8 +283,8 @@ function GamePreviewCard({
         <span
           className="flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold"
           style={{
-            background: "rgba(255,255,255,0.06)",
-            color: "rgba(255,255,255,0.3)",
+            background: "var(--theme-surface-strong)",
+            color: "var(--theme-text-muted)",
           }}
         >
           {index + 1}
@@ -309,7 +309,7 @@ export function ImportPreviewTable({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+        <p className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
           {t("import.rowsPreview", { count: previewRows.length, total: totalRows })}
           {ignoredCount > 0 && (
             <span> • {ignoredCount} {t("import.ignoredColumns").toLowerCase()}</span>
@@ -317,7 +317,7 @@ export function ImportPreviewTable({
         </p>
         <p
           className="text-xs"
-          style={{ color: "rgba(255,255,255,0.25)" }}
+          style={{ color: "var(--theme-text-muted)" }}
         >
           {t("import.clickToEdit")}
         </p>
@@ -338,8 +338,8 @@ export function ImportPreviewTable({
 
         {previewRows.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 gap-2">
-            <XCircle size={32} style={{ color: "rgba(255,255,255,0.2)" }} />
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
+            <XCircle size={32} style={{ color: "var(--theme-text-muted)" }} />
+            <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
               {t("import.noMatchedRows")}
             </p>
           </div>

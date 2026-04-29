@@ -92,6 +92,16 @@ export function getThemeVariables(palette: DynamicThemePalette) {
     "--theme-mesh-a": palette.meshA,
     "--theme-mesh-b": palette.meshB,
     "--theme-focus-ring": palette.focusRing,
+    "--theme-surface-subtle": withAlpha(palette.accent, 0.07),
+    "--theme-surface-strong": withAlpha(palette.accent, 0.12),
+    "--theme-shadow": withAlpha(palette.accent, 0.18),
+    "--theme-text-inverse": "rgba(255, 255, 255, 0.96)",
+    "--theme-danger-soft": "rgba(239, 68, 68, 0.14)",
+    "--theme-danger": "#ef4444",
+    "--theme-warning-soft": "rgba(245, 158, 11, 0.14)",
+    "--theme-warning": "#f59e0b",
+    "--theme-success-soft": "rgba(34, 197, 94, 0.14)",
+    "--theme-success": "#22c55e",
   } satisfies Record<string, string>;
 }
 

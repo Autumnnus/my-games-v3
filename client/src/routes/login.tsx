@@ -46,20 +46,20 @@ function LoginPage() {
         <div className="flex flex-col items-center gap-3 mb-8">
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #a855f7, #3b82f6)" }}
+            style={{ background: "linear-gradient(135deg, var(--theme-accent), var(--theme-accent-2))" }}
           >
             <Gamepad2 size={24} className="text-white" />
           </div>
           <div className="text-center">
             <h1
               className="text-2xl font-bold"
-              style={{ color: "rgba(255,255,255,0.95)" }}
+              style={{ color: "var(--theme-text-primary)" }}
             >
               {t('auth.signInTitle')}
             </h1>
             <p
               className="text-sm mt-1"
-              style={{ color: "rgba(255,255,255,0.5)" }}
+              style={{ color: "var(--theme-text-muted)" }}
             >
               {t('auth.welcomeBack')}
             </p>
@@ -91,7 +91,7 @@ function LoginPage() {
               <Link
                 to="/forgot-password"
                 className="text-xs hover:underline"
-                style={{ color: "rgba(168,85,247,0.8)" }}
+                style={{ color: "var(--theme-accent)" }}
               >
                 {t('auth.forgotPassword')}
               </Link>
@@ -105,10 +105,10 @@ function LoginPage() {
             </GlassButton>
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" style={{ borderColor: "rgba(255,255,255,0.1)" }} />
+                <div className="w-full border-t" style={{ borderColor: "var(--theme-glass-border)" }} />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="px-2" style={{ color: "rgba(255,255,255,0.3)" }}>
+                <span className="px-2" style={{ color: "var(--theme-text-muted)" }}>
                   {t('auth.or')}
                 </span>
               </div>
@@ -125,13 +125,13 @@ function LoginPage() {
             </GlassButton>
             <p
               className="text-center text-xs"
-              style={{ color: "rgba(255,255,255,0.4)" }}
+              style={{ color: "var(--theme-text-muted)" }}
             >
               {t('auth.noAccount')}{" "}
               <Link
                 to="/register"
                 className="underline hover:opacity-80 transition-opacity"
-                style={{ color: "#a855f7" }}
+                style={{ color: "var(--theme-accent)" }}
               >
                 {t('auth.signUp')}
               </Link>

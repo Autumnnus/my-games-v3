@@ -36,10 +36,10 @@ export function ImportProgress({
     <div className="flex flex-col gap-5 py-4">
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between text-xs">
-          <span style={{ color: "rgba(255,255,255,0.6)" }}>
+          <span style={{ color: "var(--theme-text-secondary)" }}>
             {STATUS_LABELS[status]}
           </span>
-          <span style={{ color: "rgba(255,255,255,0.4)" }}>
+          <span style={{ color: "var(--theme-text-muted)" }}>
             {current} / {total} ({pct}%)
           </span>
         </div>
@@ -47,7 +47,7 @@ export function ImportProgress({
         {/* Progress bar */}
         <div
           className="w-full h-2 rounded-full overflow-hidden"
-          style={{ background: "rgba(255,255,255,0.08)" }}
+          style={{ background: "var(--theme-surface-strong)" }}
         >
           <div
             className="h-full rounded-full transition-all duration-500 ease-out"
@@ -56,7 +56,7 @@ export function ImportProgress({
               background:
                 status === "error"
                   ? "rgba(239,68,68,0.7)"
-                  : "linear-gradient(90deg, rgba(168,85,247,0.8), rgba(59,130,246,0.8))",
+                  : "linear-gradient(90deg, var(--theme-accent), var(--theme-accent-2))",
             }}
           />
         </div>
@@ -68,7 +68,7 @@ export function ImportProgress({
           <LoadingSpinner size="sm" />
           <span
             className="truncate"
-            style={{ color: "rgba(255,255,255,0.4)" }}
+            style={{ color: "var(--theme-text-muted)" }}
             title={currentItem}
           >
             {currentItem}

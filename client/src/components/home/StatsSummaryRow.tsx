@@ -21,7 +21,7 @@ export function StatsSummaryRow({
       icon: Gamepad2,
       label: "Toplam Oyun",
       value: user.gameSize,
-      color: "#a855f7",
+      color: "var(--theme-accent)",
     },
     {
       icon: Trophy,
@@ -33,7 +33,7 @@ export function StatsSummaryRow({
       icon: Clock,
       label: "Toplam Süre",
       value: formatPlayTime(totalPlayTime),
-      color: "#3b82f6",
+      color: "var(--theme-accent-2)",
     },
     {
       icon: Star,
@@ -65,14 +65,14 @@ export function StatsSummaryRow({
               </div>
               <span
                 className="text-xs"
-                style={{ color: "rgba(255,255,255,0.5)" }}
+                style={{ color: "var(--theme-text-muted)" }}
               >
                 {label}
               </span>
             </div>
             <span
               className="text-2xl font-bold"
-              style={{ color: "rgba(255,255,255,0.95)" }}
+              style={{ color: "var(--theme-text-primary)" }}
             >
               {value}
             </span>

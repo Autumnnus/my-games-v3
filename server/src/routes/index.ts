@@ -12,6 +12,7 @@ import steamSyncRoutes from "./steam-sync.routes";
 import notificationRoutes from "./notification.routes";
 import importRoutes from "./import.routes";
 import exportRoutes from "./export.routes";
+import wishlistRoutes from "./wishlist.routes";
 
 const api = new Hono<{ Variables: AppVariables }>();
 
@@ -27,5 +28,6 @@ api.route("/steam-sync", steamSyncRoutes);
 api.route("/notifications", notificationRoutes);
 api.route("/import", importRoutes);
 api.route("/export", exportRoutes);
+api.route("/wishlist", wishlistRoutes);
 
 export default api;

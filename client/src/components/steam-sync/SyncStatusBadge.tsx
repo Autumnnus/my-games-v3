@@ -40,9 +40,9 @@ const CONFIG: Record<
   excluded: {
     label: "Excluded",
     icon: "🚫",
-    color: "rgba(255,255,255,0.4)",
-    bg: "rgba(255,255,255,0.05)",
-    border: "rgba(255,255,255,0.1)",
+    color: "var(--theme-text-muted)",
+    bg: "var(--theme-surface-subtle)",
+    border: "var(--theme-glass-border)",
   },
 };
 

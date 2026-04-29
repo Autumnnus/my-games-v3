@@ -213,13 +213,13 @@ export function ImportExportModal({
         <div className="flex items-center justify-between mb-6">
           <h2
             className="text-lg font-semibold"
-            style={{ color: "rgba(255,255,255,0.95)" }}
+            style={{ color: "var(--theme-text-primary)" }}
           >
             {t("import.titleImportExport")}
           </h2>
           <div
             className="flex gap-1 p-1 rounded-xl"
-            style={{ background: "rgba(255,255,255,0.05)" }}
+            style={{ background: "var(--theme-surface-subtle)" }}
           >
             <TabBtn
               active={activeTab === "import"}
@@ -242,7 +242,7 @@ export function ImportExportModal({
         {/* Content */}
         <div
           className="min-h-64 max-h-96 overflow-y-auto pr-1"
-          style={{ color: "rgba(255,255,255,0.8)" }}
+          style={{ color: "var(--theme-text-secondary)" }}
         >
           <AnimatePresence mode="wait">
             {activeTab === "import" && (
@@ -257,7 +257,7 @@ export function ImportExportModal({
                   <div className="flex flex-col gap-4">
                     <p
                       className="text-sm"
-                      style={{ color: "rgba(255,255,255,0.5)" }}
+                      style={{ color: "var(--theme-text-muted)" }}
                     >
                       {t("import.step1Hint")}
                     </p>
@@ -270,7 +270,7 @@ export function ImportExportModal({
                         <LoadingSpinner size="sm" />
                         <span
                           className="text-xs"
-                          style={{ color: "rgba(255,255,255,0.4)" }}
+                          style={{ color: "var(--theme-text-muted)" }}
                         >
                           {t("import.fileProcessing")}
                         </span>
@@ -284,13 +284,13 @@ export function ImportExportModal({
                     <div className="flex items-center justify-between">
                       <p
                         className="text-sm"
-                        style={{ color: "rgba(255,255,255,0.5)" }}
+                        style={{ color: "var(--theme-text-muted)" }}
                       >
                         {t("import.matchColumns")}
                       </p>
                       <div
                         className="flex items-center gap-3 text-xs"
-                        style={{ color: "rgba(255,255,255,0.35)" }}
+                        style={{ color: "var(--theme-text-muted)" }}
                       >
                         <span>{importState.parseResult.totalRows} {t("import.rows")}</span>
                         <span>•</span>
@@ -315,14 +315,14 @@ export function ImportExportModal({
                     <div className="flex items-center justify-between">
                       <p
                         className="text-sm"
-                        style={{ color: "rgba(255,255,255,0.5)" }}
+                        style={{ color: "var(--theme-text-muted)" }}
                       >
                         {t("import.checkData")}
                       </p>
                       <div className="flex items-center gap-3">
                         <span
                           className="text-xs"
-                          style={{ color: "rgba(255,255,255,0.35)" }}
+                          style={{ color: "var(--theme-text-muted)" }}
                         >
                           {t("import.importScreenshots")}
                         </span>
@@ -415,18 +415,18 @@ export function ImportExportModal({
                   <div className="flex flex-col gap-4">
                     <p
                       className="text-sm"
-                      style={{ color: "rgba(255,255,255,0.5)" }}
+                      style={{ color: "var(--theme-text-muted)" }}
                     >
                       {t("export.ready")} {t("export.formatLabel")}:{" "}
-                      <strong style={{ color: "rgba(255,255,255,0.8)" }}>
+                      <strong style={{ color: "var(--theme-text-secondary)" }}>
                         {exportState.format.toUpperCase()}
                       </strong>
                     </p>
                     <div
                       className="rounded-xl p-4 flex flex-col gap-2"
                       style={{
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        background: "rgba(255,255,255,0.02)",
+                        border: "1px solid var(--theme-glass-border)",
+                        background: "var(--theme-surface-subtle)",
                       }}
                     >
                       <SummaryRow
@@ -467,7 +467,7 @@ export function ImportExportModal({
                         <LoadingSpinner size="lg" />
                         <p
                           className="text-sm"
-                          style={{ color: "rgba(255,255,255,0.4)" }}
+                          style={{ color: "var(--theme-text-muted)" }}
                         >
                           {t("export.exporting")}
                         </p>
@@ -485,13 +485,13 @@ export function ImportExportModal({
                         </div>
                         <p
                           className="text-sm font-medium"
-                          style={{ color: "rgba(255,255,255,0.8)" }}
+                          style={{ color: "var(--theme-text-secondary)" }}
                         >
                           {t("export.exportComplete")}
                         </p>
                         <p
                           className="text-xs"
-                          style={{ color: "rgba(255,255,255,0.35)" }}
+                          style={{ color: "var(--theme-text-muted)" }}
                         >
                           {t("export.fileDownloaded")}
                         </p>
@@ -510,7 +510,7 @@ export function ImportExportModal({
           !runImportMutation.isPending && (
             <div
               className="flex items-center justify-between mt-6 pt-4"
-              style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+              style={{ borderTop: "1px solid var(--theme-glass-border)" }}
             >
               <GlassButton
                 variant="ghost"
@@ -548,7 +548,7 @@ export function ImportExportModal({
         {activeTab === "export" && exportStep < 3 && (
           <div
             className="flex items-center justify-between mt-6 pt-4"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
+            style={{ borderTop: "1px solid var(--theme-glass-border)" }}
           >
             <GlassButton
               variant="ghost"
@@ -593,8 +593,8 @@ function TabBtn({
       onClick={onClick}
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
       style={{
-        background: active ? "rgba(255,255,255,0.1)" : "transparent",
-        color: active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.4)",
+        background: active ? "var(--theme-glass-border)" : "transparent",
+        color: active ? "var(--theme-text-primary)" : "var(--theme-text-muted)",
       }}
     >
       {children}
@@ -605,8 +605,8 @@ function TabBtn({
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-center text-sm">
-      <span style={{ color: "rgba(255,255,255,0.4)" }}>{label}</span>
-      <span style={{ color: "rgba(255,255,255,0.75)" }}>{value}</span>
+      <span style={{ color: "var(--theme-text-muted)" }}>{label}</span>
+      <span style={{ color: "var(--theme-text-secondary)" }}>{value}</span>
     </div>
   );
 }

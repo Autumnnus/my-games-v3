@@ -1,25 +1,26 @@
-import { useState, useEffect, useRef } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
-import { motion } from "framer-motion";
-import { Plus, Gamepad2, ArrowUpDown } from "lucide-react";
-import { PageContainer } from "@/components/layout/PageContainer";
-import { GlassButton } from "@/components/ui/GlassButton";
-import { GameCard } from "@/components/games/GameCard";
-import { GameListItem } from "@/components/games/GameListItem";
-import { GameFiltersBar } from "@/components/games/GameFiltersBar";
-import { AddGameModal } from "@/components/games/AddGameModal";
-import { EditGameModal } from "@/components/games/EditGameModal";
-import { DeleteGameConfirm } from "@/components/games/DeleteGameConfirm";
-import { SteamImportModal } from "@/components/steam/SteamImportModal";
-import { ImportExportModal } from "@/components/import-export/ImportExportModal";
-import { GameCardSkeleton } from "@/components/ui/Skeleton";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { useUserGames } from "@/hooks/useGames";
-import { useUIStore } from "@/store/ui.store";
-import { pageTransition, staggerContainer } from "@/lib/motion";
 import type { GameListItem as GameType } from "@/api/types";
+import { AddGameModal } from "@/components/games/AddGameModal";
+import { DeleteGameConfirm } from "@/components/games/DeleteGameConfirm";
+import { EditGameModal } from "@/components/games/EditGameModal";
+import { GameCard } from "@/components/games/GameCard";
+import { GameFiltersBar } from "@/components/games/GameFiltersBar";
+import { GameListItem } from "@/components/games/GameListItem";
+import { ImportExportModal } from "@/components/import-export/ImportExportModal";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { SteamImportModal } from "@/components/steam/SteamImportModal";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { GlassButton } from "@/components/ui/GlassButton";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { GameCardSkeleton } from "@/components/ui/Skeleton";
+import { useUserGames } from "@/hooks/useGames";
+import { pageTransition, staggerContainer } from "@/lib/motion";
+import { useUIStore } from "@/store/ui.store";
+import { createFileRoute } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { ArrowUpDown, Gamepad2, Plus } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { z } from "zod";
 
 const searchSchema = z.object({
   status: z
@@ -60,6 +61,7 @@ function useDebounce<T>(value: T, delay: number) {
 }
 
 function GamesPage() {
+  const { t } = useTranslation();
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const { gamesViewMode } = useUIStore();
@@ -121,16 +123,16 @@ function GamesPage() {
             <div>
               <h1
                 className="text-2xl font-bold"
-                style={{ color: "rgba(255,255,255,0.95)" }}
+                style={{ color: "var(--theme-text-primary)" }}
               >
-                Kütüphanem
+                {t("pages.games.title")}
               </h1>
               {totalGames > 0 && (
                 <p
                   className="text-sm mt-0.5"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  style={{ color: "var(--theme-text-muted)" }}
                 >
-                  {totalGames} oyun
+                  {t("games.gamesCount", { count: totalGames })}
                 </p>
               )}
             </div>
@@ -141,14 +143,14 @@ function GamesPage() {
                 onClick={() => setIeOpen(true)}
                 className="hidden sm:flex"
               >
-                İçe/Dışa Aktar
+                {t("games.importExport")}
               </GlassButton>
               <GlassButton
                 variant="primary"
                 leftIcon={<Plus size={15} />}
                 onClick={() => setAddOpen(true)}
               >
-                Oyun Ekle
+                {t("games.addGame")}
               </GlassButton>
             </div>
           </div>
@@ -190,9 +192,9 @@ function GamesPage() {
           ) : allGames.length === 0 ? (
             <EmptyState
               icon={<Gamepad2 size={28} />}
-              title="Kütüphanen boş"
-              description="İlk oyununu ekleyerek başla!"
-              action={{ label: "Oyun Ekle", onClick: () => setAddOpen(true) }}
+              title={t("pages.games.emptyTitle")}
+              description={t("pages.games.emptyDesc")}
+              action={{ label: t("games.addGame"), onClick: () => setAddOpen(true) }}
             />
           ) : gamesViewMode === "grid" ? (
             <motion.div
@@ -255,7 +257,7 @@ function GamesPage() {
       <button
         onClick={() => setAddOpen(true)}
         className="fixed bottom-6 right-6 md:hidden w-14 h-14 rounded-full flex items-center justify-center glass-btn-primary glow-purple z-30"
-        aria-label="Oyun ekle"
+        aria-label={t("common.aria.addGame")}
       >
         <Plus size={22} />
       </button>

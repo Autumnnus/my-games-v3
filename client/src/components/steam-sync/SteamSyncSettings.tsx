@@ -133,11 +133,11 @@ export function SteamSyncSettings() {
         <div className="flex flex-col gap-0.5">
           <span
             className="text-sm font-medium"
-            style={{ color: "rgba(255,255,255,0.85)" }}
+            style={{ color: "var(--theme-text-secondary)" }}
           >
             Otomatik Steam Senkronizasyonu
           </span>
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <span className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
             Her gün Steam'den oynama süresini otomatik olarak çek
           </span>
         </div>
@@ -154,7 +154,7 @@ export function SteamSyncSettings() {
           <div className="flex items-center justify-between gap-4">
             <span
               className="text-sm"
-              style={{ color: "rgba(255,255,255,0.6)" }}
+              style={{ color: "var(--theme-text-secondary)" }}
             >
               Senkronizasyon aralığı
             </span>
@@ -175,21 +175,21 @@ export function SteamSyncSettings() {
           <div
             className="flex items-center justify-between p-3 rounded-xl"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              border: "1px solid rgba(255,255,255,0.07)",
+              background: "var(--theme-surface-subtle)",
+              border: "1px solid var(--theme-glass-border)",
             }}
           >
             <div className="flex items-center gap-2">
-              <Clock size={13} style={{ color: "rgba(255,255,255,0.4)" }} />
+              <Clock size={13} style={{ color: "var(--theme-text-muted)" }} />
               <span
                 className="text-xs"
-                style={{ color: "rgba(255,255,255,0.5)" }}
+                style={{ color: "var(--theme-text-muted)" }}
               >
                 Son senkronizasyon:
               </span>
               <span
                 className="text-xs"
-                style={{ color: "rgba(255,255,255,0.8)" }}
+                style={{ color: "var(--theme-text-secondary)" }}
               >
                 {lastSyncLabel}
               </span>

@@ -45,7 +45,7 @@ export function IGDBSearchCombobox({
         <Search
           size={15}
           className="absolute left-3"
-          style={{ color: "rgba(255,255,255,0.4)" }}
+          style={{ color: "var(--theme-text-muted)" }}
         />
         <input
           type="text"
@@ -67,7 +67,7 @@ export function IGDBSearchCombobox({
               setOpen(false);
             }}
             className="absolute right-3"
-            style={{ color: "rgba(255,255,255,0.4)" }}
+            style={{ color: "var(--theme-text-muted)" }}
           >
             <X size={14} />
           </button>
@@ -114,14 +114,14 @@ export function IGDBSearchCombobox({
                   <div className="flex-1 min-w-0">
                     <p
                       className="text-sm font-medium truncate"
-                      style={{ color: "rgba(255,255,255,0.9)" }}
+                      style={{ color: "var(--theme-text-primary)" }}
                     >
                       {game.name}
                     </p>
                     {year && (
                       <p
                         className="text-xs"
-                        style={{ color: "rgba(255,255,255,0.4)" }}
+                        style={{ color: "var(--theme-text-muted)" }}
                       >
                         {year}
                       </p>

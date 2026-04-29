@@ -37,13 +37,13 @@ export function ConflictResolver({
           <AlertTriangle size={15} style={{ color: "rgba(234,179,8,0.75)" }} />
           <span
             className="text-sm font-medium"
-            style={{ color: "rgba(255,255,255,0.75)" }}
+            style={{ color: "var(--theme-text-secondary)" }}
           >
             {conflicts.length} oyun zaten kütüphanende var
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+          <span className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
             Tümüne uygula:
           </span>
           <GlassSelect
@@ -92,16 +92,16 @@ function ConflictCard({
         <div className="flex-1 min-w-0">
           <p
             className="text-sm font-semibold truncate"
-            style={{ color: "rgba(255,255,255,0.9)" }}
+            style={{ color: "var(--theme-text-primary)" }}
           >
             "{conflict.importedName}"
           </p>
           <p
             className="text-xs mt-0.5"
-            style={{ color: "rgba(255,255,255,0.3)" }}
+            style={{ color: "var(--theme-text-muted)" }}
           >
             Mevcut:{" "}
-            <span style={{ color: "rgba(255,255,255,0.5)" }}>
+            <span style={{ color: "var(--theme-text-muted)" }}>
               {existing.name || "—"}
             </span>
           </p>
@@ -119,13 +119,13 @@ function ConflictCard({
         <div
           className="rounded-lg p-2.5"
           style={{
-            background: "rgba(255,255,255,0.03)",
-            border: "1px solid rgba(255,255,255,0.06)",
+            background: "var(--theme-surface-subtle)",
+            border: "1px solid var(--theme-glass-border)",
           }}
         >
           <p
             className="text-[10px] uppercase tracking-wider mb-1.5"
-            style={{ color: "rgba(255,255,255,0.25)" }}
+            style={{ color: "var(--theme-text-muted)" }}
           >
             Mevcut
           </p>
@@ -147,13 +147,13 @@ function ConflictCard({
         <div
           className="rounded-lg p-2.5"
           style={{
-            background: "rgba(168,85,247,0.04)",
-            border: "1px solid rgba(168,85,247,0.1)",
+            background: "var(--theme-accent-soft)",
+            border: "1px solid var(--theme-accent-soft)",
           }}
         >
           <p
             className="text-[10px] uppercase tracking-wider mb-1.5"
-            style={{ color: "rgba(168,85,247,0.5)" }}
+            style={{ color: "var(--theme-accent-soft)" }}
           >
             İçe Aktarılacak
           </p>
@@ -167,10 +167,10 @@ function ConflictCard({
 function DiffRow({ label, value }: { label: string; value?: string }) {
   return (
     <div className="flex justify-between items-center gap-2 text-xs py-0.5">
-      <span style={{ color: "rgba(255,255,255,0.3)" }}>{label}</span>
+      <span style={{ color: "var(--theme-text-muted)" }}>{label}</span>
       <span
         style={{
-          color: value ? "rgba(255,255,255,0.7)" : "rgba(255,255,255,0.2)",
+          color: value ? "var(--theme-text-secondary)" : "var(--theme-text-muted)",
         }}
       >
         {value || "—"}

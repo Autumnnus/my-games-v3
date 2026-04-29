@@ -16,22 +16,23 @@ export const Route = createFileRoute("/register")({
   component: RegisterPage,
 });
 
-const schema = z.object({
-  name: z
-    .string()
-    .min(2, "Name must be at least 2 characters")
-    .max(50, "Name is too long"),
-  email: z.string().email("Enter a valid email"),
-  password: z
-    .string()
-    .min(6, "Password must be at least 6 characters")
-    .max(100, "Password is too long"),
-});
-type FormData = z.infer<typeof schema>;
-
 function RegisterPage() {
   const { t } = useTranslation();
   const register_ = useRegister();
+
+  const schema = z.object({
+    name: z
+      .string()
+      .min(2, t("register.nameTooShort"))
+      .max(50, t("register.nameTooLong")),
+    email: z.string().email(t("auth.emailInvalid")),
+    password: z
+      .string()
+      .min(6, t("auth.passwordTooShort"))
+      .max(100, t("register.passwordTooLong")),
+  });
+  type FormData = z.infer<typeof schema>;
+
   const {
     register,
     handleSubmit,
@@ -52,20 +53,20 @@ function RegisterPage() {
         <div className="flex flex-col items-center gap-3 mb-8">
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, #a855f7, #3b82f6)" }}
+            style={{ background: "linear-gradient(135deg, var(--theme-accent), var(--theme-accent-2))" }}
           >
             <Gamepad2 size={24} className="text-white" />
           </div>
           <div className="text-center">
             <h1
               className="text-2xl font-bold"
-              style={{ color: "rgba(255,255,255,0.95)" }}
+              style={{ color: "var(--theme-text-primary)" }}
             >
               {t('register.title')}
             </h1>
             <p
               className="text-sm mt-1"
-              style={{ color: "rgba(255,255,255,0.5)" }}
+              style={{ color: "var(--theme-text-muted)" }}
             >
               {t('register.subtitle')}
             </p>
@@ -110,10 +111,10 @@ function RegisterPage() {
             </GlassButton>
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" style={{ borderColor: "rgba(255,255,255,0.1)" }} />
+                <div className="w-full border-t" style={{ borderColor: "var(--theme-glass-border)" }} />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="px-2" style={{ color: "rgba(255,255,255,0.3)" }}>
+                <span className="px-2" style={{ color: "var(--theme-text-muted)" }}>
                   {t('auth.or')}
                 </span>
               </div>
@@ -130,13 +131,13 @@ function RegisterPage() {
             </GlassButton>
             <p
               className="text-center text-xs"
-              style={{ color: "rgba(255,255,255,0.4)" }}
+              style={{ color: "var(--theme-text-muted)" }}
             >
               {t('register.alreadyHaveAccount')}{" "}
               <Link
                 to="/login"
                 className="underline hover:opacity-80 transition-opacity"
-                style={{ color: "#a855f7" }}
+                style={{ color: "var(--theme-accent)" }}
               >
                 {t('register.logIn')}
               </Link>

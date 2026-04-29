@@ -115,7 +115,7 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
           <label
             htmlFor={inputId}
             className="text-sm font-medium"
-            style={{ color: "rgba(255,255,255,0.75)" }}
+            style={{ color: "var(--theme-text-secondary)" }}
           >
             {label}
           </label>
@@ -130,11 +130,11 @@ export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
             value={displayValue}
             onChange={handleTextChange}
             placeholder={placeholder}
-            className="w-full px-3 py-2.5 rounded-xl text-sm bg-white/5 border"
+            className="glass-input w-full px-3 py-2.5 rounded-xl text-sm border"
             style={{
-              borderColor: error ? "rgba(239,68,68,0.6)" : "rgba(255,255,255,0.1)",
-              color: "rgba(255,255,255,0.9)",
-              background: "rgba(255,255,255,0.05)",
+              borderColor: error
+                ? "color-mix(in srgb, var(--theme-danger) 60%, transparent)"
+                : "var(--theme-glass-border)",
             }}
             inputMode="numeric"
             autoComplete="off"

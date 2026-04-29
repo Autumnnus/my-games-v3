@@ -43,7 +43,7 @@ function VerifyAccountPage() {
         {state === "loading" && (
           <div className="flex flex-col items-center gap-3">
             <LoadingSpinner size="lg" />
-            <p style={{ color: "rgba(255,255,255,0.6)" }}>
+            <p style={{ color: "var(--theme-text-secondary)" }}>
               {t("verifyAccount.loading")}
             </p>
           </div>
@@ -53,14 +53,14 @@ function VerifyAccountPage() {
             <CheckCircle size={40} style={{ color: "#22c55e" }} />
             <h2
               className="text-lg font-semibold"
-              style={{ color: "rgba(255,255,255,0.95)" }}
+              style={{ color: "var(--theme-text-primary)" }}
             >
               {t("verifyAccount.successTitle")}
             </h2>
             <Link
               to="/login"
               className="text-sm hover:underline"
-              style={{ color: "rgba(168,85,247,0.9)" }}
+              style={{ color: "var(--theme-accent)" }}
             >
               {t("verifyAccount.goToLogin")}
             </Link>
@@ -71,11 +71,11 @@ function VerifyAccountPage() {
             <XCircle size={40} style={{ color: "#ef4444" }} />
             <h2
               className="text-lg font-semibold"
-              style={{ color: "rgba(255,255,255,0.95)" }}
+              style={{ color: "var(--theme-text-primary)" }}
             >
               {t("verifyAccount.errorTitle")}
             </h2>
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+            <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
               {t("verifyAccount.errorSubtitle")}
             </p>
           </div>

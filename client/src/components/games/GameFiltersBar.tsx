@@ -48,7 +48,7 @@ export function GameFiltersBar({
         <Search
           size={15}
           className="absolute left-3 top-1/2 -translate-y-1/2"
-          style={{ color: "rgba(255,255,255,0.4)" }}
+          style={{ color: "var(--theme-text-muted)" }}
         />
         <input
           type="text"

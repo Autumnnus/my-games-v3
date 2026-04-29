@@ -61,7 +61,7 @@ export function ConflictBanner({
             Bu oyunda Steam senkronizasyon çakışması var
           </span>
         </div>
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+        <p className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
           Steam {formatPlayTime(steamValue)} kaydetmiş, sen{" "}
           {formatPlayTime(manualValue)} girdin. Fark: {diffSign}
           {formatPlayTime(Math.abs(diff))}

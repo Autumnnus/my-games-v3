@@ -188,7 +188,7 @@ export function GameForm({
       <div className="flex flex-col gap-1.5">
         <label
           className="text-sm font-medium"
-          style={{ color: "rgba(255,255,255,0.75)" }}
+          style={{ color: "var(--theme-text-secondary)" }}
         >
           {t("games.form.playTime")}
         </label>
@@ -227,7 +227,7 @@ export function GameForm({
             })}
           />
         </div>
-        <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <p className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
           {t("games.form.totalTime", { time: formatPlayTime(totalMinutes), minutes: totalMinutes })}
         </p>
       </div>
@@ -235,7 +235,7 @@ export function GameForm({
       <div className="flex flex-col gap-2">
         <label
           className="text-sm font-medium"
-          style={{ color: "rgba(255,255,255,0.75)" }}
+          style={{ color: "var(--theme-text-secondary)" }}
         >
           {t("games.form.rating")}
         </label>
@@ -286,7 +286,7 @@ export function GameForm({
       <div className="flex flex-col gap-1.5">
         <label
           className="text-sm font-medium"
-          style={{ color: "rgba(255,255,255,0.75)" }}
+          style={{ color: "var(--theme-text-secondary)" }}
         >
           {t("games.form.review")}
         </label>
@@ -323,7 +323,7 @@ export function GameForm({
           className="w-4 h-4 rounded"
           {...register("isFavorite")}
         />
-        <span className="text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
+        <span className="text-sm" style={{ color: "var(--theme-text-secondary)" }}>
           {t("games.form.addToFavorites")}
         </span>
       </label>

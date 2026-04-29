@@ -91,14 +91,14 @@ function StatsGrid({ stats }: { stats: StatItem[] }) {
               </div>
               <span
                 className="text-xs leading-tight"
-                style={{ color: "rgba(255,255,255,0.5)" }}
+                style={{ color: "var(--theme-text-muted)" }}
               >
                 {label}
               </span>
             </div>
             <span
               className="text-2xl font-bold leading-none"
-              style={{ color: "rgba(255,255,255,0.95)" }}
+              style={{ color: "var(--theme-text-primary)" }}
             >
               {value}
             </span>
@@ -124,7 +124,7 @@ function GameThumbnail({ game }: { game: GameListItem }) {
       ) : (
         <div
           className="w-full h-full rounded-lg flex items-center justify-center text-xl"
-          style={{ background: "rgba(255,255,255,0.05)" }}
+          style={{ background: "var(--theme-surface-subtle)" }}
         >
           🎮
         </div>
@@ -135,12 +135,13 @@ function GameThumbnail({ game }: { game: GameListItem }) {
 
 // ─── Recently Played Games ────────────────────────────────────────────────────
 function RecentlyPlayedCard({ games }: { games: GameListItem[] }) {
+  const { t } = useTranslation();
   const statusLabel: Record<string, string> = {
-    completed: "Tamamlandı",
-    playing: "Oynuyor",
-    paused: "Durduruldu",
-    backlog: "Sırada",
-    dropped: "Bırakıldı",
+    completed: t("games.statusLabel.completed"),
+    playing: t("games.statusLabel.playing"),
+    paused: t("games.statusLabel.paused"),
+    backlog: t("games.statusLabel.backlog"),
+    dropped: t("games.statusLabel.dropped"),
   };
 
   return (
@@ -150,17 +151,17 @@ function RecentlyPlayedCard({ games }: { games: GameListItem[] }) {
           <Zap size={14} style={{ color: "#f59e0b" }} />
           <h3
             className="text-sm font-semibold"
-            style={{ color: "rgba(255,255,255,0.85)" }}
+            style={{ color: "var(--theme-text-secondary)" }}
           >
-            Son Oynananlar
+            {t("games.recentlyPlayed.title")}
           </h3>
         </div>
         <Link
           to="/games"
           className="text-xs hover:underline"
-          style={{ color: "rgba(168,85,247,0.7)" }}
+          style={{ color: "var(--theme-accent)" }}
         >
-          Tümü →
+          {t("games.recentlyPlayed.viewAll")} →
         </Link>
       </div>
       <div className="flex flex-col gap-2">
@@ -170,7 +171,7 @@ function RecentlyPlayedCard({ games }: { games: GameListItem[] }) {
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             className="group flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-white/10 transition-all cursor-pointer"
-            style={{ background: "rgba(255,255,255,0.03)" }}
+            style={{ background: "var(--theme-surface-subtle)" }}
           >
             <Link to="/games/$id" params={{ id: game._id }} className="shrink-0 w-12 h-16">
               <GameThumbnail game={game} />
@@ -180,18 +181,18 @@ function RecentlyPlayedCard({ games }: { games: GameListItem[] }) {
                 to="/games/$id"
                 params={{ id: game._id }}
                 className="text-sm font-medium truncate block hover:text-white transition-colors"
-                style={{ color: "rgba(255,255,255,0.9)" }}
+                style={{ color: "var(--theme-text-primary)" }}
               >
                 {game.name}
               </Link>
               <div className="flex items-center gap-2 mt-1">
-                <GlassBadge color={game.status === "completed" ? "#22c55e" : "#3b82f6"}>
+                <GlassBadge color={game.status === "completed" ? "#22c55e" : "var(--theme-accent-2)"}>
                   {statusLabel[game.status] ?? game.status}
                 </GlassBadge>
                 {game.playTime > 0 && (
                   <span
                     className="text-xs"
-                    style={{ color: "rgba(255,255,255,0.4)" }}
+                    style={{ color: "var(--theme-text-muted)" }}
                   >
                     {formatPlayTime(game.playTime)}
                   </span>
@@ -201,7 +202,7 @@ function RecentlyPlayedCard({ games }: { games: GameListItem[] }) {
             {game.lastPlay && (
               <span
                 className="text-xs shrink-0"
-                style={{ color: "rgba(255,255,255,0.3)" }}
+                style={{ color: "var(--theme-text-muted)" }}
               >
                 {formatDate(game.lastPlay)}
               </span>
@@ -215,6 +216,7 @@ function RecentlyPlayedCard({ games }: { games: GameListItem[] }) {
 
 // ─── Steam Section ────────────────────────────────────────────────────────────
 function SteamSection() {
+  const { t } = useTranslation();
   const {
     data: profile,
     isLoading: profileLoading,
@@ -234,7 +236,7 @@ function SteamSection() {
       prevSyncStatus.current === "syncing" &&
       syncStatus?.syncStatus === "idle"
     ) {
-      toast.success("Steam kütüphanesi tarandı!");
+      toast.success(t("profile.steamScanComplete"));
     }
     prevSyncStatus.current = syncStatus?.syncStatus;
   }, [syncStatus?.syncStatus]);
@@ -246,9 +248,9 @@ function SteamSection() {
   async function handleUnlink() {
     try {
       await unlinkMutation.mutateAsync();
-      toast.success("Steam hesabı bağlantısı kaldırıldı");
+      toast.success(t("profile.steamUnlinkSuccess"));
     } catch (err) {
-      toast.error(isApiError(err) ? err.message : "Bağlantı kaldırılamadı");
+      toast.error(isApiError(err) ? err.message : t("profile.steamUnlinkFailed"));
     }
   }
 
@@ -265,7 +267,7 @@ function SteamSection() {
       <div className="flex flex-col gap-4">
         <div
           className="flex items-center gap-2"
-          style={{ color: "rgba(255,255,255,0.85)" }}
+          style={{ color: "var(--theme-text-secondary)" }}
         >
           <SteamIcon size={18} />
           <span className="font-semibold text-sm">Steam</span>
@@ -275,7 +277,7 @@ function SteamSection() {
               style={{ color: "rgba(34,197,94,0.8)" }}
             >
               <CheckCircle2 size={12} />
-              Bağlı
+              {t("profile.steamLinked")}
             </span>
           )}
         </div>
@@ -293,27 +295,25 @@ function SteamSection() {
               <div>
                 <p
                   className="text-sm font-medium"
-                  style={{ color: "rgba(255,255,255,0.9)" }}
+                  style={{ color: "var(--theme-text-primary)" }}
                 >
                   {profile.displayName}
                 </p>
                 {syncStatus?.lastSyncAt && (
                   <p
                     className="text-xs mt-0.5"
-                    style={{ color: "rgba(255,255,255,0.4)" }}
+                    style={{ color: "var(--theme-text-muted)" }}
                   >
-                    Son tarama:{" "}
-                    {new Date(syncStatus.lastSyncAt).toLocaleDateString(
-                      "tr-TR",
-                    )}
+                    {t("profile.lastScan")}
+                    {new Date(syncStatus.lastSyncAt).toLocaleDateString()}
                   </p>
                 )}
                 {isSyncing && (
                   <p
                     className="text-xs mt-0.5 flex items-center gap-1"
-                    style={{ color: "rgba(168,85,247,0.8)" }}
+                    style={{ color: "var(--theme-accent)" }}
                   >
-                    <LoadingSpinner size="sm" /> Taranıyor...
+                    <LoadingSpinner size="sm" /> {t("profile.scanning")}
                   </p>
                 )}
               </div>
@@ -326,7 +326,7 @@ function SteamSection() {
                 onClick={() => setImportOpen(true)}
                 leftIcon={<SteamIcon size={14} />}
               >
-                Kütüphaneyi Tara
+                {t("profile.scanLibrary")}
               </GlassButton>
               <GlassButton
                 size="sm"
@@ -334,21 +334,21 @@ function SteamSection() {
                 loading={unlinkMutation.isPending}
                 onClick={handleUnlink}
               >
-                Bağlantıyı Kaldır
+                {t("profile.unlinkSteam")}
               </GlassButton>
             </div>
           </div>
         ) : (
           <div className="flex items-center justify-between">
-            <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
-              Steam hesabınız bağlı değil
+            <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
+              {t("profile.steamNotLinked")}
             </p>
             <GlassButton
               size="sm"
               onClick={handleLinkSteam}
               leftIcon={<SteamIcon size={14} />}
             >
-              Steam Hesabı Bağla
+              {t("profile.linkSteam")}
             </GlassButton>
           </div>
         )}
@@ -383,9 +383,9 @@ function EditProfileSection({
       const updated = await authApi.editProfile({ name, profileImage });
       updateUser(updated);
       setEditing(false);
-      toast.success("Profil güncellendi");
+      toast.success(t("profile.profileUpdated"));
     } catch (err) {
-      toast.error(isApiError(err) ? err.message : "Güncelleme başarısız");
+      toast.error(isApiError(err) ? err.message : t("profile.profileUpdateFailed"));
     } finally {
       setSaving(false);
     }
@@ -395,10 +395,10 @@ function EditProfileSection({
     <div className="flex flex-col gap-3">
       <div
         className="flex items-center gap-2"
-        style={{ color: "rgba(255,255,255,0.85)" }}
+        style={{ color: "var(--theme-text-secondary)" }}
       >
         <User size={15} />
-        <span className="font-semibold text-sm">Profil Bilgileri</span>
+        <span className="font-semibold text-sm">{t("profile.profileInfo")}</span>
       </div>
 
       <div className="flex items-center gap-4">
@@ -406,14 +406,14 @@ function EditProfileSection({
         <div className="flex-1 min-w-0">
           <p
             className="text-base font-semibold"
-            style={{ color: "rgba(255,255,255,0.95)" }}
+            style={{ color: "var(--theme-text-primary)" }}
           >
             {name}
           </p>
           {email && (
             <p
               className="text-sm mt-0.5"
-              style={{ color: "rgba(255,255,255,0.4)" }}
+              style={{ color: "var(--theme-text-muted)" }}
             >
               {email}
             </p>
@@ -425,7 +425,7 @@ function EditProfileSection({
           onClick={() => setEditing(!editing)}
           leftIcon={<Settings2 size={13} />}
         >
-          Düzenle
+          {t("profile.edit")}
         </GlassButton>
       </div>
 
@@ -467,6 +467,7 @@ function EditProfileSection({
 
 // ─── Profile Page ─────────────────────────────────────────────────────────────
 function ProfilePage() {
+  const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const { steamLinked, steamError } = Route.useSearch();
 
@@ -529,12 +530,10 @@ function ProfilePage() {
 
   useEffect(() => {
     if (steamLinked === "true") {
-      toast.success("Steam hesabı başarıyla bağlandı!");
+      toast.success(t("steam.linkSuccess"));
     }
     if (steamError) {
-      toast.error(
-        `Steam bağlantısı başarısız: ${decodeURIComponent(steamError)}`,
-      );
+      toast.error(t("steam.linkFailed", { error: decodeURIComponent(steamError) }));
     }
   }, [steamLinked, steamError]);
 
@@ -544,25 +543,25 @@ function ProfilePage() {
   const statItems: StatItem[] = [
     {
       icon: Gamepad2,
-      label: "Toplam Oyun",
+      label: t("statistics.totalGames"),
       value: user.gameSize ?? 0,
-      color: "#a855f7",
+      color: "var(--theme-accent)",
     },
     {
       icon: Trophy,
-      label: "Tamamlanan",
+      label: t("statistics.completed"),
       value: user.completedGameSize ?? 0,
       color: "#22c55e",
     },
     {
       icon: Clock,
-      label: "Toplam Süre",
-      value: totalPlayTimeHours > 0 ? `${totalPlayTimeHours.toLocaleString("tr-TR")} saat` : "—",
-      color: "#3b82f6",
+      label: t("statistics.totalPlayTime"),
+      value: totalPlayTimeHours > 0 ? `${totalPlayTimeHours.toLocaleString()} ${t("statistics.hoursAbbrev")}` : "—",
+      color: "var(--theme-accent-2)",
     },
     {
       icon: Star,
-      label: "Ort. Puan",
+      label: t("statistics.avgRating"),
       value: avgRating > 0 ? avgRating.toFixed(1) : "—",
       color: "#f59e0b",
     },
@@ -582,9 +581,9 @@ function ProfilePage() {
           <div className="flex items-center gap-3">
             <h1
               className="text-2xl font-bold"
-              style={{ color: "rgba(255,255,255,0.95)" }}
+              style={{ color: "var(--theme-text-primary)" }}
             >
-              Profilim
+              {t("profile.titleMy")}
             </h1>
           </div>
 
@@ -617,9 +616,9 @@ function ProfilePage() {
           <GlassCard className="p-6">
             <h2
               className="text-base font-semibold mb-4"
-              style={{ color: "rgba(255,255,255,0.85)" }}
+              style={{ color: "var(--theme-text-secondary)" }}
             >
-              Bağlı Hesaplar
+              {t("profile.connectedAccounts")}
             </h2>
             <SteamSection />
           </GlassCard>
@@ -628,9 +627,9 @@ function ProfilePage() {
           <GlassCard className="p-6">
             <h2
               className="text-base font-semibold mb-4"
-              style={{ color: "rgba(255,255,255,0.85)" }}
+              style={{ color: "var(--theme-text-secondary)" }}
             >
-              Steam Otomatik Senkronizasyonu
+              {t("profile.steamAutoSync")}
             </h2>
             <SteamSyncSettings />
           </GlassCard>

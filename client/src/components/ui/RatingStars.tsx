@@ -39,7 +39,9 @@ export function RatingStars({
             <Star
               size={iconSize}
               className={
-                i < filled ? "fill-yellow-400 text-yellow-400" : "text-white/20"
+                i < filled
+                  ? "fill-yellow-400 text-yellow-400"
+                  : "text-[var(--theme-text-muted)] opacity-45"
               }
             />
           </button>
@@ -48,7 +50,7 @@ export function RatingStars({
       {value > 0 && (
         <span
           className="ml-1 text-xs"
-          style={{ color: "rgba(255,255,255,0.5)" }}
+          style={{ color: "var(--theme-text-muted)" }}
         >
           {value}/{max}
         </span>

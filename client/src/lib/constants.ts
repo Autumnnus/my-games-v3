@@ -4,7 +4,7 @@ export const STATUS_COLORS: Record<GameStatus, string> = {
   completed: "#22c55e",
   abandoned: "#6b7280",
   toBeCompleted: "#f59e0b",
-  activePlaying: "#3b82f6",
+  activePlaying: "var(--theme-accent-2)",
 };
 
 // These are used as fallback display names; prefer t('games.status.X') in components

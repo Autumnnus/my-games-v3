@@ -9,6 +9,7 @@ import { fadeUp } from "@/lib/motion";
 import { StatusBadge } from "./StatusBadge";
 import { PlayTimeBadge } from "./PlayTimeBadge";
 import { PlatformIcon } from "./PlatformIcon";
+import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { SyncStatusBadge } from "@/components/steam-sync/SyncStatusBadge";
 
 interface GameCardProps {
@@ -49,8 +50,8 @@ export function GameCard({
       {/* Cover */}
       <Link to="/games/$id" params={{ id: game._id }} className="block">
         <div
-          className="relative"
-          style={{ aspectRatio: "3/4", background: "rgba(255,255,255,0.04)" }}
+          className="relative theme-cover-placeholder"
+          style={{ aspectRatio: "3/4" }}
         >
           {imageSrc ? (
             <img
@@ -71,7 +72,7 @@ export function GameCard({
           ) : (
             <div
               className="w-full h-full flex items-center justify-center"
-              style={{ color: "rgba(255,255,255,0.15)", fontSize: "2rem" }}
+              style={{ fontSize: "2rem" }}
             >
               🎮
             </div>
@@ -81,6 +82,28 @@ export function GameCard({
             <div className="absolute top-2 right-2">
               <Star size={14} className="fill-yellow-400 text-yellow-400" />
             </div>
+          )}
+          {/* Wishlist button */}
+          {game.steamAppId && (
+            <WishlistButton
+              igdbId={game.steamAppId}
+              gameName={game.name}
+              coverUrl={game.photo ?? game.igdb?.cover?.url}
+              platform={game.platform}
+              genres={game.igdb?.genres?.map((g) => g.name) ?? []}
+              steamAppId={game.steamAppId}
+              variant="card"
+            />
+          )}
+          {(!game.steamAppId && game.igdb?.id) && (
+            <WishlistButton
+              igdbId={game.igdb!.id}
+              gameName={game.name}
+              coverUrl={game.photo ?? game.igdb?.cover?.url}
+              platform={game.platform}
+              genres={game.igdb?.genres?.map((g) => g.name) ?? []}
+              variant="card"
+            />
           )}
           {/* Status overlay on hover */}
           {hovered && !readonly && (
@@ -118,7 +141,7 @@ export function GameCard({
       <div className="p-3 flex flex-col gap-1.5">
         <p
           className="text-sm font-medium leading-snug line-clamp-1"
-          style={{ color: "rgba(255,255,255,0.9)" }}
+          style={{ color: "var(--theme-text-primary)" }}
         >
           {game.name}
         </p>

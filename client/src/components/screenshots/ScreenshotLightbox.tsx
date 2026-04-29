@@ -133,7 +133,7 @@ export function ScreenshotLightbox({
                     target="_blank"
                     rel="noopener noreferrer"
                     className="glass-card p-6 max-w-lg w-full text-base leading-relaxed hover:text-white underline"
-                    style={{ color: "rgba(255,255,255,0.85)" }}
+                    style={{ color: "var(--theme-text-secondary)" }}
                   >
                     {current.url}
                   </a>
@@ -158,7 +158,7 @@ export function ScreenshotLightbox({
           <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
             <span
               className="text-sm glass-card-sm px-3 py-1"
-              style={{ color: "rgba(255,255,255,0.6)" }}
+              style={{ color: "var(--theme-text-secondary)" }}
             >
               {index + 1} / {screenshots.length}
             </span>
@@ -182,11 +182,11 @@ export function ScreenshotLightbox({
                 <div className="glass-card-sm px-3 py-1.5 flex items-center gap-2">
                   <Gamepad2
                     size={14}
-                    style={{ color: "rgba(255,255,255,0.6)" }}
+                    style={{ color: "var(--theme-text-secondary)" }}
                   />
                   <span
                     className="text-sm"
-                    style={{ color: "rgba(255,255,255,0.85)" }}
+                    style={{ color: "var(--theme-text-secondary)" }}
                   >
                     {game.name}
                   </span>

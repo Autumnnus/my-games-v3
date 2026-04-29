@@ -92,9 +92,13 @@
     "screenshots": "Ekran Görüntüleri",
     "social": "Sosyal",
     "notifications": "Bildirimler",
-    "accountSettings": "Hesap Ayarları"
+    "accountSettings": "Hesap Ayarları",
+    "statistics": "İstatistikler",
+    "wishlist": "İstek Listesi"
   },
   "games": {
+    "title": "Oyunlar",
+    "game": "Oyun",
     "form": {
       "addTitle": "Oyun Ekle",
       "editTitle": "Oyun Düzenle",
@@ -181,7 +185,10 @@
     "deleteConfirm": {
       "title": "Oyunu Kaldır",
       "message": " adlı oyun kütüphanenden kaldırılacak. Bu işlem geri alınamaz."
-    }
+    },
+    "gamesCount": "{{count}} oyun",
+    "addGame": "Oyun Ekle",
+    "importExport": "İçe/Dışa Aktar"
   },
   "import": {
     "conflict": {
@@ -424,15 +431,20 @@
       "emptyLibrary": "Kütüphanen henüz boş",
       "addFirstGame": "İlk Oyununu Ekle",
       "recentlyPlayed": "Son Oynananlar",
-      "favorites": "⭐ Favoriler"
+      "favorites": "⭐ Favoriler",
+      "addGame": "Oyun Ekle",
+      "firstGameToLibrary": "İlk Oyununu Kütüphanene Ekle"
     },
     "games": {
       "emptyTitle": "Kütüphanen boş",
-      "emptyDesc": "İlk oyununu ekleyerek başla!"
+      "emptyDesc": "İlk oyununu ekleyerek başla!",
+      "title": "Oyunlar"
     },
     "screenshots": {
       "emptyTitle": "Ekran görüntüsü yok",
-      "emptyDesc": "Oyun sayfalarından ekran görüntüsü ekleyebilirsin."
+      "emptyDesc": "Oyun sayfalarından ekran görüntüsü ekleyebilirsin.",
+      "title": "Ekran Görüntülerim",
+      "count": "{{count}} adet"
     },
     "social": {
       "showAll": "Herkesi Gör",
@@ -462,7 +474,9 @@
       "invalidData": "Geçersiz veri",
       "couldNotProcessData": "Steam verisi işlenemedi",
       "loading": "Steam ile giriş yapılıyor..."
-    }
+    },
+    "linkSuccess": "Steam hesabı başarıyla bağlandı!",
+    "linkFailed": "Steam bağlantısı başarısız: {{error}}"
   },
   "gameDetail": {
     "gameNotFound": "Oyun bulunamadı.",
@@ -503,6 +517,29 @@
     "platformDistribution": "Platform Dağılımı",
     "genreDistribution": "Tür Dağılımı",
     "statusDistribution": "Durum Dağılımı",
-    "hoursAbbrev": "saat"
+    "hoursAbbrev": "saat",
+    "playing": "Oynuyor",
+    "backlog": "Beklemede",
+    "dropped": "Bırakıldı",
+    "noData": "Henüz yeterli veri yok",
+    "ratingDistribution": "Puan Dağılımı"
+  },
+  "wishlist": {
+    "title": "İstek Listesi",
+    "steamImport": "Steam İçe Aktarma",
+    "addGame": "Oyun Ekle",
+    "empty": "İstek listesi boş",
+    "emptyHint": "İstek listeniz henüz boş görünüyor",
+    "steamIdPlaceholder": "Steam ID Giriniz",
+    "import": "İçe Aktar",
+    "importing": "İçe Aktarılıyor",
+    "moveToLibrary": "Kütüphaneye Taşı",
+    "addToWishlist": "İstek Listesine Eklendi",
+    "remove": "Kaldır",
+    "importResults": "{{imported}} eklendi, {{failed}} başarısız, {{exists}} zaten var"
+  },
+  "social": {
+    "title": "Sosyal Akış",
+    "subtitle": "Oyun kütüphanesindeki aktiviteleri takip et"
   }
 }

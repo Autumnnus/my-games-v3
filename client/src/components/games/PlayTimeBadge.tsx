@@ -6,7 +6,7 @@ export function PlayTimeBadge({ minutes }: { minutes: number }) {
   return (
     <span
       className="inline-flex items-center gap-1 text-xs"
-      style={{ color: "rgba(255,255,255,0.45)" }}
+      style={{ color: "var(--theme-text-muted)" }}
     >
       <Clock size={11} />
       {formatPlayTime(minutes)}

@@ -36,7 +36,7 @@ function FavoriteGameCard({
     <motion.div
       variants={fadeUp}
       className="group relative flex flex-col gap-2 p-3 rounded-xl border border-transparent hover:border-white/10 transition-all"
-      style={{ background: "rgba(255,255,255,0.03)" }}
+      style={{ background: "var(--theme-surface-subtle)" }}
     >
       <div className="absolute top-2 right-2">
         <Star
@@ -59,7 +59,7 @@ function FavoriteGameCard({
           ) : (
             <div
               className="w-full h-full flex items-center justify-center text-2xl"
-              style={{ background: "rgba(255,255,255,0.05)" }}
+              style={{ background: "var(--theme-surface-subtle)" }}
             >
               🎮
             </div>
@@ -71,7 +71,7 @@ function FavoriteGameCard({
         to="/games/$id"
         params={{ id: game._id }}
         className="text-xs font-medium text-center truncate hover:text-white transition-colors"
-        style={{ color: "rgba(255,255,255,0.85)" }}
+        style={{ color: "var(--theme-text-secondary)" }}
       >
         {game.name}
       </Link>
@@ -79,7 +79,7 @@ function FavoriteGameCard({
       {game.playTime > 0 && (
         <p
           className="text-xs text-center"
-          style={{ color: "rgba(255,255,255,0.4)" }}
+          style={{ color: "var(--theme-text-muted)" }}
         >
           {formatPlayTime(game.playTime)}
         </p>
@@ -147,7 +147,7 @@ export function FavoriteGamesSection({ favoriteGames, isLoading }: Props) {
               <Star size={14} style={{ color: "#f59e0b" }} fill="#f59e0b" />
               <h3
                 className="text-sm font-semibold"
-                style={{ color: "rgba(255,255,255,0.85)" }}
+                style={{ color: "var(--theme-text-secondary)" }}
               >
                 {t("favorite.sectionTitle")}
               </h3>
@@ -179,13 +179,13 @@ export function FavoriteGamesSection({ favoriteGames, isLoading }: Props) {
               <div className="text-center">
                 <p
                   className="text-sm font-medium"
-                  style={{ color: "rgba(255,255,255,0.7)" }}
+                  style={{ color: "var(--theme-text-secondary)" }}
                 >
                   {t("favorite.emptyTitle")}
                 </p>
                 <p
                   className="text-xs mt-1"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  style={{ color: "var(--theme-text-muted)" }}
                 >
                   {t("favorite.emptyHint")}
                 </p>
