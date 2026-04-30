@@ -15,4 +15,6 @@ const WishlistItemSchema = new Schema({
   steamAppId: { type: Number },
 });
 
+WishlistItemSchema.index({ userId: 1, igdbId: 1 }, { unique: true });
+
 export default mongoose.model("WishlistItem", WishlistItemSchema);

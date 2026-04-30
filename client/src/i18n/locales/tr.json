@@ -47,6 +47,8 @@
       "minutes": "Dakika"
     },
     "aria": {
+      "closeModal": "Modalı kapat",
+      "openMenu": "Menüyü aç",
       "loading": "Yükleniyor",
       "close": "Kapat",
       "zoom": "Büyüt",
@@ -417,6 +419,14 @@
     "deleteAllConfirm": {
       "title": "Tüm Ekran Görüntülerini Sil",
       "message": "için tüm ekran görüntüleri silinecek. Bu işlem geri alınamaz."
+    },
+    "addTitle": "Ekran Görüntüsü Ekle",
+    "fromSteam": "Steam'den",
+    "addFromDevice": "Cihazdan ekle",
+    "noScreenshots": "Henüz ekran görüntüsü yok",
+    "deleteConfirm": {
+      "title": "Ekran Görüntüsünü Sil",
+      "message": "Bu ekran görüntüsünü silmek istediğinizden emin misiniz?"
     }
   },
   "steamImport": {

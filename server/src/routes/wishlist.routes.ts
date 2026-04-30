@@ -2,6 +2,7 @@ import { Hono } from "hono";
 import { ok } from "../lib/response";
 import wishlistRepository from "../repository/wishlist.repository";
 import { authMiddleware } from "../middlewares/auth.middleware";
+import ExternalAccount from "../models/ExternalAccount";
 import type { AppVariables } from "../types/context";
 
 const wishlist = new Hono<{ Variables: AppVariables }>();
@@ -46,8 +47,21 @@ wishlist.get("/check/:igdbId", authMiddleware, async (c) => {
 // POST /api/wishlist/steam-import - import from Steam wishlist
 wishlist.post("/steam-import", authMiddleware, async (c) => {
   const userId = c.get("userId");
-  const { steamId } = await c.req.json();
-  if (!steamId) return c.json(ok({ error: "steamId required" }), 400);
+  const body = await c.req.json().catch(() => ({}));
+  let { steamId } = body as { steamId?: string };
+
+  // If no steamId provided, try linked Steam account
+  if (!steamId) {
+    const linked = await ExternalAccount.findOne({ user: userId, provider: "steam" });
+    if (linked) {
+      steamId = linked.providerUserId;
+    } else {
+      return c.json(
+        { success: false, error: { code: "STEAM_ID_REQUIRED", message: "No linked Steam account. Please enter your Steam ID." } },
+        400
+      );
+    }
+  }
 
   const { importFromSteamWishlist } = await import("../services/steam-wishlist.service");
   try {

@@ -32,7 +32,7 @@ export const wishlistApi = {
     apiFetch<{ inWishlist: boolean; item?: WishlistItem }>(
       `/api/wishlist/check/${igdbId}`
     ),
-  importFromSteam: (steamId: string) =>
+  importFromSteam: (steamId?: string) =>
     apiFetch<{ imported: number; failed: number; alreadyExists: number }>(
       "/api/wishlist/steam-import",
       { method: "POST", body: JSON.stringify({ steamId }) }

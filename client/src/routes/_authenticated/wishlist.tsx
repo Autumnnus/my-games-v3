@@ -248,6 +248,7 @@ function SteamImportModal({ onClose, onImported }: SteamImportModalProps) {
   const { t } = useTranslation();
   const [steamId, setSteamId] = useState("");
   const [loading, setLoading] = useState(false);
+  const [needsManualId, setNeedsManualId] = useState(false);
   const [result, setResult] = useState<{
     imported: number;
     failed: number;
@@ -255,7 +256,36 @@ function SteamImportModal({ onClose, onImported }: SteamImportModalProps) {
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const handleImport = async () => {
+  // Try auto-import via linked Steam account on mount
+  useEffect(() => {
+    let cancelled = false;
+    async function tryAutoImport() {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await wishlistApi.importFromSteam();
+        if (!cancelled) {
+          setResult(data);
+          if (data.imported > 0) onImported();
+        }
+      } catch (e: any) {
+        if (cancelled) return;
+        if (e?.code === "STEAM_ID_REQUIRED") {
+          setNeedsManualId(true);
+        } else {
+          setError(e.message || "Import failed");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    tryAutoImport();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleManualImport = async () => {
     if (!steamId.trim()) return;
     setLoading(true);
     setError(null);
@@ -279,17 +309,29 @@ function SteamImportModal({ onClose, onImported }: SteamImportModalProps) {
       size="sm"
     >
       <div className="flex flex-col gap-4">
-        <p className="text-sm text-text-muted">
-          {t("translation:wishlist.steamIdPlaceholder")}
-        </p>
-        <GlassInput
-          type="text"
-          value={steamId}
-          onChange={(e) => setSteamId(e.target.value)}
-          placeholder="76561198012345678"
-          onKeyDown={(e) => e.key === "Enter" && handleImport()}
-          error={error ?? undefined}
-        />
+        {needsManualId && (
+          <>
+            <p className="text-sm text-text-muted">
+              {t("translation:wishlist.steamIdPlaceholder")}
+            </p>
+            <GlassInput
+              type="text"
+              value={steamId}
+              onChange={(e) => setSteamId(e.target.value)}
+              placeholder="76561198012345678"
+              onKeyDown={(e) => e.key === "Enter" && handleManualImport()}
+              error={error ?? undefined}
+            />
+          </>
+        )}
+        {!needsManualId && loading && (
+          <p className="text-sm text-text-muted">
+            {t("translation:common.buttons.loading")}…
+          </p>
+        )}
+        {!needsManualId && error && (
+          <p className="text-sm text-red-400">{error}</p>
+        )}
         {result && (
           <div className="p-3 rounded-xl text-xs bg-success-soft border border-success/20 text-success">
             {t("translation:wishlist.importResults", {
@@ -303,15 +345,17 @@ function SteamImportModal({ onClose, onImported }: SteamImportModalProps) {
           <GlassButton size="sm" onClick={onClose}>
             {t("translation:common.buttons.cancel")}
           </GlassButton>
-          <GlassButton
-            size="sm"
-            variant="primary"
-            onClick={handleImport}
-            disabled={!steamId.trim()}
-            loading={loading}
-          >
-            {t("translation:wishlist.import")}
-          </GlassButton>
+          {needsManualId && (
+            <GlassButton
+              size="sm"
+              variant="primary"
+              onClick={handleManualImport}
+              disabled={!steamId.trim()}
+              loading={loading}
+            >
+              {t("translation:wishlist.import")}
+            </GlassButton>
+          )}
         </div>
       </div>
     </GlassModal>
@@ -725,7 +769,10 @@ function WishlistPage() {
       {/* Modals */}
       {steamImportOpen && (
         <SteamImportModal
-          onClose={() => setSteamImportOpen(false)}
+          onClose={() => {
+            setSteamImportOpen(false);
+            fetchWishlist();
+          }}
           onImported={fetchWishlist}
         />
       )}

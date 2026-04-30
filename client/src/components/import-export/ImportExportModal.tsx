@@ -5,6 +5,7 @@ import { GlassSwitch } from "@/components/ui/GlassSwitch";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import type { ConflictResolution, ImportStep } from "@/hooks/useImportExport";
 import { useImportExport } from "@/hooks/useImportExport";
+import { cn } from "@/lib/cn";
 import { scaleIn } from "@/lib/motion";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Download, Upload } from "lucide-react";
@@ -24,19 +25,6 @@ interface ImportExportModalProps {
   onClose: () => void;
   defaultTab?: "import" | "export";
 }
-
-const IMPORT_STEPS_KEYS = [
-  "import.uploadFile",
-  "import.step2",
-  "import.step3",
-  "import.checkConflicts",
-  "import.success",
-] as const;
-const EXPORT_STEPS_KEYS = [
-  "export.selectFormat",
-  "export.formatLabel",
-  "export.exportComplete",
-] as const;
 
 export function ImportExportModal({
   open,
@@ -133,8 +121,7 @@ export function ImportExportModal({
       return;
     }
     if (importStep === 2) {
-      const hasName = Object.values(importState.columnMapping).includes("name");
-      if (!hasName) return;
+      if (!Object.values(importState.columnMapping).includes("name")) return;
       setImportStep(3);
       return;
     }
@@ -158,19 +145,9 @@ export function ImportExportModal({
   }
 
   function handleImportBack() {
-    if (importStep === 1) return;
-    if (importStep === 2) {
-      setImportStep(1);
-      return;
-    }
-    if (importStep === 3) {
-      setImportStep(2);
-      return;
-    }
-    if (importStep === 4) {
-      setImportStep(3);
-      return;
-    }
+    if (importStep === 2) setImportStep(1);
+    else if (importStep === 3) setImportStep(2);
+    else if (importStep === 4) setImportStep(3);
   }
 
   function handleExportNext() {
@@ -181,51 +158,40 @@ export function ImportExportModal({
     if (exportStep === 2) {
       setExportStep(3);
       exportMutation.mutate();
-      return;
     }
   }
 
   function handleExportBack() {
-    if (exportStep === 1) return;
     if (exportStep === 2) setExportStep(1);
   }
 
-  function handleFileSelected(file: File) {
-    setFile(file);
-  }
+  const IMPORT_STEPS = [
+    t("translation:import.uploadFile"),
+    t("translation:import.step2"),
+    t("translation:import.step3"),
+    t("translation:import.checkConflicts"),
+    t("translation:import.success"),
+  ];
+  const EXPORT_STEPS = [
+    t("translation:export.selectFormat"),
+    t("translation:export.formatLabel"),
+    t("translation:export.exportComplete"),
+  ];
 
-  function handleClose() {
-    onClose();
-  }
-
+  const currentSteps = activeTab === "import" ? IMPORT_STEPS : EXPORT_STEPS;
+  const currentStep = activeTab === "import" ? importStep : exportStep;
   const isImportLoading = parseMutation.isPending;
   const isExportLoading = exportMutation.isPending;
-  const detectedConflicts = importState.conflicts;
-
-  const currentSteps =
-    activeTab === "import"
-      ? IMPORT_STEPS_KEYS.map((k) => t(k))
-      : EXPORT_STEPS_KEYS.map((k) => t(k));
-  const currentStep = activeTab === "import" ? importStep : exportStep;
 
   return (
-    <GlassModal
-      open={open}
-      onClose={handleClose}
-      title=""
-      size="xl"
-      allowOverflow
-    >
+    <GlassModal open={open} onClose={onClose} title="" size="xl" allowOverflow>
       <div className="flex flex-col gap-0">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-text-primary">
             {t("translation:import.titleImportExport")}
           </h2>
-          <div
-            className="flex gap-1 p-1 rounded-xl"
-            style={{ background: "var(--theme-surface-subtle)" }}
-          >
+          <div className="flex gap-1 p-1 rounded-xl bg-surface-subtle">
             <TabBtn
               active={activeTab === "import"}
               onClick={() => setActiveTab("import")}
@@ -245,7 +211,7 @@ export function ImportExportModal({
         <StepIndicator steps={currentSteps} currentStep={currentStep} />
 
         {/* Content */}
-        <div className="min-h-64 max-h-96 overflow-y-auto pr-1 text-text-secondary">
+        <div className="min-h-64 max-h-96 overflow-y-auto pr-1 mt-4 text-text-secondary">
           <AnimatePresence mode="wait">
             {activeTab === "import" && (
               <motion.div
@@ -260,10 +226,7 @@ export function ImportExportModal({
                     <p className="text-sm text-text-muted">
                       {t("translation:import.step1Hint")}
                     </p>
-                    <FileDropper
-                      onFileSelected={handleFileSelected}
-                      maxSizeMB={10}
-                    />
+                    <FileDropper onFileSelected={setFile} maxSizeMB={10} />
                     {isImportLoading && (
                       <div className="flex items-center gap-2 justify-center py-4">
                         <LoadingSpinner size="sm" />
@@ -315,7 +278,7 @@ export function ImportExportModal({
                         </span>
                         <GlassSwitch
                           checked={importState.importScreenshots}
-                          onChange={(checked) => setImportScreenshots(checked)}
+                          onChange={setImportScreenshots}
                         />
                       </div>
                     </div>
@@ -341,20 +304,18 @@ export function ImportExportModal({
 
                 {importStep === 4 && (
                   <ConflictResolver
-                    conflicts={detectedConflicts}
+                    conflicts={importState.conflicts}
                     defaultStrategy={importState.conflictStrategy}
-                    onResolve={(newResolutions) => {
-                      setResolutions(newResolutions);
-                    }}
+                    onResolve={setResolutions}
                   />
                 )}
 
                 {importStep === 5 && importResult && (
                   <ImportResult
                     result={importResult}
-                    onClose={handleClose}
+                    onClose={onClose}
                     onViewLibrary={() => {
-                      handleClose();
+                      onClose();
                       window.location.href = "/games";
                     }}
                   />
@@ -396,6 +357,7 @@ export function ImportExportModal({
                     onFiltersChange={setExportFilters}
                   />
                 )}
+
                 {exportStep === 2 && (
                   <div className="flex flex-col gap-4">
                     <p className="text-sm text-text-muted">
@@ -405,13 +367,7 @@ export function ImportExportModal({
                         {exportState.format.toUpperCase()}
                       </strong>
                     </p>
-                    <div
-                      className="rounded-xl p-4 flex flex-col gap-2"
-                      style={{
-                        border: "1px solid var(--theme-glass-border)",
-                        background: "var(--theme-surface-subtle)",
-                      }}
-                    >
+                    <div className="rounded-xl p-4 flex flex-col gap-2 border border-glass-border bg-surface-subtle">
                       <SummaryRow
                         label={t("translation:export.formatLabel")}
                         value={exportState.format.toUpperCase()}
@@ -428,7 +384,9 @@ export function ImportExportModal({
                         label={t("translation:export.statusFilter")}
                         value={
                           exportState.filters.status?.length
-                            ? exportState.filters.status.join(", ")
+                            ? exportState.filters.status
+                                .map((s) => t(`games.status.${s}`))
+                                .join(", ")
                             : t("translation:export.all")
                         }
                       />
@@ -436,13 +394,16 @@ export function ImportExportModal({
                         label={t("translation:export.platformFilter")}
                         value={
                           exportState.filters.platforms?.length
-                            ? exportState.filters.platforms.join(", ")
+                            ? exportState.filters.platforms
+                                .map((p) => t(`games.platform.${p}`))
+                                .join(", ")
                             : t("translation:export.all")
                         }
                       />
                     </div>
                   </div>
                 )}
+
                 {exportStep === 3 && (
                   <div className="flex flex-col items-center justify-center gap-4 py-8">
                     {isExportLoading ? (
@@ -454,14 +415,8 @@ export function ImportExportModal({
                       </>
                     ) : (
                       <>
-                        <div
-                          className="w-14 h-14 rounded-full flex items-center justify-center"
-                          style={{ background: "rgba(34,197,94,0.12)" }}
-                        >
-                          <Download
-                            size={24}
-                            style={{ color: "rgba(34,197,94,0.8)" }}
-                          />
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center bg-success-soft">
+                          <Download size={24} className="text-success" />
                         </div>
                         <p className="text-sm font-medium text-text-secondary">
                           {t("translation:export.exportComplete")}
@@ -478,14 +433,11 @@ export function ImportExportModal({
           </AnimatePresence>
         </div>
 
-        {/* Footer navigation */}
+        {/* Footer — Import */}
         {activeTab === "import" &&
           importStep < 5 &&
           !runImportMutation.isPending && (
-            <div
-              className="flex items-center justify-between mt-6 pt-4"
-              style={{ borderTop: "1px solid var(--theme-glass-border)" }}
-            >
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-glass-border">
               <GlassButton
                 variant="ghost"
                 onClick={handleImportBack}
@@ -519,11 +471,9 @@ export function ImportExportModal({
             </div>
           )}
 
+        {/* Footer — Export */}
         {activeTab === "export" && exportStep < 3 && (
-          <div
-            className="flex items-center justify-between mt-6 pt-4"
-            style={{ borderTop: "1px solid var(--theme-glass-border)" }}
-          >
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-glass-border">
             <GlassButton
               variant="ghost"
               onClick={handleExportBack}
@@ -567,11 +517,12 @@ function TabBtn({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-      style={{
-        background: active ? "var(--theme-glass-border)" : "transparent",
-        color: active ? "var(--theme-text-primary)" : "var(--theme-text-muted)",
-      }}
+      className={cn(
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+        active
+          ? "bg-glass-border text-text-primary"
+          : "text-text-muted hover:text-text-secondary",
+      )}
     >
       {children}
     </button>
