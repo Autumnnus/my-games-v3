@@ -1,21 +1,23 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { Image } from "lucide-react";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { ScreenshotCard } from "@/components/screenshots/ScreenshotCard";
 import { ScreenshotLightbox } from "@/components/screenshots/ScreenshotLightbox";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Skeleton } from "@/components/ui/Skeleton";
 import { useUserScreenshots } from "@/hooks/useScreenshots";
-import { useAuthStore } from "@/store/auth.store";
 import { pageTransition, staggerContainer } from "@/lib/motion";
+import { useAuthStore } from "@/store/auth.store";
+import { createFileRoute } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { Image } from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/_authenticated/screenshots")({
   component: ScreenshotsPage,
 });
 
 function ScreenshotsPage() {
+  const { t } = useTranslation();
   const userId = useAuthStore((s) => s.user?._id ?? "");
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const { data: screenshots = [], isLoading } = useUserScreenshots(userId);
@@ -30,21 +32,20 @@ function ScreenshotsPage() {
       <PageContainer>
         <div className="flex flex-col gap-6">
           <div className="flex items-center gap-3">
-            <h1
-              className="text-2xl font-bold"
-              style={{ color: "rgba(255,255,255,0.95)" }}
-            >
-              Ekran Görüntülerim
+            <h1 className="text-2xl font-bold text-text-primary">
+              {t("translation:pages.screenshots.title")}
             </h1>
             {!isLoading && (
               <span
                 className="text-sm px-2 py-0.5 rounded-full"
                 style={{
-                  background: "rgba(255,255,255,0.08)",
-                  color: "rgba(255,255,255,0.6)",
+                  background: "var(--theme-surface-strong)",
+                  color: "var(--theme-text-secondary)",
                 }}
               >
-                {screenshots.length} adet
+                {t("translation:pages.screenshots.count", {
+                  count: screenshots.length,
+                })}
               </span>
             )}
           </div>
@@ -63,8 +64,8 @@ function ScreenshotsPage() {
           ) : screenshots.length === 0 ? (
             <EmptyState
               icon={<Image size={28} />}
-              title="Ekran görüntüsü yok"
-              description="Oyun sayfalarından ekran görüntüsü ekleyebilirsin."
+              title={t("translation:pages.screenshots.emptyTitle")}
+              description={t("translation:pages.screenshots.emptyDesc")}
             />
           ) : (
             <motion.div

@@ -1,11 +1,23 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Activity, RefreshCw } from "lucide-react";
-import type { ActivityFeedResponse, ActivityType } from "@my-games/shared";
 import { GlassButton } from "@/components/ui/GlassButton";
-import { Skeleton } from "@/components/ui/Skeleton";
+import type { ActivityFeedResponse } from "@my-games/shared";
+import { motion } from "framer-motion";
+import { Activity, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ActivityItem } from "./ActivityItem";
-import { FILTER_OPTIONS, type ActivityFilter } from "./activityConfig";
+import type { ActivityFilter } from "./activityConfig";
+
+const FILTER_OPTION_KEYS: { labelKey: string; value: ActivityFilter }[] = [
+  { labelKey: "activity.all", value: "all" },
+  { labelKey: "activity.added", value: "game_added" },
+  { labelKey: "activity.completed", value: "game_completed" },
+  { labelKey: "activity.dropped", value: "game_abandoned" },
+  { labelKey: "activity.rated", value: "game_rated" },
+  { labelKey: "activity.reviewed", value: "game_reviewed" },
+  { labelKey: "activity.screenshot", value: "screenshot_added" },
+  { labelKey: "activity.steamSync", value: "steam_synced" },
+  { labelKey: "activity.milestone", value: "milestone_playtime" },
+];
 
 interface Props {
   data: ActivityFeedResponse | undefined;
@@ -24,6 +36,7 @@ export function ActivityFeed({
   onPageChange,
   onRefresh,
 }: Props) {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<ActivityFilter>("all");
 
   const items = data?.items ?? [];
@@ -34,7 +47,7 @@ export function ActivityFeed({
     <div className="flex flex-col gap-4">
       {/* Filter chips */}
       <div className="flex flex-wrap gap-2">
-        {FILTER_OPTIONS.map((opt) => (
+        {FILTER_OPTION_KEYS.map((opt) => (
           <button
             key={opt.value}
             onClick={() => setFilter(opt.value)}
@@ -42,34 +55,33 @@ export function ActivityFeed({
             style={
               filter === opt.value
                 ? {
-                    background: "rgba(168,85,247,0.2)",
-                    borderColor: "rgba(168,85,247,0.5)",
-                    color: "#c084fc",
+                    background: "var(--theme-accent-soft)",
+                    borderColor: "var(--theme-accent-soft)",
+                    color: "var(--theme-accent)",
                   }
                 : {
-                    background: "rgba(255,255,255,0.04)",
-                    borderColor: "rgba(255,255,255,0.1)",
-                    color: "rgba(255,255,255,0.5)",
+                    background: "var(--theme-surface-subtle)",
+                    borderColor: "var(--theme-glass-border)",
+                    color: "var(--theme-text-muted)",
                   }
             }
           >
-            {opt.label}
+            {t(opt.labelKey)}
           </button>
         ))}
 
-        {/* Refresh button */}
         <button
           onClick={onRefresh}
           disabled={isFetching}
           className="ml-auto px-3 py-1 rounded-full text-xs border flex items-center gap-1.5 transition-all"
           style={{
-            background: "rgba(255,255,255,0.04)",
-            borderColor: "rgba(255,255,255,0.1)",
-            color: "rgba(255,255,255,0.4)",
+            background: "var(--theme-surface-subtle)",
+            borderColor: "var(--theme-glass-border)",
+            color: "var(--theme-text-muted)",
           }}
         >
           <RefreshCw size={11} className={isFetching ? "animate-spin" : ""} />
-          Yenile
+          {t("translation:activity.refresh")}
         </button>
       </div>
 
@@ -100,7 +112,7 @@ export function ActivityFeed({
           >
             <ChevronLeft size={14} />
           </GlassButton>
-          <span className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <span className="text-sm text-text-muted">
             {page} / {data.totalPages}
           </span>
           <GlassButton
@@ -118,17 +130,18 @@ export function ActivityFeed({
 
 function ActivitySkeleton() {
   return (
-    <div className="flex gap-3 p-4 rounded-xl border border-white/[0.07] bg-white/[0.03]">
-      <div className="w-7 h-7 rounded-full bg-white/10 animate-pulse shrink-0" />
+    <div className="flex gap-3 p-4 rounded-xl border border-glass-border bg-glass-surface">
+      <div className="w-7 h-7 rounded-full bg-glass-surface-hover animate-pulse shrink-0" />
       <div className="flex-1 flex flex-col gap-2">
-        <div className="h-4 w-2/3 rounded bg-white/10 animate-pulse" />
-        <div className="h-3 w-1/4 rounded bg-white/10 animate-pulse" />
+        <div className="h-4 w-2/3 rounded bg-glass-surface-hover animate-pulse" />
+        <div className="h-3 w-1/4 rounded bg-glass-surface-hover animate-pulse" />
       </div>
     </div>
   );
 }
 
 function EmptyFeed({ filter }: { filter: ActivityFilter }) {
+  const { t } = useTranslation();
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -138,14 +151,16 @@ function EmptyFeed({ filter }: { filter: ActivityFilter }) {
       <div
         className="w-12 h-12 rounded-2xl flex items-center justify-center"
         style={{
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.08)",
+          background: "var(--theme-surface-subtle)",
+          border: "1px solid var(--theme-glass-border)",
         }}
       >
-        <Activity size={20} style={{ color: "rgba(255,255,255,0.3)" }} />
+        <Activity size={20} className="text-text-muted" />
       </div>
-      <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
-        {filter === "all" ? "Henüz aktivite yok." : "Bu filtrede aktivite yok."}
+      <p className="text-sm text-text-muted">
+        {filter === "all"
+          ? t("translation:activity.noActivity")
+          : t("translation:activity.noActivityFiltered")}
       </p>
     </motion.div>
   );

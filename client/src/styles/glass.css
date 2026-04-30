@@ -7,7 +7,7 @@
   border-radius: var(--radius-glass);
   box-shadow:
     inset 0 1px 0 var(--theme-glass-highlight),
-    0 18px 60px rgba(0, 0, 0, 0.14);
+    0 18px 60px var(--theme-shadow);
 }
 
 .glass-card-sm {
@@ -31,7 +31,7 @@
   background: var(--theme-glass-surface-hover);
   border-color: var(--theme-glass-border-hover);
   transform: translateY(-2px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 32px var(--theme-shadow);
 }
 
 /* ─── Glass Input ────────────────────────────────────────────────── */
@@ -40,7 +40,7 @@
     linear-gradient(
       170deg,
       var(--theme-glass-highlight),
-      rgba(255, 255, 255, 0.02) 45%
+      color-mix(in srgb, var(--theme-glass-surface) 36%, transparent) 45%
     ),
     var(--theme-glass-surface);
   border: 1px solid var(--theme-glass-border);
@@ -54,9 +54,9 @@
     background 220ms ease,
     transform 220ms ease;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -10px 16px rgba(255, 255, 255, 0.02),
-    0 8px 24px rgba(7, 10, 18, 0.26);
+    inset 0 1px 0 var(--theme-glass-highlight),
+    inset 0 -10px 16px color-mix(in srgb, var(--theme-glass-surface) 40%, transparent),
+    0 8px 24px var(--theme-shadow);
 }
 
 .glass-input-shell {
@@ -73,8 +73,8 @@
   border-radius: calc(var(--radius-glass-sm) + 1px);
   background: linear-gradient(
     120deg,
-    rgba(255, 255, 255, 0.22),
-    rgba(255, 255, 255, 0.02) 30%,
+    var(--theme-glass-highlight),
+    color-mix(in srgb, var(--theme-glass-surface) 35%, transparent) 30%,
     var(--theme-accent-soft) 75%,
     var(--theme-mesh-b)
   );
@@ -91,15 +91,15 @@
 .glass-input:focus {
   border-color: var(--theme-accent);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 1px 0 var(--theme-glass-highlight),
     0 0 0 2px var(--theme-accent-soft),
     0 12px 34px var(--theme-mesh-b);
   outline: none;
   background:
     linear-gradient(
       170deg,
-      rgba(255, 255, 255, 0.15),
-      rgba(255, 255, 255, 0.03) 45%
+      var(--theme-glass-highlight),
+      color-mix(in srgb, var(--theme-glass-surface) 42%, transparent) 45%
     ),
     var(--theme-glass-surface-hover);
   transform: translateY(-1px);
@@ -110,10 +110,10 @@
   background:
     linear-gradient(
       170deg,
-      rgba(255, 255, 255, 0.14),
-      rgba(255, 255, 255, 0.03) 45%
+      var(--theme-glass-highlight),
+      color-mix(in srgb, var(--theme-glass-surface) 38%, transparent) 45%
     ),
-    rgba(255, 255, 255, 0.05);
+    var(--theme-glass-surface-hover);
 }
 
 .glass-input-shell:focus-within::before {
@@ -127,7 +127,7 @@
 .glass-input-error {
   border-color: #ef4444 !important;
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 1px 0 var(--theme-glass-highlight),
     0 0 0 2px rgba(239, 68, 68, 0.22),
     0 12px 24px rgba(127, 29, 29, 0.28) !important;
 }
@@ -162,8 +162,8 @@
   background:
     linear-gradient(
       170deg,
-      rgba(255, 255, 255, 0.16),
-      rgba(255, 255, 255, 0.04) 45%
+      var(--theme-glass-highlight),
+      color-mix(in srgb, var(--theme-glass-surface) 44%, transparent) 45%
     ),
     var(--theme-bg-elevated);
   border-color: var(--theme-glass-border-hover);
@@ -182,7 +182,7 @@
     var(--theme-accent-soft),
     var(--theme-mesh-b)
   );
-  color: #ffffff;
+  color: var(--theme-text-inverse);
 }
 
 .glass-select option:disabled {
@@ -198,8 +198,8 @@
   backdrop-filter: blur(22px) saturate(160%);
   -webkit-backdrop-filter: blur(22px) saturate(160%);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 18px 48px rgba(0, 0, 0, 0.44);
+    inset 0 1px 0 var(--theme-glass-highlight),
+    0 18px 48px var(--theme-shadow);
 }
 
 @media (max-width: 640px) {
@@ -229,7 +229,7 @@
 .glass-btn:hover:not(:disabled) {
   background: var(--theme-glass-surface-hover);
   border-color: var(--theme-glass-border-hover);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px var(--theme-shadow);
 }
 
 .glass-btn:active:not(:disabled) {
@@ -261,13 +261,14 @@
 }
 
 .glass-btn-danger {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.3);
+  background: var(--theme-danger-soft);
+  border-color: color-mix(in srgb, var(--theme-danger) 35%, transparent);
+  color: var(--theme-danger);
 }
 
 .glass-btn-danger:hover:not(:disabled) {
-  background: rgba(239, 68, 68, 0.25);
-  border-color: rgba(239, 68, 68, 0.5);
+  background: color-mix(in srgb, var(--theme-danger) 22%, transparent);
+  border-color: color-mix(in srgb, var(--theme-danger) 52%, transparent);
 }
 
 .glass-btn-ghost {
@@ -310,9 +311,9 @@
 .glass-skeleton {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.04) 25%,
-    rgba(255, 255, 255, 0.1) 50%,
-    rgba(255, 255, 255, 0.04) 75%
+    var(--theme-glass-surface) 25%,
+    var(--theme-glass-surface-hover) 50%,
+    var(--theme-glass-surface) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
@@ -338,7 +339,94 @@
 
 /* ─── Modal Overlay ──────────────────────────────────────────────── */
 .glass-overlay {
-  background: rgba(0, 0, 0, 0.72);
+  background: color-mix(in srgb, var(--theme-bg-base) 72%, transparent);
   backdrop-filter: blur(16px) saturate(120%);
   -webkit-backdrop-filter: blur(16px) saturate(120%);
+}
+
+/* ─── Radix Select / Popover Panel ──────────────────────────────── */
+.glass-panel {
+  background: linear-gradient(180deg, var(--theme-bg-overlay), var(--theme-bg-elevated));
+  border: 1px solid var(--theme-glass-border);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border-radius: var(--radius-glass-sm);
+  box-shadow:
+    inset 0 1px 0 var(--theme-glass-highlight),
+    0 20px 56px var(--theme-shadow);
+}
+
+.glass-panel-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--theme-text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.glass-panel-item:hover,
+.glass-panel-item[data-highlighted] {
+  background: var(--theme-glass-surface-hover);
+  color: var(--theme-text-primary);
+}
+
+.glass-panel-item[data-state="checked"] {
+  color: var(--theme-accent);
+}
+
+.glass-panel-item[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Radix Switch ───────────────────────────────────────────────── */
+.glass-switch {
+  position: relative;
+  display: inline-flex;
+  height: 20px;
+  width: 36px;
+  align-items: center;
+  border-radius: 9999px;
+  border: 1px solid var(--theme-glass-border);
+  background: var(--theme-glass-surface);
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease;
+  outline: none;
+}
+
+.glass-switch[data-state="checked"] {
+  background: var(--theme-accent-strong);
+  border-color: var(--theme-glass-border-hover);
+}
+
+.glass-switch:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.glass-switch:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+
+.glass-switch-thumb {
+  display: block;
+  height: 14px;
+  width: 14px;
+  border-radius: 9999px;
+  background: var(--theme-text-muted);
+  transform: translateX(3px);
+  transition: transform 200ms ease, background 180ms ease;
+  pointer-events: none;
+}
+
+.glass-switch[data-state="checked"] .glass-switch-thumb {
+  background: #ffffff;
+  transform: translateX(18px);
 }

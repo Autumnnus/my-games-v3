@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { Search, CheckSquare, Square, ChevronDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { GlassModal } from "@/components/ui/GlassModal";
 import { GlassButton } from "@/components/ui/GlassButton";
@@ -15,24 +16,6 @@ interface Props {
   onClose: () => void;
 }
 
-const CONFLICT_OPTIONS: {
-  value: ConflictResolution;
-  label: string;
-  desc: string;
-}[] = [
-  {
-    value: "higher",
-    label: "En yükseği al",
-    desc: "Mevcut ve Steam süresinden büyük olanı kullan",
-  },
-  {
-    value: "steam",
-    label: "Steam'i üzerine yaz",
-    desc: "Her zaman Steam'deki süreyi kullan",
-  },
-  { value: "keep", label: "Mevcut koru", desc: "Zaten ekli oyunlara dokunma" },
-];
-
 function GameRow({
   item,
   selected,
@@ -42,6 +25,7 @@ function GameRow({
   selected: boolean;
   onToggle: () => void;
 }) {
+  const { t } = useTranslation();
   const hasConflict =
     item.existingPlaytimeMinutes !== undefined &&
     item.existingPlaytimeMinutes !== item.playtimeMinutes;
@@ -55,13 +39,13 @@ function GameRow({
       className="w-full flex items-start gap-3 px-3 py-2 rounded-lg transition-colors text-left"
       style={{
         background: selected ? "rgba(168,85,247,0.08)" : "transparent",
-        border: `1px solid ${selected ? "rgba(168,85,247,0.25)" : "transparent"}`,
+        border: `1px solid ${selected ? "var(--theme-accent-soft)" : "transparent"}`,
       }}
     >
       {/* Checkbox */}
       <span
         style={{
-          color: selected ? "#a855f7" : "rgba(255,255,255,0.3)",
+          color: selected ? "var(--theme-accent)" : "var(--theme-text-muted)",
           flexShrink: 0,
         }}
       >
@@ -82,15 +66,13 @@ function GameRow({
       {/* Title + conflict details */}
       <div className="flex-1 min-w-0">
         <p
-          className="text-sm truncate"
-          style={{ color: "rgba(255,255,255,0.85)" }}
+          className="text-sm truncate text-text-secondary"
         >
           {item.title}
         </p>
         {hasConflict && (
           <div
-            className="mt-1.5 text-xs flex flex-wrap items-center gap-x-2 gap-y-1"
-            style={{ color: "rgba(255,255,255,0.55)" }}
+            className="mt-1.5 text-xs flex flex-wrap items-center gap-x-2 gap-y-1 text-text-muted"
           >
             <span>
               Mevcut: {formatPlayTime(item.existingPlaytimeMinutes ?? 0)}
@@ -105,10 +87,10 @@ function GameRow({
 
       {/* Playtime + conflict */}
       <div className="flex flex-col items-end gap-0.5 shrink-0">
-        <span className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+        <span className="text-xs text-text-muted">
           {item.playtimeMinutes > 0
             ? formatPlayTime(item.playtimeMinutes)
-            : "0 dk"}
+            : t('steamImport.zeroPlaytime')}
         </span>
         {hasConflict && (
           <span
@@ -123,7 +105,7 @@ function GameRow({
         )}
         {item.existingPlaytimeMinutes !== undefined && !hasConflict && (
           <span className="text-xs" style={{ color: "rgba(134,239,172,0.7)" }}>
-            Eklendi
+            {t('steamImport.added')}
           </span>
         )}
       </div>
@@ -132,8 +114,31 @@ function GameRow({
 }
 
 export function SteamImportModal({ open, onClose }: Props) {
+  const { t } = useTranslation();
   const { data: library, isLoading, error, refetch } = useSteamLibrary(open);
   const syncMutation = useSyncSteam();
+
+  const CONFLICT_OPTIONS: {
+    value: ConflictResolution;
+    label: string;
+    desc: string;
+  }[] = [
+    {
+      value: "higher",
+      label: t('steamImport.conflictHigher'),
+      desc: t('steamImport.conflictHigherDesc'),
+    },
+    {
+      value: "steam",
+      label: t('steamImport.conflictSteam'),
+      desc: t('steamImport.conflictSteamDesc'),
+    },
+    {
+      value: "keep",
+      label: t('steamImport.conflictKeep'),
+      desc: t('steamImport.conflictKeepDesc'),
+    },
+  ];
 
   const [search, setSearch] = useState("");
   const [conflictResolution, setConflictResolution] =
@@ -272,23 +277,22 @@ export function SteamImportModal({ open, onClose }: Props) {
             <GlassInput
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Oyun ara..."
+              placeholder={t('steamImport.searchPlaceholder')}
               leftIcon={<Search size={13} />}
               className="flex-1"
             />
             <GlassButton size="sm" onClick={toggleAll} variant="ghost">
-              {allFilteredSelected ? "Hepsini Kaldır" : "Hepsini Seç"}
+              {allFilteredSelected ? t('steamImport.deselectAll') : t('steamImport.selectAll')}
             </GlassButton>
           </div>
 
           {/* Stats */}
           <div
-            className="flex items-center gap-3 text-sm shrink-0"
-            style={{ color: "rgba(255,255,255,0.5)" }}
+            className="flex items-center gap-3 text-sm shrink-0 text-text-muted"
           >
             <span>{library?.length ?? 0} oyun</span>
             <span>·</span>
-            <span style={{ color: "#a855f7" }}>{selected.size} seçili</span>
+            <span className="text-accent">{selected.size} seçili</span>
             <span>·</span>
             <span>{notAddedCount} eklenmemiş</span>
             {conflictCount > 0 && (
@@ -309,12 +313,11 @@ export function SteamImportModal({ open, onClose }: Props) {
             >
               <div className="flex flex-col items-start">
                 <span
-                  className="text-xs mb-0.5"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
+                  className="text-xs mb-0.5 text-text-muted"
                 >
                   Görünüm filtreleri
                 </span>
-                <span style={{ color: "rgba(255,255,255,0.85)" }}>
+                <span className="text-text-secondary">
                   {showNotAdded ? "Eklenmemişler" : ""}
                   {showNotAdded && showConflicts ? " + " : ""}
                   {showConflicts ? "Çakışanlar" : ""}
@@ -327,7 +330,7 @@ export function SteamImportModal({ open, onClose }: Props) {
               <ChevronDown
                 size={14}
                 style={{
-                  color: "rgba(255,255,255,0.4)",
+                  color: "var(--theme-text-muted)",
                   transform: showViewFilters ? "rotate(180deg)" : "none",
                   transition: "transform 0.2s",
                 }}
@@ -340,10 +343,10 @@ export function SteamImportModal({ open, onClose }: Props) {
                   className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-left transition-colors border"
                   style={{
                     background: showNotAdded
-                      ? "rgba(168,85,247,0.16)"
+                      ? "var(--theme-accent-soft)"
                       : "transparent",
                     borderColor: showNotAdded
-                      ? "rgba(168,85,247,0.45)"
+                      ? "var(--theme-accent-soft)"
                       : "transparent",
                   }}
                 >
@@ -351,8 +354,8 @@ export function SteamImportModal({ open, onClose }: Props) {
                     className="text-sm"
                     style={{
                       color: showNotAdded
-                        ? "rgba(255,255,255,0.97)"
-                        : "rgba(255,255,255,0.85)",
+                        ? "var(--theme-text-primary)"
+                        : "var(--theme-text-secondary)",
                     }}
                   >
                     Eklenmemişler
@@ -361,8 +364,8 @@ export function SteamImportModal({ open, onClose }: Props) {
                     className="text-xs font-medium"
                     style={{
                       color: showNotAdded
-                        ? "#c084fc"
-                        : "rgba(255,255,255,0.45)",
+                        ? "var(--theme-accent)"
+                        : "var(--theme-text-muted)",
                     }}
                   >
                     {notAddedCount}
@@ -384,8 +387,8 @@ export function SteamImportModal({ open, onClose }: Props) {
                     className="text-sm"
                     style={{
                       color: showConflicts
-                        ? "rgba(255,255,255,0.97)"
-                        : "rgba(255,255,255,0.85)",
+                        ? "var(--theme-text-primary)"
+                        : "var(--theme-text-secondary)",
                     }}
                   >
                     Çakışanlar
@@ -395,7 +398,7 @@ export function SteamImportModal({ open, onClose }: Props) {
                     style={{
                       color: showConflicts
                         ? "rgba(251,146,60,0.96)"
-                        : "rgba(255,255,255,0.45)",
+                        : "var(--theme-text-muted)",
                     }}
                   >
                     {conflictCount}
@@ -417,8 +420,8 @@ export function SteamImportModal({ open, onClose }: Props) {
                     className="text-sm"
                     style={{
                       color: showAlreadyAdded
-                        ? "rgba(255,255,255,0.97)"
-                        : "rgba(255,255,255,0.85)",
+                        ? "var(--theme-text-primary)"
+                        : "var(--theme-text-secondary)",
                     }}
                   >
                     Ekli olanlar (gizle/göster)
@@ -428,7 +431,7 @@ export function SteamImportModal({ open, onClose }: Props) {
                     style={{
                       color: showAlreadyAdded
                         ? "rgba(74,222,128,0.95)"
-                        : "rgba(255,255,255,0.45)",
+                        : "var(--theme-text-muted)",
                     }}
                   >
                     {alreadyAddedCount}
@@ -447,19 +450,18 @@ export function SteamImportModal({ open, onClose }: Props) {
               >
                 <div className="flex flex-col items-start">
                   <span
-                    className="text-xs mb-0.5"
-                    style={{ color: "rgba(255,255,255,0.4)" }}
+                    className="text-xs mb-0.5 text-text-muted"
                   >
                     Çakışma çözümü
                   </span>
-                  <span style={{ color: "rgba(255,255,255,0.85)" }}>
+                  <span className="text-text-secondary">
                     {selectedConflictOption.label}
                   </span>
                 </div>
                 <ChevronDown
                   size={14}
                   style={{
-                    color: "rgba(255,255,255,0.4)",
+                    color: "var(--theme-text-muted)",
                     transform: showConflictPicker ? "rotate(180deg)" : "none",
                     transition: "transform 0.2s",
                   }}
@@ -479,22 +481,21 @@ export function SteamImportModal({ open, onClose }: Props) {
                           setConflictResolution(opt.value);
                           setShowConflictPicker(false);
                         }}
-                        className="w-full flex flex-col items-start px-3 py-2 rounded-lg text-left hover:bg-white/5 transition-colors"
+                        className="w-full flex flex-col items-start px-3 py-2 rounded-lg text-left hover:bg-glass-surface transition-colors"
                       >
                         <span
                           className="text-sm font-medium"
                           style={{
                             color:
                               conflictResolution === opt.value
-                                ? "#a855f7"
-                                : "rgba(255,255,255,0.85)",
+                                ? "var(--theme-accent)"
+                                : "var(--theme-text-secondary)",
                           }}
                         >
                           {opt.label}
                         </span>
                         <span
-                          className="text-xs mt-0.5"
-                          style={{ color: "rgba(255,255,255,0.4)" }}
+                          className="text-xs mt-0.5 text-text-muted"
                         >
                           {opt.desc}
                         </span>
@@ -526,8 +527,7 @@ export function SteamImportModal({ open, onClose }: Props) {
             ))}
             {filtered.length === 0 && (
               <p
-                className="text-center py-8 text-sm"
-                style={{ color: "rgba(255,255,255,0.4)" }}
+                className="text-center py-8 text-sm text-text-muted"
               >
                 Oyun bulunamadı
               </p>
@@ -535,7 +535,7 @@ export function SteamImportModal({ open, onClose }: Props) {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/8 shrink-0">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-glass-border shrink-0">
             <GlassButton variant="ghost" size="sm" onClick={onClose}>
               İptal
             </GlassButton>

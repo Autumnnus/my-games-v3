@@ -30,8 +30,8 @@ function ConflictCard({
     <div
       className="rounded-xl p-4 flex flex-col gap-3"
       style={{
-        background: "rgba(255,255,255,0.04)",
-        border: "1px solid rgba(255,255,255,0.08)",
+        background: "var(--theme-surface-subtle)",
+        border: "1px solid var(--theme-glass-border)",
       }}
     >
       {/* Game info */}
@@ -44,8 +44,7 @@ function ConflictCard({
           />
         )}
         <p
-          className="text-sm font-medium"
-          style={{ color: "rgba(255,255,255,0.9)" }}
+          className="text-sm font-medium text-text-primary"
         >
           🎮 {conflict.gameName}
         </p>
@@ -54,29 +53,27 @@ function ConflictCard({
       {/* Values */}
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <span className="text-xs text-text-muted">
             Sen
           </span>
           <span
-            className="text-sm font-semibold"
-            style={{ color: "rgba(255,255,255,0.85)" }}
+            className="text-sm font-semibold text-text-secondary"
           >
             {formatPlayTime(conflict.manualValue)}
           </span>
         </div>
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <span className="text-xs text-text-muted">
             Steam
           </span>
           <span
-            className="text-sm font-semibold"
-            style={{ color: "rgba(255,255,255,0.85)" }}
+            className="text-sm font-semibold text-text-secondary"
           >
             {formatPlayTime(conflict.steamValue)}
           </span>
         </div>
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>
+          <span className="text-xs text-text-muted">
             Fark
           </span>
           <span
@@ -159,23 +156,21 @@ export function ConflictPopup({
             <div className="flex items-center gap-2">
               <AlertTriangle size={18} className="text-amber-400" />
               <h2
-                className="text-base font-semibold"
-                style={{ color: "rgba(255,255,255,0.95)" }}
+                className="text-base font-semibold text-text-primary"
               >
                 Steam Senkronizasyon Çakışmaları Tespit Edildi
               </h2>
             </div>
             <button
               onClick={onDismiss}
-              className="shrink-0 p-1.5 rounded-lg transition-colors"
-              style={{ color: "rgba(255,255,255,0.5)" }}
+              className="shrink-0 p-1.5 rounded-lg transition-colors text-text-muted"
               aria-label="Kapat"
             >
               <X size={16} />
             </button>
           </div>
 
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <p className="text-sm text-text-muted">
             Steam oynama süresi, manuel girdiğiniz değerlerden farklı. Her biri
             için nasıl çözmek istediğini seç.
           </p>

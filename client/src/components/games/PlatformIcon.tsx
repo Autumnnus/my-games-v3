@@ -14,8 +14,7 @@ export function PlatformIcon({
 }: PlatformIconProps) {
   return (
     <span
-      className={`inline-flex items-center gap-1 text-xs ${className}`}
-      style={{ color: "rgba(255,255,255,0.5)" }}
+      className={`inline-flex items-center gap-1 text-xs text-text-muted ${className}`}
       title={PLATFORM_LABELS[platform]}
     >
       <span>{PLATFORM_ICONS[platform]}</span>

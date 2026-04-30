@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { Edit2, Trash2, Star } from "lucide-react";
 import type { GameListItem as GameListItemType } from "@/api/types";
 import { formatCoverUrl, formatRating } from "@/lib/formatters";
 import { fadeUp } from "@/lib/motion";
-import { StatusBadge } from "./StatusBadge";
-import { PlayTimeBadge } from "./PlayTimeBadge";
+import { Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { Edit2, Star, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { PlatformIcon } from "./PlatformIcon";
+import { PlayTimeBadge } from "./PlayTimeBadge";
+import { StatusBadge } from "./StatusBadge";
 
 interface GameListItemProps {
   game: GameListItemType;
@@ -22,6 +23,7 @@ export function GameListItem({
   onDelete,
   readonly = false,
 }: GameListItemProps) {
+  const { t } = useTranslation();
   const steamOrPrimaryCoverUrl = game.photo
     ? formatCoverUrl(game.photo, "thumb")
     : null;
@@ -46,10 +48,7 @@ export function GameListItem({
         params={{ id: game._id }}
         className="flex items-center gap-3 flex-1 min-w-0"
       >
-        <div
-          className="w-10 h-14 rounded-lg overflow-hidden shrink-0"
-          style={{ background: "rgba(255,255,255,0.04)" }}
-        >
+        <div className="w-10 h-14 rounded-lg overflow-hidden shrink-0 theme-cover-placeholder">
           {imageSrc ? (
             <img
               src={imageSrc}
@@ -78,10 +77,7 @@ export function GameListItem({
                 className="fill-yellow-400 text-yellow-400 shrink-0"
               />
             )}
-            <p
-              className="text-sm font-medium truncate"
-              style={{ color: "rgba(255,255,255,0.9)" }}
-            >
+            <p className="text-sm font-medium truncate text-text-primary">
               {game.name}
             </p>
           </div>
@@ -94,10 +90,7 @@ export function GameListItem({
       </Link>
 
       {game.rating !== undefined && game.rating !== null && (
-        <div
-          className="shrink-0 text-sm font-medium"
-          style={{ color: "rgba(255,255,255,0.6)" }}
-        >
+        <div className="shrink-0 text-sm font-medium text-text-secondary">
           ⭐ {formatRating(game.rating)}
         </div>
       )}
@@ -108,7 +101,7 @@ export function GameListItem({
             <button
               onClick={() => onEdit(game)}
               className="glass-btn p-1.5 rounded-lg"
-              aria-label="Düzenle"
+              aria-label={t("translation:common.aria.edit")}
             >
               <Edit2 size={13} />
             </button>
@@ -117,7 +110,7 @@ export function GameListItem({
             <button
               onClick={() => onDelete(game)}
               className="glass-btn glass-btn-danger p-1.5 rounded-lg"
-              aria-label="Sil"
+              aria-label={t("translation:common.aria.delete")}
             >
               <Trash2 size={13} />
             </button>

@@ -44,8 +44,7 @@ export function IGDBSearchCombobox({
       <div className="relative flex items-center">
         <Search
           size={15}
-          className="absolute left-3"
-          style={{ color: "rgba(255,255,255,0.4)" }}
+          className="absolute left-3 text-text-muted"
         />
         <input
           type="text"
@@ -66,8 +65,7 @@ export function IGDBSearchCombobox({
               setQuery("");
               setOpen(false);
             }}
-            className="absolute right-3"
-            style={{ color: "rgba(255,255,255,0.4)" }}
+            className="absolute right-3 text-text-muted"
           >
             <X size={14} />
           </button>
@@ -98,7 +96,7 @@ export function IGDBSearchCombobox({
                     setQuery(game.name);
                     setOpen(false);
                   }}
-                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left hover:bg-white/6 transition-colors"
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-left hover:bg-glass-surface transition-colors"
                 >
                   {cover ? (
                     <img
@@ -113,15 +111,13 @@ export function IGDBSearchCombobox({
                   )}
                   <div className="flex-1 min-w-0">
                     <p
-                      className="text-sm font-medium truncate"
-                      style={{ color: "rgba(255,255,255,0.9)" }}
+                      className="text-sm font-medium truncate text-text-primary"
                     >
                       {game.name}
                     </p>
                     {year && (
                       <p
-                        className="text-xs"
-                        style={{ color: "rgba(255,255,255,0.4)" }}
+                        className="text-xs text-text-muted"
                       >
                         {year}
                       </p>

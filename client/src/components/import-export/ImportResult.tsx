@@ -35,7 +35,7 @@ export function ImportResult({
           icon={<ArrowRight size={15} />}
           value={summary.updated}
           label="Güncellendi"
-          color="rgba(59,130,246,0.8)"
+          color="var(--theme-accent-2)"
         />
         <StatCard
           icon={<SkipForward size={15} />}
@@ -80,7 +80,7 @@ export function ImportResult({
               </p>
             ))}
             {errors.length > 10 && (
-              <p className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>
+              <p className="text-xs text-text-muted">
                 ...ve {errors.length - 10} hata daha
               </p>
             )}
@@ -116,18 +116,17 @@ function StatCard({
     <div
       className="flex flex-col items-center gap-1.5 rounded-xl py-3"
       style={{
-        background: "rgba(255,255,255,0.03)",
-        border: "1px solid rgba(255,255,255,0.07)",
+        background: "var(--theme-surface-subtle)",
+        border: "1px solid var(--theme-glass-border)",
       }}
     >
       <div style={{ color }}>{icon}</div>
       <span
-        className="text-xl font-bold"
-        style={{ color: "rgba(255,255,255,0.9)" }}
+        className="text-xl font-bold text-text-primary"
       >
         {value}
       </span>
-      <span className="text-xs" style={{ color: "rgba(255,255,255,0.35)" }}>
+      <span className="text-xs text-text-muted">
         {label}
       </span>
     </div>

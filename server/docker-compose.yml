@@ -1,5 +1,5 @@
 services:
-  mongo:
+  mongodb:
     image: mongo:7
     container_name: my-games-mongo
     restart: unless-stopped

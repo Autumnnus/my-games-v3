@@ -11,6 +11,10 @@ async function getUserStatisticsService(userId: string) {
   return await statisticsRepository.getStatisticsById(userId);
 }
 
+async function getUserAggregateStatisticsService(userId: string) {
+  return await gameRepository.getUserAggregateStatistics(userId);
+}
+
 async function updateStatisticsService() {
   const users = await userRepository.findAllUsers();
   const updated = [];
@@ -45,5 +49,6 @@ async function updateStatisticsService() {
 export default {
   getStatisticsService,
   getUserStatisticsService,
+  getUserAggregateStatisticsService,
   updateStatisticsService,
 };

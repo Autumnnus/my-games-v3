@@ -16,6 +16,10 @@
   --color-glass-surface-hover: var(--theme-glass-surface-hover);
   --color-glass-border-hover: var(--theme-glass-border-hover);
 
+  --color-accent: var(--theme-accent);
+  --color-accent-soft: var(--theme-accent-soft);
+  --color-accent-strong: var(--theme-accent-strong);
+  --color-accent-2: var(--theme-accent-2);
   --color-accent-purple: var(--theme-accent);
   --color-accent-purple-dim: var(--theme-accent-soft);
   --color-accent-blue: var(--theme-accent-2);
@@ -25,6 +29,18 @@
   --color-text-primary: var(--theme-text-primary);
   --color-text-secondary: var(--theme-text-secondary);
   --color-text-muted: var(--theme-text-muted);
+  --color-text-inverse: var(--theme-text-inverse);
+
+  --color-danger: var(--theme-danger);
+  --color-danger-soft: var(--theme-danger-soft);
+  --color-warning: var(--theme-warning);
+  --color-warning-soft: var(--theme-warning-soft);
+  --color-success: var(--theme-success);
+  --color-success-soft: var(--theme-success-soft);
+
+  --color-surface-subtle: var(--theme-surface-subtle);
+  --color-surface-strong: var(--theme-surface-strong);
+  --color-shadow: var(--theme-shadow);
 
   --color-status-completed: #22c55e;
   --color-status-active: #3b82f6;
@@ -60,6 +76,16 @@
   --theme-mesh-a: rgba(139, 92, 246, 0.15);
   --theme-mesh-b: rgba(59, 130, 246, 0.12);
   --theme-focus-ring: var(--theme-accent);
+  --theme-surface-subtle: rgba(255, 255, 255, 0.04);
+  --theme-surface-strong: rgba(255, 255, 255, 0.08);
+  --theme-shadow: rgba(0, 0, 0, 0.24);
+  --theme-text-inverse: rgba(255, 255, 255, 0.96);
+  --theme-danger-soft: rgba(239, 68, 68, 0.14);
+  --theme-danger: #ef4444;
+  --theme-warning-soft: rgba(245, 158, 11, 0.14);
+  --theme-warning: #f59e0b;
+  --theme-success-soft: rgba(34, 197, 94, 0.14);
+  --theme-success: #22c55e;
 }
 
 :root[data-theme="light"] {
@@ -82,6 +108,16 @@
   background: rgba(20, 28, 44, 0.34);
 }
 
+:root[data-theme="light"] .bg-black\/40 {
+  background-color: rgba(17, 24, 39, 0.24) !important;
+}
+
+:root[data-theme="light"] .bg-black\/50,
+:root[data-theme="light"] .bg-black\/60,
+:root[data-theme="light"] .bg-black\/70 {
+  background-color: rgba(17, 24, 39, 0.34) !important;
+}
+
 :root[data-theme="light"] [class*="border-white/"] {
   border-color: var(--theme-glass-border) !important;
 }
@@ -96,6 +132,49 @@
 
 :root[data-theme="light"] [class*="hover:text-white"]:hover {
   color: var(--theme-accent) !important;
+}
+
+.theme-text-primary {
+  color: var(--theme-text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--theme-text-secondary);
+}
+
+.theme-text-muted {
+  color: var(--theme-text-muted);
+}
+
+.theme-link {
+  color: var(--theme-accent);
+  transition:
+    color 160ms ease,
+    opacity 160ms ease;
+}
+
+.theme-link:hover {
+  color: var(--theme-accent-2);
+}
+
+.theme-surface-subtle {
+  background: var(--theme-surface-subtle);
+  border: 1px solid var(--theme-glass-border);
+}
+
+.theme-divider {
+  border-color: var(--theme-glass-border);
+}
+
+.theme-cover-placeholder {
+  background:
+    linear-gradient(135deg, var(--theme-surface-subtle), var(--theme-mesh-b)),
+    var(--theme-glass-surface);
+  color: var(--theme-text-muted);
+}
+
+.theme-unread {
+  background: var(--theme-accent-soft);
 }
 
 :root[data-theme="light"] :where(h1, h2, h3, h4, p, span, label, strong, small, td, th, a, button, li, div)[style*="color: rgba(255, 255, 255, 0.95"],

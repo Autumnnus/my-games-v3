@@ -2,13 +2,14 @@ import { env } from "../config/env";
 import igdbAuthHelper from "./igdb-auth.helper";
 import type { IGDBData } from "@my-games/shared";
 
-async function fetchIgdbGames(
+async function fetchIgdbEndpoint<T>(
+  endpoint: string,
   body: string,
   isRetry = false,
-): Promise<IGDBData[]> {
+): Promise<T[]> {
   const accessToken = await igdbAuthHelper.getAccessToken();
 
-  const response = await fetch("https://api.igdb.com/v4/games", {
+  const response = await fetch(`https://api.igdb.com/v4/${endpoint}`, {
     method: "POST",
     headers: {
       "Client-ID": env.IGDB_CLIENT_ID,
@@ -20,7 +21,7 @@ async function fetchIgdbGames(
 
   if (response.status === 401 && !isRetry) {
     await igdbAuthHelper.refreshAccessToken();
-    return await fetchIgdbGames(body, true);
+    return await fetchIgdbEndpoint<T>(endpoint, body, true);
   }
 
   if (!response.ok) {
@@ -28,7 +29,11 @@ async function fetchIgdbGames(
     throw new Error(`IGDB API error: ${response.status} - ${errorText}`);
   }
 
-  return (await response.json()) as IGDBData[];
+  return (await response.json()) as T[];
 }
 
-export default { fetchIgdbGames };
+async function fetchIgdbGames(body: string): Promise<IGDBData[]> {
+  return fetchIgdbEndpoint<IGDBData>("games", body);
+}
+
+export default { fetchIgdbGames, fetchIgdbEndpoint };

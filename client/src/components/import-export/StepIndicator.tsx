@@ -23,18 +23,18 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                   background: isCompleted
                     ? "rgba(34,197,94,0.2)"
                     : isCurrent
-                      ? "rgba(168,85,247,0.25)"
-                      : "rgba(255,255,255,0.06)",
+                      ? "var(--theme-accent-soft)"
+                      : "var(--theme-glass-border)",
                   border: isCompleted
                     ? "1.5px solid rgba(34,197,94,0.5)"
                     : isCurrent
-                      ? "1.5px solid rgba(168,85,247,0.7)"
-                      : "1.5px solid rgba(255,255,255,0.1)",
+                      ? "1.5px solid var(--theme-accent)"
+                      : "1.5px solid var(--theme-glass-border)",
                   color: isCompleted
                     ? "rgba(34,197,94,0.9)"
                     : isCurrent
                       ? "rgba(168,85,247,1)"
-                      : "rgba(255,255,255,0.3)",
+                      : "var(--theme-text-muted)",
                 }}
               >
                 {isCompleted ? <Check size={14} strokeWidth={2.5} /> : stepNum}
@@ -43,10 +43,10 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                 className="text-[10px] font-medium whitespace-nowrap"
                 style={{
                   color: isCurrent
-                    ? "rgba(168,85,247,0.9)"
+                    ? "var(--theme-accent)"
                     : isCompleted
                       ? "rgba(34,197,94,0.7)"
-                      : "rgba(255,255,255,0.25)",
+                      : "var(--theme-text-muted)",
                 }}
               >
                 {step}
@@ -58,7 +58,7 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                 style={{
                   background: isCompleted
                     ? "rgba(34,197,94,0.4)"
-                    : "rgba(255,255,255,0.08)",
+                    : "var(--theme-glass-border)",
                 }}
               />
             )}

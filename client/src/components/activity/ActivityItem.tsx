@@ -1,9 +1,10 @@
+import { Avatar } from "@/components/ui/Avatar";
+import { timeAgo } from "@/lib/formatters";
+import type { Activity } from "@my-games/shared";
 import { Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Pencil } from "lucide-react";
-import type { Activity } from "@my-games/shared";
-import { Avatar } from "@/components/ui/Avatar";
-import { timeAgo } from "@/lib/formatters";
+import { useTranslation } from "react-i18next";
 import { ACTIVITY_CONFIG } from "./activityConfig";
 
 interface Props {
@@ -11,7 +12,6 @@ interface Props {
   index: number;
 }
 
-// Upsert yapılan tipler: updatedAt > createdAt ise "düzenlendi" göster
 const UPSERT_TYPES = new Set([
   "game_rated",
   "game_reviewed",
@@ -21,12 +21,12 @@ const UPSERT_TYPES = new Set([
 ]);
 
 export function ActivityItem({ activity, index }: Props) {
+  const { t } = useTranslation();
   const config = ACTIVITY_CONFIG[activity.type];
   const user = activity.user;
   const game = activity.game;
   const entryId = activity.libraryEntry;
 
-  // updatedAt createdAt'tan en az 10 saniye sonraysa "düzenlendi" say
   const wasEdited =
     UPSERT_TYPES.has(activity.type) &&
     new Date(activity.updatedAt).getTime() -
@@ -40,19 +40,19 @@ export function ActivityItem({ activity, index }: Props) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.3 }}
-      className="group relative flex gap-3 p-4 rounded-xl border transition-all duration-200 hover:border-white/20"
+      className="group relative flex gap-3 p-4 rounded-xl border transition-all duration-200 hover:border-glass-border-hover"
       style={{
-        background: "rgba(255,255,255,0.03)",
-        borderColor: "rgba(255,255,255,0.07)",
+        background: "var(--theme-surface-subtle)",
+        borderColor: "var(--theme-glass-border)",
       }}
     >
       {/* Left color strip */}
       <div
         className="absolute left-0 top-4 bottom-4 w-0.5 rounded-full opacity-60"
-        style={{ background: config.rawColor }}
+        style={{ background: config?.rawColor ?? "#888" }}
       />
 
-      {/* User avatar → kullanıcı profiline gider */}
+      {/* User avatar */}
       <Link
         to="/users/$id"
         params={{ id: user._id }}
@@ -65,47 +65,41 @@ export function ActivityItem({ activity, index }: Props) {
       <div className="flex-1 min-w-0">
         {/* Action line */}
         <div className="flex flex-wrap items-center gap-1.5 text-sm leading-snug">
-          {/* Kullanıcı adı */}
           <Link
             to="/users/$id"
             params={{ id: user._id }}
-            className="font-semibold hover:text-white transition-colors"
-            style={{ color: "rgba(255,255,255,0.9)" }}
+            className="font-semibold hover:text-white transition-colors text-text-primary"
           >
             {user.name}
           </Link>
 
-          {/* Activity badge */}
           <span
             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
             style={{
-              background: config.bgColor,
-              border: `1px solid ${config.borderColor}`,
-              color: config.rawColor,
+              background: config?.bgColor ?? "var(--theme-surface-subtle)",
+              border: `1px solid ${config?.borderColor ?? "var(--theme-glass-border)"}`,
+              color: config?.rawColor ?? "var(--theme-text-secondary)",
             }}
           >
-            <span>{config.icon}</span>
-            <span>{config.label(activity)}</span>
+            <span>{config?.icon}</span>
+            <span>{t(config?.labelKey ?? "activity.all")}</span>
           </span>
 
-          {/* Oyun adı → oyun detay sayfasına gider */}
           {game && (
             <>
-              <span style={{ color: "rgba(255,255,255,0.3)" }}>·</span>
+              <span className="text-text-muted">·</span>
               {entryId ? (
                 <Link
                   to="/games/$id"
                   params={{ id: entryId }}
-                  className="font-medium truncate max-w-[200px] text-sm hover:text-white transition-colors"
-                  style={{ color: "rgba(255,255,255,0.75)" }}
+                  className="font-medium truncate max-w-[200px] text-sm hover:text-white transition-colors text-text-secondary"
                   title={game.title}
                 >
                   {game.title}
                 </Link>
               ) : (
                 <span
-                  className="font-medium truncate max-w-[200px] text-sm"
-                  style={{ color: "rgba(255,255,255,0.75)" }}
+                  className="font-medium truncate max-w-[200px] text-sm text-text-secondary"
                   title={game.title}
                 >
                   {game.title}
@@ -115,20 +109,18 @@ export function ActivityItem({ activity, index }: Props) {
           )}
         </div>
 
-        {/* Review snippet */}
         {activity.type === "game_reviewed" && activity.metadata.review && (
           <p
             className="mt-2 text-sm italic line-clamp-2 pl-2 border-l-2"
             style={{
-              color: "rgba(255,255,255,0.5)",
-              borderColor: config.rawColor + "66",
+              color: "var(--theme-text-muted)",
+              borderColor: (config?.rawColor ?? "#888") + "66",
             }}
           >
             "{activity.metadata.review}"
           </p>
         )}
 
-        {/* Screenshot thumbnail — oyun sayfasına gider */}
         {activity.type === "screenshot_added" &&
           activity.metadata.firstScreenshotUrl && (
             <div className="mt-2">
@@ -137,7 +129,7 @@ export function ActivityItem({ activity, index }: Props) {
                   <img
                     src={activity.metadata.firstScreenshotUrl}
                     alt="screenshot"
-                    className="h-20 w-auto rounded-lg object-cover border border-white/10 opacity-80 group-hover:opacity-100 transition-opacity hover:border-white/30"
+                    className="h-20 w-auto rounded-lg object-cover border border-glass-border opacity-80 group-hover:opacity-100 transition-opacity hover:border-glass-border-hover"
                     loading="lazy"
                   />
                 </Link>
@@ -145,14 +137,13 @@ export function ActivityItem({ activity, index }: Props) {
                 <img
                   src={activity.metadata.firstScreenshotUrl}
                   alt="screenshot"
-                  className="h-20 w-auto rounded-lg object-cover border border-white/10 opacity-80 group-hover:opacity-100 transition-opacity"
+                  className="h-20 w-auto rounded-lg object-cover border border-glass-border opacity-80 group-hover:opacity-100 transition-opacity"
                   loading="lazy"
                 />
               )}
             </div>
           )}
 
-        {/* Rating dots */}
         {activity.type === "game_rated" && activity.metadata.rating && (
           <div className="mt-1.5 flex items-center gap-0.5">
             {Array.from({ length: 10 }).map((_, i) => (
@@ -163,7 +154,7 @@ export function ActivityItem({ activity, index }: Props) {
                   background:
                     i < activity.metadata.rating!
                       ? "#f59e0b"
-                      : "rgba(255,255,255,0.1)",
+                      : "var(--theme-glass-border)",
                 }}
               />
             ))}
@@ -173,25 +164,32 @@ export function ActivityItem({ activity, index }: Props) {
           </div>
         )}
 
-        {/* Timestamp + düzenlendi */}
-        <div className="mt-1.5 flex items-center gap-1.5">
-          <p className="text-xs" style={{ color: "rgba(255,255,255,0.28)" }}>
-            {timeAgo(displayTime)}
+        {activity.type === "milestone_playtime" && activity.metadata.hours && (
+          <p
+            className="mt-1.5 text-xs font-medium"
+            style={{ color: config?.rawColor ?? "var(--theme-text-secondary)" }}
+          >
+            {activity.metadata.hours >= 1000
+              ? `${(activity.metadata.hours / 1000).toFixed(1)}k`
+              : activity.metadata.hours}{" "}
+            {t("translation:activity.hoursAbbrev")}
           </p>
+        )}
+
+        <div className="mt-1.5 flex items-center gap-1.5">
+          <p className="text-xs text-text-muted">{timeAgo(displayTime)}</p>
           {wasEdited && (
             <span
-              className="inline-flex items-center gap-0.5 text-xs"
-              style={{ color: "rgba(255,255,255,0.2)" }}
+              className="inline-flex items-center gap-0.5 text-xs text-text-muted"
               title="Bu aktivite güncellendi"
             >
               <Pencil size={9} />
-              düzenlendi
+              {t("translation:activity.edited")}
             </span>
           )}
         </div>
       </div>
 
-      {/* Game cover → oyun sayfasına gider */}
       {game?.coverUrl && (
         <div className="shrink-0 hidden sm:block">
           {entryId ? (
@@ -199,7 +197,7 @@ export function ActivityItem({ activity, index }: Props) {
               <img
                 src={game.coverUrl}
                 alt={game.title}
-                className="w-9 h-[52px] rounded object-cover border border-white/10 opacity-70 group-hover:opacity-100 hover:border-white/30 transition-all"
+                className="w-9 h-[52px] rounded object-cover border border-glass-border opacity-70 group-hover:opacity-100 hover:border-glass-border-hover transition-all"
                 loading="lazy"
               />
             </Link>
@@ -207,7 +205,7 @@ export function ActivityItem({ activity, index }: Props) {
             <img
               src={game.coverUrl}
               alt={game.title}
-              className="w-9 h-[52px] rounded object-cover border border-white/10 opacity-70 group-hover:opacity-100 transition-opacity"
+              className="w-9 h-[52px] rounded object-cover border border-glass-border opacity-70 group-hover:opacity-100 transition-opacity"
               loading="lazy"
             />
           )}

@@ -1,3 +1,5 @@
+import { useDeleteMultipleScreenshots } from "@/api/screenshots.api";
+import { steamSyncApi } from "@/api/steamSync";
 import { DeleteGameConfirm } from "@/components/games/DeleteGameConfirm";
 import { EditGameModal } from "@/components/games/EditGameModal";
 import { PlatformIcon } from "@/components/games/PlatformIcon";
@@ -11,11 +13,10 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { GlassSwitch } from "@/components/ui/GlassSwitch";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { RatingStars } from "@/components/ui/RatingStars";
-import { useGame } from "@/hooks/useGames";
+import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { useDynamicGameTheme } from "@/hooks/useDynamicGameTheme";
+import { useGame } from "@/hooks/useGames";
 import { useGameScreenshots } from "@/hooks/useScreenshots";
-import { useDeleteMultipleScreenshots } from "@/api/screenshots.api";
-import { steamSyncApi } from "@/api/steamSync";
 import {
   formatCoverUrl,
   formatDate,
@@ -28,6 +29,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ArrowLeft, Edit2, Star, Trash2, X } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/games/$id")({
@@ -35,6 +37,7 @@ export const Route = createFileRoute("/games/$id")({
 });
 
 function GameDetailPage() {
+  const { t } = useTranslation();
   const { id } = Route.useParams();
   const navigate = useNavigate();
   const { data: game, isLoading } = useGame(id);
@@ -83,10 +86,18 @@ function GameDetailPage() {
       onSuccess: () => {
         setSelectedScreenshots(new Set());
         setDeleteMode(false);
-        toast.success("Seçilen görseller silindi");
+        toast.success(
+          t("translation:gameDetail.selected") +
+            " " +
+            t("translation:common.buttons.delete").toLowerCase(),
+        );
       },
       onError: () => {
-        toast.error("Silme işlemi başarısız");
+        toast.error(
+          t("translation:gameDetail.deleteSelected") +
+            " " +
+            t("translation:common.errors.generic").toLowerCase(),
+        );
       },
     });
   };
@@ -103,12 +114,12 @@ function GameDetailPage() {
       .then(() => {
         toast.success(
           exclude
-            ? "Steam senkronizasyonundan çıkarıldı"
-            : "Steam senkronizasyonuna eklendi",
+            ? t("translation:gameDetail.steamSyncExclude")
+            : t("translation:gameDetail.steamSyncExcludeHint"),
         );
       })
       .catch(() => {
-        toast.error("Ayarlar güncellenemedi");
+        toast.error(t("translation:common.errors.generic"));
       });
   };
 
@@ -123,11 +134,8 @@ function GameDetailPage() {
   if (!game) {
     return (
       <PageContainer>
-        <div
-          className="text-center py-20"
-          style={{ color: "var(--theme-text-muted)" }}
-        >
-          Oyun bulunamadı.
+        <div className="text-center py-20 text-text-muted">
+          {t("translation:gameDetail.gameNotFound")}
         </div>
       </PageContainer>
     );
@@ -176,18 +184,39 @@ function GameDetailPage() {
           <Link
             to="/games"
             className="glass-btn p-2 rounded-xl self-start mt-4"
-            aria-label="Geri"
+            aria-label={t("translation:gameDetail.back")}
           >
             <ArrowLeft size={16} />
           </Link>
           {isOwner && (
             <div className="flex items-center gap-2">
+              <WishlistButton
+                igdbId={game.igdb?.id ?? game.steamAppId ?? 0}
+                gameName={game.name}
+                coverUrl={coverUrl ?? undefined}
+                platform={game.platform}
+                genres={game.igdb?.genres?.map((g) => g.name) ?? []}
+                releaseYear={
+                  game.igdb?.first_release_date
+                    ? new Date(
+                        game.igdb.first_release_date * 1000,
+                      ).getFullYear()
+                    : undefined
+                }
+                developer={
+                  game.igdb?.involved_companies?.find((c) => c.developer)
+                    ?.company.name
+                }
+                igdbData={game.igdb}
+                variant="detail"
+                steamAppId={game.steamAppId}
+              />
               <GlassButton
                 size="sm"
                 leftIcon={<Edit2 size={13} />}
                 onClick={() => setEditOpen(true)}
               >
-                Düzenle
+                {t("translation:gameDetail.edit")}
               </GlassButton>
               <GlassButton
                 size="sm"
@@ -195,7 +224,7 @@ function GameDetailPage() {
                 leftIcon={<Trash2 size={13} />}
                 onClick={() => setDeleteOpen(true)}
               >
-                Kaldır
+                {t("translation:gameDetail.remove")}
               </GlassButton>
             </div>
           )}
@@ -218,39 +247,33 @@ function GameDetailPage() {
             )}
             {igdb && (
               <GlassCard className="p-4 flex flex-col gap-3">
-                <h3
-                  className="text-xs font-semibold uppercase tracking-wide"
-                  style={{ color: "var(--theme-text-muted)" }}
-                >
-                  IGDB Bilgisi
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+                  {t("translation:gameDetail.igdbInfo")}
                 </h3>
                 {igdb.first_release_date && (
                   <div className="flex items-center justify-between text-sm">
-                    <span style={{ color: "var(--theme-text-muted)" }}>
-                      Çıkış Tarihi
+                    <span className="text-text-muted">
+                      {t("translation:gameDetail.releaseDate")}
                     </span>
-                    <span style={{ color: "var(--theme-text-secondary)" }}>
+                    <span className="text-text-secondary">
                       {formatUnixDate(igdb.first_release_date)}
                     </span>
                   </div>
                 )}
                 {igdb.aggregated_rating && (
                   <div className="flex items-center justify-between text-sm">
-                    <span style={{ color: "var(--theme-text-muted)" }}>
-                      IGDB Puanı
+                    <span className="text-text-muted">
+                      {t("translation:gameDetail.igdbRating")}
                     </span>
-                    <span style={{ color: "var(--theme-text-secondary)" }}>
+                    <span className="text-text-secondary">
                       {igdb.aggregated_rating.toFixed(0)}/100
                     </span>
                   </div>
                 )}
                 {igdb.genres && igdb.genres.length > 0 && (
                   <div className="flex flex-col gap-1">
-                    <span
-                      className="text-xs"
-                      style={{ color: "var(--theme-text-muted)" }}
-                    >
-                      Türler
+                    <span className="text-xs text-text-muted">
+                      {t("translation:gameDetail.genres")}
                     </span>
                     <div className="flex flex-wrap gap-1">
                       {igdb.genres.map((g) => (
@@ -271,18 +294,14 @@ function GameDetailPage() {
                 )}
                 {igdb.game_modes && igdb.game_modes.length > 0 && (
                   <div className="flex flex-col gap-1">
-                    <span
-                      className="text-xs"
-                      style={{ color: "var(--theme-text-muted)" }}
-                    >
-                      Oyun Modu
+                    <span className="text-xs text-text-muted">
+                      {t("translation:gameDetail.gameModes")}
                     </span>
                     <div className="flex flex-wrap gap-1">
                       {igdb.game_modes.map((m) => (
                         <span
                           key={m.id}
-                          className="text-xs px-2 py-0.5 rounded-full glass-card-sm"
-                          style={{ color: "var(--theme-text-secondary)" }}
+                          className="text-xs px-2 py-0.5 rounded-full glass-card-sm text-text-secondary"
                         >
                           {m.name}
                         </span>
@@ -297,14 +316,14 @@ function GameDetailPage() {
           {/* Right: User entry */}
           <div className="flex flex-col gap-5">
             <div>
-              <h1
-                className="text-3xl font-bold"
-                style={{ color: "var(--theme-text-primary)" }}
-              >
+              <h1 className="text-3xl font-bold text-text-primary">
                 {game.name}
               </h1>
               <div className="flex items-center gap-2 mt-2">
-                <StatusBadge status={game.status} completionDate={game.completionDate} />
+                <StatusBadge
+                  status={game.status}
+                  completionDate={game.completionDate}
+                />
                 <PlatformIcon platform={game.platform} showLabel />
                 {game.isFavorite && (
                   <Star size={14} className="fill-yellow-400 text-yellow-400" />
@@ -325,14 +344,13 @@ function GameDetailPage() {
                   className="text-sm font-medium"
                   style={{ color: "rgba(251,191,36,0.95)" }}
                 >
-                  ⚠️ Steam senkronizasyon çakışması var
+                  ⚠️ {t("translation:gameDetail.steamSyncConflict")}
                 </p>
-                <p
-                  className="text-xs"
-                  style={{ color: "rgba(255,255,255,0.5)" }}
-                >
-                  Steam {formatPlayTime(steamPlayTime)} kaydetmiş, sen{" "}
-                  {formatPlayTime(game.playTime)} girdin.
+                <p className="text-xs text-text-muted">
+                  {t("translation:gameDetail.steamLogged")}{" "}
+                  {formatPlayTime(steamPlayTime)}{" "}
+                  {t("translation:gameDetail.youEntered")}{" "}
+                  {formatPlayTime(game.playTime)}.
                 </p>
                 <div className="flex items-center gap-2 flex-wrap">
                   <GlassButton
@@ -342,13 +360,15 @@ function GameDetailPage() {
                       steamSyncApi
                         .resolveConflict(id, "take_steam")
                         .then(() => {
-                          toast.success("Steam değeri alındı");
+                          toast.success(t("translation:gameDetail.takeSteam"));
                           window.location.reload();
                         })
-                        .catch(() => toast.error("Uygulanamadı"));
+                        .catch(() =>
+                          toast.error(t("translation:common.errors.generic")),
+                        );
                     }}
                   >
-                    Steam'i Al
+                    {t("translation:gameDetail.takeSteam")}
                   </GlassButton>
                   <GlassButton
                     size="sm"
@@ -356,13 +376,15 @@ function GameDetailPage() {
                       steamSyncApi
                         .resolveConflict(id, "keep_manual")
                         .then(() => {
-                          toast.success("Senin değerin korundu");
+                          toast.success(t("translation:gameDetail.keepMine"));
                           window.location.reload();
                         })
-                        .catch(() => toast.error("Uygulanamadı"));
+                        .catch(() =>
+                          toast.error(t("translation:common.errors.generic")),
+                        );
                     }}
                   >
-                    Benimki Kalsın
+                    {t("translation:gameDetail.keepMine")}
                   </GlassButton>
                   <GlassButton
                     size="sm"
@@ -371,13 +393,15 @@ function GameDetailPage() {
                       steamSyncApi
                         .resolveConflict(id, "ignore")
                         .then(() => {
-                          toast.success("Yoksayıldı");
+                          toast.success(t("translation:gameDetail.ignore"));
                           window.location.reload();
                         })
-                        .catch(() => toast.error("Uygulanamadı"));
+                        .catch(() =>
+                          toast.error(t("translation:common.errors.generic")),
+                        );
                     }}
                   >
-                    Yoksay
+                    {t("translation:gameDetail.ignore")}
                   </GlassButton>
                 </div>
               </div>
@@ -386,67 +410,41 @@ function GameDetailPage() {
             {/* Stats row */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <GlassCard size="sm" className="p-3 flex flex-col gap-1">
-                <span
-                  className="text-xs"
-                  style={{ color: "var(--theme-text-muted)" }}
-                >
-                  Süre
+                <span className="text-xs text-text-muted">
+                  {t("translation:gameDetail.duration")}
                 </span>
-                <span
-                  className="text-lg font-semibold"
-                  style={{ color: "var(--theme-text-primary)" }}
-                >
+                <span className="text-lg font-semibold text-text-primary">
                   {formatPlayTime(game.playTime)}
                 </span>
               </GlassCard>
               <GlassCard size="sm" className="p-3 flex flex-col gap-1">
-                <span
-                  className="text-xs"
-                  style={{ color: "var(--theme-text-muted)" }}
-                >
-                  Puan
+                <span className="text-xs text-text-muted">
+                  {t("translation:gameDetail.score")}
                 </span>
                 <div className="flex items-center gap-2">
                   {game.rating !== undefined && game.rating !== null ? (
                     <RatingStars value={game.rating} readonly size="sm" />
                   ) : (
-                    <span
-                      className="text-sm"
-                      style={{ color: "var(--theme-text-muted)" }}
-                    >
-                      —
-                    </span>
+                    <span className="text-sm text-text-muted">—</span>
                   )}
                 </div>
               </GlassCard>
               {game.completionDate && (
                 <GlassCard size="sm" className="p-3 flex flex-col gap-1">
-                  <span
-                    className="text-xs"
-                    style={{ color: "var(--theme-text-muted)" }}
-                  >
-                    Tamamlanma
+                  <span className="text-xs text-text-muted">
+                    {t("translation:gameDetail.completion")}
                   </span>
-                  <span
-                    className="text-sm"
-                    style={{ color: "var(--theme-text-secondary)" }}
-                  >
+                  <span className="text-sm text-text-secondary">
                     {formatDate(game.completionDate)}
                   </span>
                 </GlassCard>
               )}
               {game.lastPlayDate && (
                 <GlassCard size="sm" className="p-3 flex flex-col gap-1">
-                  <span
-                    className="text-xs"
-                    style={{ color: "var(--theme-text-muted)" }}
-                  >
-                    Son Oynama
+                  <span className="text-xs text-text-muted">
+                    {t("translation:gameDetail.lastPlay")}
                   </span>
-                  <span
-                    className="text-sm"
-                    style={{ color: "var(--theme-text-secondary)" }}
-                  >
+                  <span className="text-sm text-text-secondary">
                     {formatDate(game.lastPlayDate)}
                   </span>
                 </GlassCard>
@@ -458,22 +456,16 @@ function GameDetailPage() {
               <div
                 className="flex items-center justify-between p-3 rounded-xl"
                 style={{
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.07)",
+                  background: "var(--theme-surface-subtle)",
+                  border: "1px solid var(--theme-glass-border)",
                 }}
               >
                 <div className="flex flex-col gap-0.5">
-                  <span
-                    className="text-sm"
-                    style={{ color: "rgba(255,255,255,0.8)" }}
-                  >
-                    Steam senkronizasyonundan çıkar
+                  <span className="text-sm text-text-secondary">
+                    {t("translation:gameDetail.steamSyncExclude")}
                   </span>
-                  <span
-                    className="text-xs"
-                    style={{ color: "rgba(255,255,255,0.4)" }}
-                  >
-                    Bu oyunun oynama süresi Steam tarafından güncellenmez
+                  <span className="text-xs text-text-muted">
+                    {t("translation:gameDetail.steamSyncExcludeHint")}
                   </span>
                 </div>
                 <GlassSwitch
@@ -486,10 +478,7 @@ function GameDetailPage() {
             {/* Review */}
             {game.review && (
               <GlassCard className="p-4">
-                <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: "rgba(255,255,255,0.7)" }}
-                >
+                <p className="text-sm leading-relaxed text-text-secondary">
                   {game.review}
                 </p>
               </GlassCard>
@@ -498,11 +487,10 @@ function GameDetailPage() {
             {/* Screenshots section */}
             <div className="flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <h2
-                  className="text-base font-semibold"
-                  style={{ color: "rgba(255,255,255,0.85)" }}
-                >
-                  Ekran Görüntüleri ({screenshots.length})
+                <h2 className="text-base font-semibold text-text-secondary">
+                  {t("translation:gameDetail.screenshots", {
+                    count: screenshots.length,
+                  })}
                 </h2>
                 {isOwner && (
                   <div className="flex items-center gap-2">
@@ -511,7 +499,7 @@ function GameDetailPage() {
                       variant="primary"
                       onClick={() => setAddScreenshotOpen(true)}
                     >
-                      + Ekle
+                      + {t("translation:gameDetail.addScreenshot")}
                     </GlassButton>
                     {screenshots.length > 0 && !deleteMode && (
                       <GlassButton
@@ -520,7 +508,7 @@ function GameDetailPage() {
                         leftIcon={<Trash2 size={13} />}
                         onClick={() => setDeleteMode(true)}
                       >
-                        Sil
+                        {t("translation:gameDetail.delete")}
                       </GlassButton>
                     )}
                   </div>
@@ -543,11 +531,8 @@ function GameDetailPage() {
                   ))}
                 </div>
               ) : (
-                <div
-                  className="glass-card p-8 text-center"
-                  style={{ color: "rgba(255,255,255,0.35)" }}
-                >
-                  Henüz ekran görüntüsü yok
+                <div className="glass-card p-8 text-center text-text-muted">
+                  {t("translation:gameDetail.noScreenshots")}
                 </div>
               )}
             </div>
@@ -556,9 +541,9 @@ function GameDetailPage() {
 
         {/* Delete mode bottom bar */}
         {deleteMode && (
-          <div className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-white/10 px-4 py-3 flex items-center justify-between gap-4">
-            <span style={{ color: "rgba(255,255,255,0.85)" }}>
-              {selectedScreenshots.size} seçili
+          <div className="fixed bottom-0 left-0 right-0 z-50 glass-card border-t border-glass-border px-4 py-3 flex items-center justify-between gap-4">
+            <span className="text-text-secondary">
+              {selectedScreenshots.size} {t("translation:gameDetail.selected")}
             </span>
             <div className="flex items-center gap-2">
               <GlassButton
@@ -570,14 +555,14 @@ function GameDetailPage() {
                   selectedScreenshots.size === 0 || deleteMutation.isPending
                 }
               >
-                Seçilenleri Sil
+                {t("translation:gameDetail.deleteSelected")}
               </GlassButton>
               <GlassButton
                 size="sm"
                 leftIcon={<X size={13} />}
                 onClick={handleCancelDelete}
               >
-                İptal
+                {t("translation:gameDetail.cancel")}
               </GlassButton>
             </div>
           </div>

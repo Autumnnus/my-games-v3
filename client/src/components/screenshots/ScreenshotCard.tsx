@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Expand, ImageOff, Trash2, Gamepad2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { Screenshot } from "@/api/types";
 import { scaleIn } from "@/lib/motion";
 
@@ -43,6 +44,7 @@ export function ScreenshotCard({
   selected = false,
   onSelect,
 }: ScreenshotCardProps) {
+  const { t } = useTranslation();
   const [hovered, setHovered] = useState(false);
   const [imgError, setImgError] = useState(false);
 
@@ -73,11 +75,10 @@ export function ScreenshotCard({
     >
       {showAsImage ? (
         imgError ? (
-          <div className="w-full flex flex-col items-center justify-center gap-2 py-12 border border-dashed border-white/20 rounded-xl bg-white/5">
-            <ImageOff size={32} style={{ color: "rgba(255,255,255,0.35)" }} />
+          <div className="w-full flex flex-col items-center justify-center gap-2 py-12 border border-dashed border-glass-border-hover rounded-xl bg-glass-surface">
+            <ImageOff size={32} className="text-text-muted" />
             <span
-              className="text-xs"
-              style={{ color: "rgba(255,255,255,0.35)" }}
+              className="text-xs text-text-muted"
             >
               Görsel yüklenemedi
             </span>
@@ -96,7 +97,7 @@ export function ScreenshotCard({
       ) : (
         <div
           className="w-full p-4 text-sm leading-relaxed glass-card rounded-xl break-all"
-          style={{ color: "rgba(255,255,255,0.8)", minHeight: 100 }}
+          style={{ color: "var(--theme-text-secondary)", minHeight: 100 }}
         >
           <a
             href={screenshot.url}
@@ -147,7 +148,7 @@ export function ScreenshotCard({
                 onClick();
               }}
               className="glass-btn p-2 rounded-xl"
-              aria-label="Büyüt"
+              aria-label={t('common.aria.zoom')}
             >
               <Expand size={15} />
             </button>
@@ -159,7 +160,7 @@ export function ScreenshotCard({
                 onDelete(screenshot._id);
               }}
               className="glass-btn glass-btn-danger p-2 rounded-xl"
-              aria-label="Sil"
+              aria-label={t('common.aria.delete')}
             >
               <Trash2 size={15} />
             </button>
@@ -174,8 +175,7 @@ export function ScreenshotCard({
         return (
           <div className="mt-1 px-1">
             <span
-              className="text-xs truncate block"
-              style={{ color: "rgba(255,255,255,0.5)" }}
+              className="text-xs truncate block text-text-muted"
             >
               <Gamepad2 size={10} className="inline mr-1" />
               {game.name}
@@ -190,7 +190,7 @@ export function ScreenshotCard({
           className="absolute bottom-0 left-0 right-0 px-3 py-2 text-xs font-medium truncate"
           style={{
             background: "linear-gradient(transparent, rgba(0,0,0,0.75))",
-            color: "rgba(255,255,255,0.85)",
+            color: "var(--theme-text-secondary)",
           }}
         >
           {screenshot.name}

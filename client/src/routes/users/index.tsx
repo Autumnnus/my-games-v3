@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Search, Users } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { UserCard } from "@/components/users/UserCard";
 import { UserCardSkeleton } from "@/components/ui/Skeleton";
@@ -14,6 +15,7 @@ export const Route = createFileRoute("/users/")({
 });
 
 function UsersPage() {
+  const { t } = useTranslation();
   const { data: users, isLoading } = useUsers();
   const [search, setSearch] = useState("");
 
@@ -32,28 +34,25 @@ function UsersPage() {
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between gap-4">
             <h1
-              className="text-2xl font-bold"
-              style={{ color: "rgba(255,255,255,0.95)" }}
+              className="text-2xl font-bold text-text-primary"
             >
-              Kullanıcılar
+              {t('users.title')}
             </h1>
             <span
-              className="text-sm"
-              style={{ color: "rgba(255,255,255,0.4)" }}
+              className="text-sm text-text-muted"
             >
-              {users?.length ?? 0} kullanıcı
+              {t('users.count', { count: users?.length ?? 0 })}
             </span>
           </div>
 
           <div className="relative max-w-sm">
             <Search
               size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2"
-              style={{ color: "rgba(255,255,255,0.4)" }}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
             />
             <input
               type="text"
-              placeholder="İsme göre ara..."
+              placeholder={t('users.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="glass-input w-full pl-9 pr-4 py-2.5 text-sm"
@@ -69,9 +68,9 @@ function UsersPage() {
           ) : filtered.length === 0 ? (
             <EmptyState
               icon={<Users size={28} />}
-              title="Kullanıcı bulunamadı"
+              title={t('users.userNotFound')}
               description={
-                search ? "Farklı bir isim dene." : "Henüz kullanıcı yok."
+                search ? t('users.tryDifferentName') : t('users.noUsers')
               }
             />
           ) : (

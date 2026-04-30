@@ -1,14 +1,16 @@
-import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { Edit2, Trash2, Star } from "lucide-react";
 import type { GameListItem } from "@/api/types";
+import { SyncStatusBadge } from "@/components/steam-sync/SyncStatusBadge";
+import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { formatCoverUrl } from "@/lib/formatters";
 import { fadeUp } from "@/lib/motion";
-import { StatusBadge } from "./StatusBadge";
-import { PlayTimeBadge } from "./PlayTimeBadge";
+import { Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { Edit2, Star, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { PlatformIcon } from "./PlatformIcon";
-import { SyncStatusBadge } from "@/components/steam-sync/SyncStatusBadge";
+import { PlayTimeBadge } from "./PlayTimeBadge";
+import { StatusBadge } from "./StatusBadge";
 
 interface GameCardProps {
   game: GameListItem;
@@ -23,6 +25,7 @@ export function GameCard({
   onDelete,
   readonly = false,
 }: GameCardProps) {
+  const { t } = useTranslation();
   const [hovered, setHovered] = useState(false);
   const steamOrPrimaryCoverUrl = game.photo
     ? formatCoverUrl(game.photo, "big")
@@ -47,8 +50,8 @@ export function GameCard({
       {/* Cover */}
       <Link to="/games/$id" params={{ id: game._id }} className="block">
         <div
-          className="relative"
-          style={{ aspectRatio: "3/4", background: "rgba(255,255,255,0.04)" }}
+          className="relative theme-cover-placeholder"
+          style={{ aspectRatio: "3/4" }}
         >
           {imageSrc ? (
             <img
@@ -69,7 +72,7 @@ export function GameCard({
           ) : (
             <div
               className="w-full h-full flex items-center justify-center"
-              style={{ color: "rgba(255,255,255,0.15)", fontSize: "2rem" }}
+              style={{ fontSize: "2rem" }}
             >
               🎮
             </div>
@@ -79,6 +82,28 @@ export function GameCard({
             <div className="absolute top-2 right-2">
               <Star size={14} className="fill-yellow-400 text-yellow-400" />
             </div>
+          )}
+          {/* Wishlist button */}
+          {(game.igdb?.id || game.steamAppId) && (
+            <WishlistButton
+              igdbId={game.igdb?.id ?? game.steamAppId!}
+              gameName={game.name}
+              coverUrl={game.photo ?? game.igdb?.cover?.url}
+              platform={game.platform}
+              genres={game.igdb?.genres?.map((g) => g.name) ?? []}
+              releaseYear={
+                game.igdb?.first_release_date
+                  ? new Date(game.igdb.first_release_date * 1000).getFullYear()
+                  : undefined
+              }
+              developer={
+                game.igdb?.involved_companies?.find((c) => c.developer)?.company
+                  .name
+              }
+              igdbData={game.igdb}
+              steamAppId={game.steamAppId}
+              variant="card"
+            />
           )}
           {/* Status overlay on hover */}
           {hovered && !readonly && (
@@ -90,7 +115,7 @@ export function GameCard({
                     onEdit(game);
                   }}
                   className="glass-btn p-2 rounded-xl"
-                  aria-label="Düzenle"
+                  aria-label={t("translation:common.buttons.edit")}
                 >
                   <Edit2 size={15} />
                 </button>
@@ -102,7 +127,7 @@ export function GameCard({
                     onDelete(game);
                   }}
                   className="glass-btn glass-btn-danger p-2 rounded-xl"
-                  aria-label="Sil"
+                  aria-label={t("translation:common.buttons.delete")}
                 >
                   <Trash2 size={15} />
                 </button>
@@ -114,10 +139,7 @@ export function GameCard({
 
       {/* Info */}
       <div className="p-3 flex flex-col gap-1.5">
-        <p
-          className="text-sm font-medium leading-snug line-clamp-1"
-          style={{ color: "rgba(255,255,255,0.9)" }}
-        >
+        <p className="text-sm font-medium leading-snug line-clamp-1 text-text-primary">
           {game.name}
         </p>
         <div className="flex items-center justify-between gap-2">

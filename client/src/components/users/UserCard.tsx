@@ -25,8 +25,7 @@ export function UserCard({ user }: { user: UserProfile }) {
         <Avatar src={user.profileImage} name={user.name} size="lg" />
         <div>
           <p
-            className="font-semibold text-sm"
-            style={{ color: "rgba(255,255,255,0.9)" }}
+            className="font-semibold text-sm text-text-primary"
           >
             {user.name}
           </p>
@@ -37,8 +36,7 @@ export function UserCard({ user }: { user: UserProfile }) {
           )}
         </div>
         <div
-          className="flex items-center gap-3 text-xs"
-          style={{ color: "rgba(255,255,255,0.45)" }}
+          className="flex items-center gap-3 text-xs text-text-muted"
         >
           <span className="flex items-center gap-1">
             <Gamepad2 size={11} /> {user.gameSize}

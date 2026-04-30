@@ -25,7 +25,7 @@ export function HeroSection() {
         <motion.div
           className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full opacity-20"
           style={{
-            background: "radial-gradient(circle, #a855f7, transparent)",
+            background: "radial-gradient(circle, var(--theme-accent), transparent)",
           }}
           animate={{ scale: [1, 1.1, 1], x: [0, 20, 0], y: [0, -15, 0] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
@@ -33,7 +33,7 @@ export function HeroSection() {
         <motion.div
           className="absolute -bottom-40 -right-40 w-[500px] h-[500px] rounded-full opacity-15"
           style={{
-            background: "radial-gradient(circle, #3b82f6, transparent)",
+            background: "radial-gradient(circle, var(--theme-accent-2), transparent)",
           }}
           animate={{ scale: [1, 1.15, 1], x: [0, -25, 0], y: [0, 20, 0] }}
           transition={{
@@ -74,10 +74,9 @@ export function HeroSection() {
               size="sm"
               className="inline-flex items-center gap-2 px-4 py-2"
             >
-              <Sparkles size={14} style={{ color: "#a855f7" }} />
+              <Sparkles size={14} className="text-accent" />
               <span
-                className="text-sm font-medium"
-                style={{ color: "rgba(255,255,255,0.75)" }}
+                className="text-sm font-medium text-text-secondary"
               >
                 Oyun kütüphaneni yönet
               </span>
@@ -87,12 +86,12 @@ export function HeroSection() {
           {/* Title */}
           <motion.div variants={fadeUp} className="flex flex-col gap-4">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-none">
-              <span style={{ color: "rgba(255,255,255,0.95)" }}>Oyun</span>
+              <span className="text-text-primary">Oyun</span>
               <br />
               <span
                 style={{
                   background:
-                    "linear-gradient(135deg, #a855f7, #3b82f6, #ec4899)",
+                    "linear-gradient(135deg, var(--theme-accent), var(--theme-accent-2), #ec4899)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
@@ -100,11 +99,10 @@ export function HeroSection() {
                 Kütüphaneni
               </span>
               <br />
-              <span style={{ color: "rgba(255,255,255,0.85)" }}>Keşfet</span>
+              <span className="text-text-secondary">Keşfet</span>
             </h1>
             <p
-              className="text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed"
-              style={{ color: "rgba(255,255,255,0.55)" }}
+              className="text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed text-text-muted"
             >
               Tüm oyunlarını tek bir yerde takip et. İlerleme kaydet, puan ver,
               ekran görüntüsü sakla, istatistiklerini keşfet.
@@ -143,10 +141,9 @@ export function HeroSection() {
             ].map((feat) => (
               <span
                 key={feat}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs glass-card-sm"
-                style={{ color: "rgba(255,255,255,0.55)" }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs glass-card-sm text-text-muted"
               >
-                <Star size={10} style={{ color: "#a855f7" }} />
+                <Star size={10} className="text-accent" />
                 {feat}
               </span>
             ))}

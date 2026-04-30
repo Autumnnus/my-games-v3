@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 interface LoadingSpinnerProps {
   size?: "sm" | "md" | "lg";
   className?: string;
@@ -7,13 +9,14 @@ export function LoadingSpinner({
   size = "md",
   className = "",
 }: LoadingSpinnerProps) {
+  const { t } = useTranslation();
   const sizeClass = { sm: "w-4 h-4", md: "w-5 h-5", lg: "w-8 h-8" }[size];
   return (
     <svg
       className={`animate-spin ${sizeClass} ${className}`}
       viewBox="0 0 24 24"
       fill="none"
-      aria-label="Yükleniyor"
+      aria-label={t('common.aria.loading')}
     >
       <circle
         className="opacity-20"

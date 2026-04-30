@@ -1,28 +1,24 @@
-import { useState, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ArrowRight,
-  Download,
-  Upload,
-} from "lucide-react";
-import { GlassModal } from "@/components/ui/GlassModal";
+import type { ImportRunResult } from "@/api/importExport";
 import { GlassButton } from "@/components/ui/GlassButton";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { GlassModal } from "@/components/ui/GlassModal";
 import { GlassSwitch } from "@/components/ui/GlassSwitch";
-import { StepIndicator } from "./StepIndicator";
-import { FileDropper } from "./FileDropper";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import type { ConflictResolution, ImportStep } from "@/hooks/useImportExport";
+import { useImportExport } from "@/hooks/useImportExport";
+import { cn } from "@/lib/cn";
+import { scaleIn } from "@/lib/motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Download, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { ColumnMappingTable } from "./ColumnMappingTable";
-import { ImportPreviewTable } from "./ImportPreviewTable";
 import { ConflictResolver } from "./ConflictResolver";
+import { ExportOptions } from "./ExportOptions";
+import { FileDropper } from "./FileDropper";
+import { ImportPreviewTable } from "./ImportPreviewTable";
 import { ImportProgress } from "./ImportProgress";
 import { ImportResult } from "./ImportResult";
-import { ExportOptions } from "./ExportOptions";
-import { useImportExport } from "@/hooks/useImportExport";
-import { scaleIn } from "@/lib/motion";
-import type { ImportStep, ConflictResolution } from "@/hooks/useImportExport";
-import type { ImportRunResult } from "@/api/importExport";
+import { StepIndicator } from "./StepIndicator";
 
 interface ImportExportModalProps {
   open: boolean;
@@ -30,20 +26,12 @@ interface ImportExportModalProps {
   defaultTab?: "import" | "export";
 }
 
-const IMPORT_STEPS = [
-  "Dosya Yükle",
-  "Sütun Eşleştir",
-  "Önizleme",
-  "Çakışmalar",
-  "Sonuç",
-];
-const EXPORT_STEPS = ["Format Seç", "Seçenekler", "İndir"];
-
 export function ImportExportModal({
   open,
   onClose,
   defaultTab = "import",
 }: ImportExportModalProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"import" | "export">(defaultTab);
   const [importStep, setImportStep] = useState<ImportStep>(1);
   const [exportStep, setExportStep] = useState<1 | 2 | 3>(1);
@@ -61,7 +49,6 @@ export function ImportExportModal({
   >("parsing");
   const [progressCurrent, setProgressCurrent] = useState(0);
   const [progressTotal, setProgressTotal] = useState(0);
-  const [progressItem, setProgressItem] = useState("");
 
   const {
     importState,
@@ -70,7 +57,6 @@ export function ImportExportModal({
     runImport,
     setFile,
     setColumnMapping,
-    setConflictStrategy,
     setImportScreenshots,
     setRows,
     setConflicts,
@@ -82,7 +68,6 @@ export function ImportExportModal({
     exportMutation,
   } = useImportExport();
 
-  // Sync defaultTab when modal opens
   useEffect(() => {
     if (open) {
       setActiveTab(defaultTab);
@@ -95,16 +80,12 @@ export function ImportExportModal({
     }
   }, [open, defaultTab, resetImport]);
 
-  // Detect conflicts after parse
   useEffect(() => {
     if (importState.parseResult && importState.rows.length > 0) {
-      // In a real implementation, this would call an API to detect conflicts.
-      // For now we leave conflicts empty and skip to preview.
       setConflicts([]);
     }
-  }, [importState.parseResult, importState.rows]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [importState.parseResult, importState.rows, setConflicts]);
 
-  // Track import progress
   useEffect(() => {
     if (runImportMutation.isPending) {
       setProgressStatus("importing");
@@ -123,15 +104,15 @@ export function ImportExportModal({
     runImportMutation.isPending,
     runImportMutation.isSuccess,
     runImportMutation.isError,
-  ]); // eslint-disable-line react-hooks/exhaustive-deps
+    importState.rows.length,
+  ]);
 
-  // Transition from step 1 to step 2 after successful parse
   useEffect(() => {
     if (parseMutation.isSuccess) {
       setImportStep(2);
       parseMutation.reset();
     }
-  }, [parseMutation.isSuccess]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [parseMutation.isSuccess, parseMutation]);
 
   function handleImportNext() {
     if (importStep === 1) {
@@ -140,14 +121,11 @@ export function ImportExportModal({
       return;
     }
     if (importStep === 2) {
-      // Validate name mapping exists
-      const hasName = Object.values(importState.columnMapping).includes("name");
-      if (!hasName) return;
+      if (!Object.values(importState.columnMapping).includes("name")) return;
       setImportStep(3);
       return;
     }
     if (importStep === 3) {
-      // If conflicts exist, go to step 4; otherwise start import
       if (importState.conflicts.length > 0) {
         setImportStep(4);
       } else {
@@ -167,19 +145,9 @@ export function ImportExportModal({
   }
 
   function handleImportBack() {
-    if (importStep === 1) return;
-    if (importStep === 2) {
-      setImportStep(1);
-      return;
-    }
-    if (importStep === 3) {
-      setImportStep(2);
-      return;
-    }
-    if (importStep === 4) {
-      setImportStep(3);
-      return;
-    }
+    if (importStep === 2) setImportStep(1);
+    else if (importStep === 3) setImportStep(2);
+    else if (importStep === 4) setImportStep(3);
   }
 
   function handleExportNext() {
@@ -190,64 +158,51 @@ export function ImportExportModal({
     if (exportStep === 2) {
       setExportStep(3);
       exportMutation.mutate();
-      return;
     }
   }
 
   function handleExportBack() {
-    if (exportStep === 1) return;
     if (exportStep === 2) setExportStep(1);
   }
 
-  function handleFileSelected(file: File) {
-    setFile(file);
-  }
-
-  function handleClose() {
-    onClose();
-  }
-
-  const isImportLoading = parseMutation.isPending;
-  const isExportLoading = exportMutation.isPending;
-
-  // Derive conflicts from rows (mock — in real impl, this comes from API)
-  const detectedConflicts = importState.conflicts;
+  const IMPORT_STEPS = [
+    t("translation:import.uploadFile"),
+    t("translation:import.step2"),
+    t("translation:import.step3"),
+    t("translation:import.checkConflicts"),
+    t("translation:import.success"),
+  ];
+  const EXPORT_STEPS = [
+    t("translation:export.selectFormat"),
+    t("translation:export.formatLabel"),
+    t("translation:export.exportComplete"),
+  ];
 
   const currentSteps = activeTab === "import" ? IMPORT_STEPS : EXPORT_STEPS;
   const currentStep = activeTab === "import" ? importStep : exportStep;
+  const isImportLoading = parseMutation.isPending;
+  const isExportLoading = exportMutation.isPending;
 
   return (
-    <GlassModal
-      open={open}
-      onClose={handleClose}
-      title=""
-      size="xl"
-      allowOverflow
-    >
+    <GlassModal open={open} onClose={onClose} title="" size="xl" allowOverflow>
       <div className="flex flex-col gap-0">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2
-            className="text-lg font-semibold"
-            style={{ color: "rgba(255,255,255,0.95)" }}
-          >
-            İçe / Dışa Aktar
+          <h2 className="text-lg font-semibold text-text-primary">
+            {t("translation:import.titleImportExport")}
           </h2>
-          <div
-            className="flex gap-1 p-1 rounded-xl"
-            style={{ background: "rgba(255,255,255,0.05)" }}
-          >
+          <div className="flex gap-1 p-1 rounded-xl bg-surface-subtle">
             <TabBtn
               active={activeTab === "import"}
               onClick={() => setActiveTab("import")}
             >
-              <Upload size={14} /> İçe Aktar
+              <Upload size={14} /> {t("translation:import.import")}
             </TabBtn>
             <TabBtn
               active={activeTab === "export"}
               onClick={() => setActiveTab("export")}
             >
-              <Download size={14} /> Dışa Aktar
+              <Download size={14} /> {t("translation:import.export")}
             </TabBtn>
           </div>
         </div>
@@ -256,12 +211,8 @@ export function ImportExportModal({
         <StepIndicator steps={currentSteps} currentStep={currentStep} />
 
         {/* Content */}
-        <div
-          className="min-h-64 max-h-96 overflow-y-auto pr-1"
-          style={{ color: "rgba(255,255,255,0.8)" }}
-        >
+        <div className="min-h-64 max-h-96 overflow-y-auto pr-1 mt-4 text-text-secondary">
           <AnimatePresence mode="wait">
-            {/* ── IMPORT ── */}
             {activeTab === "import" && (
               <motion.div
                 key={`import-${importStep}`}
@@ -270,49 +221,34 @@ export function ImportExportModal({
                 animate="animate"
                 exit="exit"
               >
-                {/* Step 1: File upload */}
                 {importStep === 1 && (
                   <div className="flex flex-col gap-4">
-                    <p
-                      className="text-sm"
-                      style={{ color: "rgba(255,255,255,0.5)" }}
-                    >
-                      Steam, PlayStation, Excel veya manuel olarak hazırlanmış
-                      dosyayı yükle.
+                    <p className="text-sm text-text-muted">
+                      {t("translation:import.step1Hint")}
                     </p>
-                    <FileDropper
-                      onFileSelected={handleFileSelected}
-                      maxSizeMB={10}
-                    />
+                    <FileDropper onFileSelected={setFile} maxSizeMB={10} />
                     {isImportLoading && (
                       <div className="flex items-center gap-2 justify-center py-4">
                         <LoadingSpinner size="sm" />
-                        <span
-                          className="text-xs"
-                          style={{ color: "rgba(255,255,255,0.4)" }}
-                        >
-                          Dosya işleniyor...
+                        <span className="text-xs text-text-muted">
+                          {t("translation:import.fileProcessing")}
                         </span>
                       </div>
                     )}
                   </div>
                 )}
 
-                {/* Step 2: Column mapping */}
                 {importStep === 2 && importState.parseResult && (
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                      <p
-                        className="text-sm"
-                        style={{ color: "rgba(255,255,255,0.5)" }}
-                      >
-                        Kaynak sütunları kütüphane alanlarıyla eşleştir.
+                      <p className="text-sm text-text-muted">
+                        {t("translation:import.matchColumns")}
                       </p>
-                      <div
-                        className="flex items-center gap-3 text-xs"
-                        style={{ color: "rgba(255,255,255,0.35)" }}
-                      >
-                        <span>{importState.parseResult.totalRows} satır</span>
+                      <div className="flex items-center gap-3 text-xs text-text-muted">
+                        <span>
+                          {importState.parseResult.totalRows}{" "}
+                          {t("translation:import.rows")}
+                        </span>
                         <span>•</span>
                         <span>
                           {importState.parseResult.format.toUpperCase()}
@@ -330,28 +266,19 @@ export function ImportExportModal({
                   </div>
                 )}
 
-                {/* Step 3: Preview */}
                 {importStep === 3 && (
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                      <p
-                        className="text-sm"
-                        style={{ color: "rgba(255,255,255,0.5)" }}
-                      >
-                        Verileri kontrol et ve düzenle.
+                      <p className="text-sm text-text-muted">
+                        {t("translation:import.checkData")}
                       </p>
                       <div className="flex items-center gap-3">
-                        <span
-                          className="text-xs"
-                          style={{ color: "rgba(255,255,255,0.35)" }}
-                        >
-                          Ekran görüntülerini içe aktar
+                        <span className="text-xs text-text-muted">
+                          {t("translation:import.importScreenshots")}
                         </span>
                         <GlassSwitch
                           checked={importState.importScreenshots}
-                          onChange={(e) =>
-                            setImportScreenshots(e.target.checked)
-                          }
+                          onChange={setImportScreenshots}
                         />
                       </div>
                     </div>
@@ -360,7 +287,6 @@ export function ImportExportModal({
                       mapping={importState.columnMapping}
                       onRowEdit={(rowIdx, field, value) => {
                         const updated = [...importState.rows];
-                        // Update mapped value back to raw row
                         const sourceCol = Object.entries(
                           importState.columnMapping,
                         ).find(([, f]) => f === field)?.[0];
@@ -376,42 +302,36 @@ export function ImportExportModal({
                   </div>
                 )}
 
-                {/* Step 4: Conflicts */}
                 {importStep === 4 && (
                   <ConflictResolver
-                    conflicts={detectedConflicts}
+                    conflicts={importState.conflicts}
                     defaultStrategy={importState.conflictStrategy}
-                    onResolve={(newResolutions) => {
-                      setResolutions(newResolutions);
-                    }}
+                    onResolve={setResolutions}
                   />
                 )}
 
-                {/* Step 5: Result */}
                 {importStep === 5 && importResult && (
                   <ImportResult
                     result={importResult}
-                    onClose={handleClose}
+                    onClose={onClose}
                     onViewLibrary={() => {
-                      handleClose();
+                      onClose();
                       window.location.href = "/games";
                     }}
                   />
                 )}
 
-                {/* Progress (shown during import) */}
                 {importStep < 5 && runImportMutation.isPending && (
                   <ImportProgress
                     total={progressTotal}
                     current={progressCurrent}
-                    currentItem={progressItem}
+                    currentItem=""
                     status={progressStatus}
                   />
                 )}
               </motion.div>
             )}
 
-            {/* ── EXPORT ── */}
             {activeTab === "export" && (
               <motion.div
                 key={`export-${exportStep}`}
@@ -437,89 +357,72 @@ export function ImportExportModal({
                     onFiltersChange={setExportFilters}
                   />
                 )}
+
                 {exportStep === 2 && (
                   <div className="flex flex-col gap-4">
-                    <p
-                      className="text-sm"
-                      style={{ color: "rgba(255,255,255,0.5)" }}
-                    >
-                      Dışa aktarma hazır. Dosya formatı:{" "}
-                      <strong style={{ color: "rgba(255,255,255,0.8)" }}>
+                    <p className="text-sm text-text-muted">
+                      {t("translation:export.ready")}{" "}
+                      {t("translation:export.formatLabel")}:{" "}
+                      <strong className="text-text-secondary">
                         {exportState.format.toUpperCase()}
                       </strong>
                     </p>
-                    <div
-                      className="rounded-xl p-4 flex flex-col gap-2"
-                      style={{
-                        border: "1px solid rgba(255,255,255,0.08)",
-                        background: "rgba(255,255,255,0.02)",
-                      }}
-                    >
+                    <div className="rounded-xl p-4 flex flex-col gap-2 border border-glass-border bg-surface-subtle">
                       <SummaryRow
-                        label="Format"
+                        label={t("translation:export.formatLabel")}
                         value={exportState.format.toUpperCase()}
                       />
                       <SummaryRow
-                        label="Ekran görüntüleri"
+                        label={t("translation:export.includeScreenshots")}
                         value={
                           exportState.filters.includeScreenshots
-                            ? "Evet"
-                            : "Hayır"
+                            ? t("translation:export.yes")
+                            : t("translation:export.no")
                         }
                       />
                       <SummaryRow
-                        label="Durum filtresi"
+                        label={t("translation:export.statusFilter")}
                         value={
                           exportState.filters.status?.length
-                            ? exportState.filters.status.join(", ")
-                            : "Tümü"
+                            ? exportState.filters.status
+                                .map((s) => t(`games.status.${s}`))
+                                .join(", ")
+                            : t("translation:export.all")
                         }
                       />
                       <SummaryRow
-                        label="Platform filtresi"
+                        label={t("translation:export.platformFilter")}
                         value={
                           exportState.filters.platforms?.length
-                            ? exportState.filters.platforms.join(", ")
-                            : "Tümü"
+                            ? exportState.filters.platforms
+                                .map((p) => t(`games.platform.${p}`))
+                                .join(", ")
+                            : t("translation:export.all")
                         }
                       />
                     </div>
                   </div>
                 )}
+
                 {exportStep === 3 && (
                   <div className="flex flex-col items-center justify-center gap-4 py-8">
                     {isExportLoading ? (
                       <>
                         <LoadingSpinner size="lg" />
-                        <p
-                          className="text-sm"
-                          style={{ color: "rgba(255,255,255,0.4)" }}
-                        >
-                          Dışa aktarılıyor...
+                        <p className="text-sm text-text-muted">
+                          {t("translation:export.exporting")}
                         </p>
                       </>
                     ) : (
                       <>
-                        <div
-                          className="w-14 h-14 rounded-full flex items-center justify-center"
-                          style={{ background: "rgba(34,197,94,0.12)" }}
-                        >
-                          <Download
-                            size={24}
-                            style={{ color: "rgba(34,197,94,0.8)" }}
-                          />
+                        <div className="w-14 h-14 rounded-full flex items-center justify-center bg-success-soft">
+                          <Download size={24} className="text-success" />
                         </div>
-                        <p
-                          className="text-sm font-medium"
-                          style={{ color: "rgba(255,255,255,0.8)" }}
-                        >
-                          Dışa aktarma tamamlandı!
+                        <p className="text-sm font-medium text-text-secondary">
+                          {t("translation:export.exportComplete")}
                         </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: "rgba(255,255,255,0.35)" }}
-                        >
-                          Dosyan indirildi.
+                        <p className="text-xs text-text-muted">
+                          {t("translation:export.fileDownloaded")}
                         </p>
                       </>
                     )}
@@ -530,21 +433,18 @@ export function ImportExportModal({
           </AnimatePresence>
         </div>
 
-        {/* Footer navigation */}
+        {/* Footer — Import */}
         {activeTab === "import" &&
           importStep < 5 &&
           !runImportMutation.isPending && (
-            <div
-              className="flex items-center justify-between mt-6 pt-4"
-              style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
-            >
+            <div className="flex items-center justify-between mt-6 pt-4 border-t border-glass-border">
               <GlassButton
                 variant="ghost"
                 onClick={handleImportBack}
                 disabled={importStep === 1}
                 leftIcon={<ChevronLeft size={15} />}
               >
-                Geri
+                {t("translation:import.back")}
               </GlassButton>
               <GlassButton
                 variant="primary"
@@ -563,26 +463,24 @@ export function ImportExportModal({
                 loading={isImportLoading || runImportMutation.isPending}
               >
                 {importStep === 4
-                  ? "İçe Aktarı Başlat"
+                  ? t("translation:export.startImport")
                   : importStep === 3
-                    ? "Çakışma Kontrolü"
-                    : "Devam"}
+                    ? t("translation:export.checkConflicts")
+                    : t("translation:import.continue")}
               </GlassButton>
             </div>
           )}
 
+        {/* Footer — Export */}
         {activeTab === "export" && exportStep < 3 && (
-          <div
-            className="flex items-center justify-between mt-6 pt-4"
-            style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}
-          >
+          <div className="flex items-center justify-between mt-6 pt-4 border-t border-glass-border">
             <GlassButton
               variant="ghost"
               onClick={handleExportBack}
               disabled={exportStep === 1}
               leftIcon={<ChevronLeft size={15} />}
             >
-              Geri
+              {t("translation:import.back")}
             </GlassButton>
             <GlassButton
               variant="primary"
@@ -596,7 +494,9 @@ export function ImportExportModal({
               }
               loading={isExportLoading}
             >
-              {exportStep === 2 ? "Dışa Aktar" : "Devam"}
+              {exportStep === 2
+                ? t("translation:export.exportButton")
+                : t("translation:import.continue")}
             </GlassButton>
           </div>
         )}
@@ -617,11 +517,12 @@ function TabBtn({
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-      style={{
-        background: active ? "rgba(255,255,255,0.1)" : "transparent",
-        color: active ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.4)",
-      }}
+      className={cn(
+        "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all",
+        active
+          ? "bg-glass-border text-text-primary"
+          : "text-text-muted hover:text-text-secondary",
+      )}
     >
       {children}
     </button>
@@ -631,8 +532,8 @@ function TabBtn({
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-center text-sm">
-      <span style={{ color: "rgba(255,255,255,0.4)" }}>{label}</span>
-      <span style={{ color: "rgba(255,255,255,0.75)" }}>{value}</span>
+      <span className="text-text-muted">{label}</span>
+      <span className="text-text-secondary">{value}</span>
     </div>
   );
 }

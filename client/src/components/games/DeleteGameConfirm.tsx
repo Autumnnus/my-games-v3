@@ -1,7 +1,8 @@
-import { GlassModal } from "@/components/ui/GlassModal";
-import { GlassButton } from "@/components/ui/GlassButton";
-import { useDeleteGame } from "@/hooks/useGames";
 import type { GameListItem } from "@/api/types";
+import { GlassButton } from "@/components/ui/GlassButton";
+import { GlassModal } from "@/components/ui/GlassModal";
+import { useDeleteGame } from "@/hooks/useGames";
+import { useTranslation } from "react-i18next";
 
 interface DeleteGameConfirmProps {
   game: GameListItem | null;
@@ -14,24 +15,25 @@ export function DeleteGameConfirm({
   onClose,
   onDeleted,
 }: DeleteGameConfirmProps) {
+  const { t } = useTranslation();
   const deleteGame = useDeleteGame();
 
   return (
-    <GlassModal open={!!game} onClose={onClose} title="Oyunu Kaldır" size="sm">
+    <GlassModal
+      open={!!game}
+      onClose={onClose}
+      title={t("translation:games.deleteConfirm.title")}
+      size="sm"
+    >
       {game && (
         <div className="flex flex-col gap-5">
-          <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
-            <span
-              className="font-semibold"
-              style={{ color: "rgba(255,255,255,0.9)" }}
-            >
-              {game.name}
-            </span>{" "}
-            adlı oyun kütüphanenden kaldırılacak. Bu işlem geri alınamaz.
+          <p className="text-sm text-text-secondary">
+            <span className="font-semibold text-text-primary">{game.name}</span>
+            {t("translation:games.deleteConfirm.message")}
           </p>
           <div className="flex gap-2 justify-end">
             <GlassButton variant="ghost" onClick={onClose}>
-              İptal
+              {t("translation:common.buttons.cancel")}
             </GlassButton>
             <GlassButton
               variant="danger"
@@ -45,7 +47,7 @@ export function DeleteGameConfirm({
                 })
               }
             >
-              Kaldır
+              {t("translation:common.buttons.remove")}
             </GlassButton>
           </div>
         </div>

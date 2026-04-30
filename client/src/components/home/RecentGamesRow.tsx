@@ -18,15 +18,13 @@ export function RecentGamesRow({ games, title }: RecentGamesRowProps) {
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <h2
-          className="text-base font-semibold"
-          style={{ color: "rgba(255,255,255,0.85)" }}
+          className="text-base font-semibold text-text-secondary"
         >
           {title}
         </h2>
         <Link
           to="/games"
-          className="text-xs flex items-center gap-1 hover:underline"
-          style={{ color: "rgba(168,85,247,0.8)" }}
+          className="text-xs flex items-center gap-1 hover:underline text-accent"
         >
           Tümünü gör <ArrowRight size={12} />
         </Link>
@@ -70,8 +68,7 @@ export function RecentGamesRow({ games, title }: RecentGamesRowProps) {
                   </div>
                   <div className="mt-1.5 px-0.5">
                     <p
-                      className="text-xs font-medium truncate"
-                      style={{ color: "rgba(255,255,255,0.8)" }}
+                      className="text-xs font-medium truncate text-text-secondary"
                     >
                       {game.name}
                     </p>

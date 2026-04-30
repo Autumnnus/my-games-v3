@@ -14,6 +14,13 @@ statistics.get("/", async (c) => {
   return c.json(ok(data));
 });
 
+statistics.get("/user/:userId", async (c) => {
+  const data = await statisticsService.getUserAggregateStatisticsService(
+    c.req.param("userId"),
+  );
+  return c.json(ok(data));
+});
+
 statistics.get("/:id", async (c) => {
   const data = await statisticsService.getUserStatisticsService(
     c.req.param("id"),

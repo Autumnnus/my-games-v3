@@ -1,6 +1,7 @@
-import { GlassModal } from "@/components/ui/GlassModal";
 import { GlassButton } from "@/components/ui/GlassButton";
+import { GlassModal } from "@/components/ui/GlassModal";
 import { useDeleteAllScreenshots } from "@/hooks/useScreenshots";
+import { useTranslation } from "react-i18next";
 
 interface DeleteAllScreenshotsConfirmProps {
   gameId: string;
@@ -17,28 +18,24 @@ export function DeleteAllScreenshotsConfirm({
   onClose,
   onDeleted,
 }: DeleteAllScreenshotsConfirmProps) {
+  const { t } = useTranslation();
   const deleteAll = useDeleteAllScreenshots(gameId);
 
   return (
     <GlassModal
       open={open}
       onClose={onClose}
-      title="Tüm Ekran Görüntülerini Sil"
+      title={t("translation:screenshots.deleteAllConfirm.title")}
       size="sm"
     >
       <div className="flex flex-col gap-5">
-        <p className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
-          <span
-            className="font-semibold"
-            style={{ color: "rgba(255,255,255,0.9)" }}
-          >
-            {gameName}
-          </span>{" "}
-          için tüm ekran görüntüleri silinecek. Bu işlem geri alınamaz.
+        <p className="text-sm text-text-secondary">
+          <span className="font-semibold text-text-primary">{gameName}</span>{" "}
+          {t("translation:screenshots.deleteAllConfirm.message")}
         </p>
         <div className="flex gap-2 justify-end">
           <GlassButton variant="ghost" onClick={onClose}>
-            İptal
+            {t("translation:common.buttons.cancel")}
           </GlassButton>
           <GlassButton
             variant="danger"
@@ -52,7 +49,7 @@ export function DeleteAllScreenshotsConfirm({
               })
             }
           >
-            Tümünü Sil
+            {t("translation:common.buttons.deleteAll")}
           </GlassButton>
         </div>
       </div>

@@ -1,14 +1,10 @@
-import { Search, Grid3X3, List } from "lucide-react";
-import type { GameStatus, Platform } from "@my-games/shared";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { GlassSelect } from "@/components/ui/GlassSelect";
-import {
-  ALL_STATUSES,
-  ALL_PLATFORMS,
-  STATUS_LABELS,
-  PLATFORM_LABELS,
-} from "@/lib/constants";
+import { ALL_PLATFORMS, ALL_STATUSES } from "@/lib/constants";
 import { useUIStore } from "@/store/ui.store";
+import type { GameStatus, Platform } from "@my-games/shared";
+import { Grid3X3, List, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface GameFiltersBarProps {
   status?: GameStatus;
@@ -22,14 +18,6 @@ interface GameFiltersBarProps {
   onSearchChange: (v: string) => void;
 }
 
-const SORT_OPTIONS = [
-  { value: "lastPlay:desc", label: "Son Oynanan" },
-  { value: "createdAt:desc", label: "Eklenme Tarihi" },
-  { value: "name:asc", label: "A-Z" },
-  { value: "rating:desc", label: "En Yüksek Puan" },
-  { value: "playTime:desc", label: "En Uzun Süre" },
-];
-
 export function GameFiltersBar({
   status,
   platform,
@@ -41,6 +29,7 @@ export function GameFiltersBar({
   onSortChange,
   onSearchChange,
 }: GameFiltersBarProps) {
+  const { t } = useTranslation();
   const { gamesViewMode, setGamesViewMode } = useUIStore();
   const currentSort = sortBy && order ? `${sortBy}:${order}` : "lastPlay:desc";
 
@@ -55,12 +44,11 @@ export function GameFiltersBar({
       <div className="relative">
         <Search
           size={15}
-          className="absolute left-3 top-1/2 -translate-y-1/2"
-          style={{ color: "rgba(255,255,255,0.4)" }}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
         />
         <input
           type="text"
-          placeholder="Oyun ara..."
+          placeholder={t("translation:common.buttons.search")}
           value={search ?? ""}
           onChange={(e) => onSearchChange(e.target.value)}
           className="glass-input w-full pl-9 pr-4 py-2.5 text-sm"
@@ -75,7 +63,7 @@ export function GameFiltersBar({
             onClick={() => onStatusChange(undefined)}
             className={`glass-btn text-xs px-3 py-1.5 rounded-full ${!status ? "glass-btn-primary" : ""}`}
           >
-            Tümü
+            {t("translation:export.all")}
           </button>
           {ALL_STATUSES.map((s) => (
             <button
@@ -83,7 +71,7 @@ export function GameFiltersBar({
               onClick={() => onStatusChange(status === s ? undefined : s)}
               className={`glass-btn text-xs px-3 py-1.5 rounded-full ${status === s ? "glass-btn-primary" : ""}`}
             >
-              {STATUS_LABELS[s]}
+              {t(`games.status.${s}`)}
             </button>
           ))}
         </div>
@@ -92,22 +80,38 @@ export function GameFiltersBar({
           {/* Platform filter */}
           <GlassSelect
             value={platform ?? ""}
-            onChange={(e) =>
-              onPlatformChange((e.target.value as Platform) || undefined)
-            }
+            onChange={(v) => onPlatformChange((v as Platform) || undefined)}
             options={ALL_PLATFORMS.map((p) => ({
               value: p,
-              label: PLATFORM_LABELS[p],
+              label: t(`games.platform.${p}`),
             }))}
-            placeholder="Platform"
+            placeholder={t("translation:games.form.platform")}
             className="text-xs py-1.5 min-w-32"
           />
 
           {/* Sort */}
           <GlassSelect
             value={currentSort}
-            onChange={(e) => handleSortChange(e.target.value)}
-            options={SORT_OPTIONS}
+            onChange={handleSortChange}
+            options={[
+              {
+                value: "lastPlay:desc",
+                label: t("translation:games.sort.lastPlayed"),
+              },
+              {
+                value: "createdAt:desc",
+                label: t("translation:games.sort.createdAt"),
+              },
+              { value: "name:asc", label: t("translation:games.sort.name") },
+              {
+                value: "rating:desc",
+                label: t("translation:games.sort.highestRated"),
+              },
+              {
+                value: "playTime:desc",
+                label: t("translation:games.sort.mostPlayed"),
+              },
+            ]}
             className="text-xs py-1.5 min-w-36"
           />
 
@@ -118,7 +122,7 @@ export function GameFiltersBar({
               size="sm"
               onClick={() => setGamesViewMode("grid")}
               className="p-1.5 rounded-lg border-0"
-              aria-label="Grid görünümü"
+              aria-label={t("translation:games.view.grid")}
             >
               <Grid3X3 size={14} />
             </GlassButton>
@@ -127,7 +131,7 @@ export function GameFiltersBar({
               size="sm"
               onClick={() => setGamesViewMode("list")}
               className="p-1.5 rounded-lg border-0"
-              aria-label="Liste görünümü"
+              aria-label={t("translation:games.view.list")}
             >
               <List size={14} />
             </GlassButton>

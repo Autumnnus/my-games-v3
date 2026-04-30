@@ -1,24 +1,25 @@
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { GlassSelect } from "@/components/ui/GlassSelect";
 import type { ImportField, ImportPreset } from "@/api/importExport";
+import { GlassSelect } from "@/components/ui/GlassSelect";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
-const FIELD_OPTIONS: Array<{ value: ImportField; label: string }> = [
-  { value: "name", label: "İsim (name) *" },
-  { value: "status", label: "Durum (status)" },
-  { value: "rating", label: "Puan (rating)" },
-  { value: "playTime", label: "Oynama Süresi (playTime)" },
-  { value: "platforms", label: "Platformlar (platforms)" },
-  { value: "genres", label: "Türler (genres)" },
-  { value: "tags", label: "Etiketler (tags)" },
-  { value: "notes", label: "Notlar (notes)" },
-  { value: "coverImage", label: "Kapak Görseli (coverImage)" },
-  { value: "screenshots", label: "Ekran Görüntüleri (screenshots)" },
-  { value: "steamAppId", label: "Steam App ID (steamAppId)" },
-  { value: "ignore", label: "Yoksay (ignore)" },
+const FIELD_OPTIONS_KEYS: Array<{ value: ImportField; labelKey: string }> = [
+  { value: "name", labelKey: "import.nameField" },
+  { value: "status", labelKey: "import.statusField" },
+  { value: "rating", labelKey: "import.ratingField" },
+  { value: "playTime", labelKey: "import.playTimeField" },
+  { value: "platforms", labelKey: "import.platformsField" },
+  { value: "genres", labelKey: "import.genresField" },
+  { value: "tags", labelKey: "import.tagsField" },
+  { value: "notes", labelKey: "import.notesField" },
+  { value: "coverImage", labelKey: "import.coverImageField" },
+  { value: "screenshots", labelKey: "import.screenshotsField" },
+  { value: "steamAppId", labelKey: "import.steamAppIdField" },
+  { value: "ignore", labelKey: "import.ignoreField" },
 ];
 
-const PRESET_LABELS: Record<ImportPreset, string> = {
+const PRESET_LABELS_KEYS: Record<ImportPreset, string> = {
   steam: "Steam",
   psn: "PlayStation",
   retroachievements: "RetroAchievements",
@@ -38,13 +39,13 @@ export function ColumnMappingTable({
   onMappingChange,
   detectedPreset,
 }: ColumnMappingTableProps) {
+  const { t } = useTranslation();
   const [showIgnored, setShowIgnored] = useState(false);
 
   function handleChange(col: string, value: ImportField) {
     onMappingChange({ ...mapping, [col]: value });
   }
 
-  // Split columns into "active" (not ignored) and "ignored"
   const activeColumns = detectedColumns.filter(
     (col) => (mapping[col] ?? "ignore") !== "ignore",
   );
@@ -57,7 +58,6 @@ export function ColumnMappingTable({
 
   return (
     <div className="flex flex-col gap-3">
-      {/* Preset detection banner */}
       {detectedPreset && (
         <div
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium self-start"
@@ -68,17 +68,18 @@ export function ColumnMappingTable({
           }}
         >
           <span>●</span>
-          {PRESET_LABELS[detectedPreset]} hazır ayarı otomatik eşleştirildi
+          {t("translation:import.presetDetected", {
+            preset: t(PRESET_LABELS_KEYS[detectedPreset]),
+          })}
         </div>
       )}
 
-      {/* Info callout */}
       <div
         className="flex items-start gap-2.5 px-3 py-2.5 rounded-lg text-xs leading-relaxed"
         style={{
-          background: "rgba(255,255,255,0.03)",
-          border: "1px solid rgba(255,255,255,0.07)",
-          color: "rgba(255,255,255,0.45)",
+          background: "var(--theme-surface-subtle)",
+          border: "1px solid var(--theme-glass-border)",
+          color: "var(--theme-text-muted)",
         }}
       >
         <span
@@ -88,37 +89,34 @@ export function ColumnMappingTable({
           ⚡
         </span>
         <span>
-          Yalnızca eşleştirmek istediğin sütunları seç — diğerleri otomatik olarak
-          yoksayılır.{" "}
-          <span style={{ color: "rgba(255,255,255,0.75)", fontWeight: 600 }}>
-            İsim (name)
-          </span>{" "}
-          alanı zorunludur.
+          {t("translation:import.columnMappingHint")}{" "}
+          <span
+            style={{ color: "var(--theme-text-secondary)", fontWeight: 600 }}
+          >
+            {t("translation:import.nameRequired")}
+          </span>
         </span>
       </div>
 
-      {/* Active mapping table */}
       {hasActive && (
         <div
           className="rounded-xl overflow-hidden"
-          style={{ border: "1px solid rgba(255,255,255,0.08)" }}
+          style={{ border: "1px solid var(--theme-glass-border)" }}
         >
-          {/* Header */}
           <div
             className="grid grid-cols-2 gap-4 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
             style={{
-              background: "rgba(255,255,255,0.04)",
-              color: "rgba(255,255,255,0.4)",
+              background: "var(--theme-surface-subtle)",
+              color: "var(--theme-text-muted)",
             }}
           >
-            <span>Kaynak Sütun</span>
-            <span>Hedef Alan</span>
+            <span>{t("translation:import.sourceColumn")}</span>
+            <span>{t("translation:import.targetField")}</span>
           </div>
 
-          {/* Rows */}
           <div
             className="divide-y"
-            style={{ divideColor: "rgba(255,255,255,0.05)" }}
+            style={{ borderTop: "1px solid var(--theme-surface-subtle)" }}
           >
             {activeColumns.map((col) => {
               const isName = mapping[col] === "name";
@@ -129,8 +127,7 @@ export function ColumnMappingTable({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span
-                      className="text-sm truncate"
-                      style={{ color: "rgba(255,255,255,0.75)" }}
+                      className="text-sm truncate text-text-secondary"
                       title={col}
                     >
                       {col}
@@ -144,16 +141,17 @@ export function ColumnMappingTable({
                           color: "rgba(251,191,36,0.9)",
                         }}
                       >
-                        Zorunlu
+                        {t("translation:import.required")}
                       </span>
                     )}
                   </div>
                   <GlassSelect
                     value={mapping[col] ?? "ignore"}
-                    onChange={(e) =>
-                      handleChange(col, e.target.value as ImportField)
-                    }
-                    options={FIELD_OPTIONS}
+                    onChange={(v) => handleChange(col, v as ImportField)}
+                    options={FIELD_OPTIONS_KEYS.map((opt) => ({
+                      value: opt.value,
+                      label: t(opt.labelKey),
+                    }))}
                   />
                 </div>
               );
@@ -162,31 +160,26 @@ export function ColumnMappingTable({
         </div>
       )}
 
-      {/* No active columns state */}
       {!hasActive && (
         <div
           className="flex flex-col items-center gap-2 py-8 rounded-xl text-center"
           style={{
-            border: "1px dashed rgba(255,255,255,0.1)",
-            color: "rgba(255,255,255,0.3)",
+            border: "1px dashed var(--theme-glass-border)",
+            color: "var(--theme-text-muted)",
           }}
         >
           <span className="text-2xl">📋</span>
-          <p className="text-sm">
-            Hiçbir sütun eşleştirilmedi. Aşağıdaki toggle ile yoksayılan
-            sütunları görüntüle.
-          </p>
+          <p className="text-sm">{t("translation:import.noMatchedRowsHint")}</p>
         </div>
       )}
 
-      {/* Ignored columns toggle / section */}
       {hasIgnored && (
         <div className="flex flex-col gap-2">
           <button
             onClick={() => setShowIgnored((v) => !v)}
             className="flex items-center gap-1.5 text-xs transition-all cursor-pointer w-fit"
             style={{
-              color: "rgba(255,255,255,0.35)",
+              color: "var(--theme-text-muted)",
               background: "none",
               border: "none",
               padding: "2px 0",
@@ -202,13 +195,13 @@ export function ColumnMappingTable({
               ▶
             </span>
             {showIgnored
-              ? "Yoksayılan sütunları gizle"
-              : "Yoksayılan sütunları göster"}
+              ? t("translation:import.hideIgnored")
+              : t("translation:import.showIgnored")}
             <span
               className="ml-1 px-1.5 py-0.5 rounded text-xs"
               style={{
-                background: "rgba(255,255,255,0.07)",
-                color: "rgba(255,255,255,0.4)",
+                background: "var(--theme-surface-strong)",
+                color: "var(--theme-text-muted)",
               }}
             >
               {ignoredColumns.length}
@@ -224,22 +217,24 @@ export function ColumnMappingTable({
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden rounded-xl"
-                style={{ border: "1px solid rgba(255,255,255,0.05)" }}
+                style={{ border: "1px solid var(--theme-surface-subtle)" }}
               >
                 <div style={{ opacity: 0.65 }}>
                   <div
                     className="grid grid-cols-2 gap-4 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
                     style={{
-                      background: "rgba(255,255,255,0.02)",
-                      color: "rgba(255,255,255,0.25)",
+                      background: "var(--theme-surface-subtle)",
+                      color: "var(--theme-text-muted)",
                     }}
                   >
-                    <span>Kaynak Sütun</span>
-                    <span>Hedef Alan</span>
+                    <span>{t("translation:import.sourceColumn")}</span>
+                    <span>{t("translation:import.targetField")}</span>
                   </div>
                   <div
                     className="divide-y"
-                    style={{ divideColor: "rgba(255,255,255,0.03)" }}
+                    style={{
+                      borderTop: "1px solid var(--theme-surface-subtle)",
+                    }}
                   >
                     {ignoredColumns.map((col) => (
                       <div
@@ -247,18 +242,18 @@ export function ColumnMappingTable({
                         className="grid grid-cols-2 items-center gap-4 px-4 py-2"
                       >
                         <span
-                          className="text-xs truncate"
-                          style={{ color: "rgba(255,255,255,0.35)" }}
+                          className="text-xs truncate text-text-muted"
                           title={col}
                         >
                           {col}
                         </span>
                         <GlassSelect
                           value="ignore"
-                          onChange={(e) =>
-                            handleChange(col, e.target.value as ImportField)
-                          }
-                          options={FIELD_OPTIONS}
+                          onChange={(v) => handleChange(col, v as ImportField)}
+                          options={FIELD_OPTIONS_KEYS.map((opt) => ({
+                            value: opt.value,
+                            label: t(opt.labelKey),
+                          }))}
                         />
                       </div>
                     ))}

@@ -7,6 +7,7 @@ import {
   Gamepad2,
   ExternalLink,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import type { Screenshot } from "@/api/types";
 import { GlassButton } from "@/components/ui/GlassButton";
 
@@ -49,6 +50,7 @@ export function ScreenshotLightbox({
   onClose,
   onNavigate,
 }: ScreenshotLightboxProps) {
+  const { t } = useTranslation();
   const current = index !== null ? screenshots[index] : null;
 
   useEffect(() => {
@@ -96,7 +98,7 @@ export function ScreenshotLightbox({
               className="shrink-0 p-2 rounded-xl"
               onClick={() => onNavigate(index - 1)}
               disabled={index === 0}
-              aria-label="Önceki"
+              aria-label={t('common.aria.previous')}
             >
               <ChevronLeft size={18} />
             </GlassButton>
@@ -121,7 +123,7 @@ export function ScreenshotLightbox({
                       src={current.thumbnail ?? current.url}
                       alt={current.name ?? "Ekran görüntüsü"}
                       className="max-h-[80vh] max-w-full rounded-2xl object-contain"
-                      style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }}
+                      style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }} /* deep image shadow, no token */
                     />
                   );
                 }
@@ -130,8 +132,7 @@ export function ScreenshotLightbox({
                     href={current.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="glass-card p-6 max-w-lg w-full text-base leading-relaxed hover:text-white underline"
-                    style={{ color: "rgba(255,255,255,0.85)" }}
+                    className="glass-card p-6 max-w-lg w-full text-base leading-relaxed text-text-secondary hover:text-text-primary underline"
                   >
                     {current.url}
                   </a>
@@ -146,7 +147,7 @@ export function ScreenshotLightbox({
               className="shrink-0 p-2 rounded-xl"
               onClick={() => onNavigate(index + 1)}
               disabled={index === screenshots.length - 1}
-              aria-label="Sonraki"
+              aria-label={t('common.aria.next')}
             >
               <ChevronRight size={18} />
             </GlassButton>
@@ -154,17 +155,14 @@ export function ScreenshotLightbox({
 
           {/* Close & counter */}
           <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-            <span
-              className="text-sm glass-card-sm px-3 py-1"
-              style={{ color: "rgba(255,255,255,0.6)" }}
-            >
+            <span className="text-sm glass-card-sm px-3 py-1 text-text-secondary">
               {index + 1} / {screenshots.length}
             </span>
             <GlassButton
               size="sm"
               className="p-1.5 rounded-xl"
               onClick={onClose}
-              aria-label="Kapat"
+              aria-label={t('common.aria.close')}
             >
               <X size={16} />
             </GlassButton>
@@ -178,23 +176,15 @@ export function ScreenshotLightbox({
             return (
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
                 <div className="glass-card-sm px-3 py-1.5 flex items-center gap-2">
-                  <Gamepad2
-                    size={14}
-                    style={{ color: "rgba(255,255,255,0.6)" }}
-                  />
-                  <span
-                    className="text-sm"
-                    style={{ color: "rgba(255,255,255,0.85)" }}
-                  >
-                    {game.name}
-                  </span>
+                  <Gamepad2 size={14} className="text-text-secondary" />
+                  <span className="text-sm text-text-secondary">{game.name}</span>
                 </div>
                 {entryId && (
                   <GlassButton
                     size="sm"
                     className="p-1.5 rounded-xl"
                     onClick={() => (window.location.href = `/games/${entryId}`)}
-                    title="Oyuna git"
+                    title={t('screenshots.lightbox.goToGame')}
                   >
                     <ExternalLink size={14} />
                   </GlassButton>

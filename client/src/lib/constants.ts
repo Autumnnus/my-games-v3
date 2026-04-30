@@ -1,5 +1,20 @@
 import type { Platform, GameStatus } from "@my-games/shared";
 
+export const STATUS_COLORS: Record<GameStatus, string> = {
+  completed: "#22c55e",
+  abandoned: "#6b7280",
+  toBeCompleted: "#f59e0b",
+  activePlaying: "var(--theme-accent-2)",
+};
+
+// These are used as fallback display names; prefer t('games.status.X') in components
+export const STATUS_LABELS: Record<GameStatus, string> = {
+  activePlaying: "Oynuyor",
+  completed: "Tamamlandı",
+  abandoned: "Bırakıldı",
+  toBeCompleted: "Tamamlanacak",
+};
+
 export const PLATFORM_LABELS: Record<Platform, string> = {
   steam: "Steam",
   epicGames: "Epic Games",
@@ -10,22 +25,8 @@ export const PLATFORM_LABELS: Record<Platform, string> = {
   playstation: "PlayStation",
   xboxSeries: "Xbox Series",
   nintendo: "Nintendo",
-  mobile: "Mobile",
+  mobile: "Mobil",
   otherPlatforms: "Diğer",
-};
-
-export const STATUS_LABELS: Record<GameStatus, string> = {
-  completed: "Tamamlandı",
-  abandoned: "Bırakıldı",
-  toBeCompleted: "Tamamlanacak",
-  activePlaying: "Oynuyor",
-};
-
-export const STATUS_COLORS: Record<GameStatus, string> = {
-  completed: "#22c55e",
-  abandoned: "#6b7280",
-  toBeCompleted: "#f59e0b",
-  activePlaying: "#3b82f6",
 };
 
 export const PLATFORM_ICONS: Record<Platform, string> = {
