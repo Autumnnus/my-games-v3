@@ -44,8 +44,7 @@ function ConflictCard({
           />
         )}
         <p
-          className="text-sm font-medium"
-          style={{ color: "var(--theme-text-primary)" }}
+          className="text-sm font-medium text-text-primary"
         >
           🎮 {conflict.gameName}
         </p>
@@ -54,29 +53,27 @@ function ConflictCard({
       {/* Values */}
       <div className="grid grid-cols-3 gap-2 text-center">
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
+          <span className="text-xs text-text-muted">
             Sen
           </span>
           <span
-            className="text-sm font-semibold"
-            style={{ color: "var(--theme-text-secondary)" }}
+            className="text-sm font-semibold text-text-secondary"
           >
             {formatPlayTime(conflict.manualValue)}
           </span>
         </div>
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
+          <span className="text-xs text-text-muted">
             Steam
           </span>
           <span
-            className="text-sm font-semibold"
-            style={{ color: "var(--theme-text-secondary)" }}
+            className="text-sm font-semibold text-text-secondary"
           >
             {formatPlayTime(conflict.steamValue)}
           </span>
         </div>
         <div className="flex flex-col gap-0.5">
-          <span className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
+          <span className="text-xs text-text-muted">
             Fark
           </span>
           <span
@@ -159,23 +156,21 @@ export function ConflictPopup({
             <div className="flex items-center gap-2">
               <AlertTriangle size={18} className="text-amber-400" />
               <h2
-                className="text-base font-semibold"
-                style={{ color: "var(--theme-text-primary)" }}
+                className="text-base font-semibold text-text-primary"
               >
                 Steam Senkronizasyon Çakışmaları Tespit Edildi
               </h2>
             </div>
             <button
               onClick={onDismiss}
-              className="shrink-0 p-1.5 rounded-lg transition-colors"
-              style={{ color: "var(--theme-text-muted)" }}
+              className="shrink-0 p-1.5 rounded-lg transition-colors text-text-muted"
               aria-label="Kapat"
             >
               <X size={16} />
             </button>
           </div>
 
-          <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
+          <p className="text-sm text-text-muted">
             Steam oynama süresi, manuel girdiğiniz değerlerden farklı. Her biri
             için nasıl çözmek istediğini seç.
           </p>

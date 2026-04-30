@@ -80,7 +80,7 @@ export function ImportResult({
               </p>
             ))}
             {errors.length > 10 && (
-              <p className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
+              <p className="text-xs text-text-muted">
                 ...ve {errors.length - 10} hata daha
               </p>
             )}
@@ -122,12 +122,11 @@ function StatCard({
     >
       <div style={{ color }}>{icon}</div>
       <span
-        className="text-xl font-bold"
-        style={{ color: "var(--theme-text-primary)" }}
+        className="text-xl font-bold text-text-primary"
       >
         {value}
       </span>
-      <span className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
+      <span className="text-xs text-text-muted">
         {label}
       </span>
     </div>

@@ -50,8 +50,13 @@ wishlist.post("/steam-import", authMiddleware, async (c) => {
   if (!steamId) return c.json(ok({ error: "steamId required" }), 400);
 
   const { importFromSteamWishlist } = await import("../services/steam-wishlist.service");
-  const result = await importFromSteamWishlist(userId, steamId);
-  return c.json(ok(result));
+  try {
+    const result = await importFromSteamWishlist(userId, steamId);
+    return c.json(ok(result));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Steam import failed";
+    return c.json({ success: false, error: { code: "STEAM_IMPORT_ERROR", message } }, 400);
+  }
 });
 
 export default wishlist;

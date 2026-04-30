@@ -11,36 +11,12 @@ interface StatsSummaryRowProps {
   avgRating?: number;
 }
 
-export function StatsSummaryRow({
-  user,
-  totalPlayTime = 0,
-  avgRating,
-}: StatsSummaryRowProps) {
+export function StatsSummaryRow({ user, totalPlayTime = 0, avgRating }: StatsSummaryRowProps) {
   const stats = [
-    {
-      icon: Gamepad2,
-      label: "Toplam Oyun",
-      value: user.gameSize,
-      color: "var(--theme-accent)",
-    },
-    {
-      icon: Trophy,
-      label: "Tamamlanan",
-      value: user.completedGameSize,
-      color: "#22c55e",
-    },
-    {
-      icon: Clock,
-      label: "Toplam Süre",
-      value: formatPlayTime(totalPlayTime),
-      color: "var(--theme-accent-2)",
-    },
-    {
-      icon: Star,
-      label: "Ort. Puan",
-      value: avgRating ? formatRating(avgRating) : "—",
-      color: "#f59e0b",
-    },
+    { icon: Gamepad2, label: "Toplam Oyun", value: user.gameSize, color: "var(--theme-accent)" },
+    { icon: Trophy, label: "Tamamlanan", value: user.completedGameSize, color: "#22c55e" },
+    { icon: Clock, label: "Toplam Süre", value: formatPlayTime(totalPlayTime), color: "var(--theme-accent-2)" },
+    { icon: Star, label: "Ort. Puan", value: avgRating ? formatRating(avgRating) : "—", color: "#f59e0b" },
   ];
 
   return (
@@ -56,26 +32,13 @@ export function StatsSummaryRow({
             <div className="flex items-center gap-2">
               <div
                 className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{
-                  background: `${color}22`,
-                  border: `1px solid ${color}33`,
-                }}
+                style={{ background: `${color}22`, border: `1px solid ${color}33` }}
               >
                 <Icon size={16} style={{ color }} />
               </div>
-              <span
-                className="text-xs"
-                style={{ color: "var(--theme-text-muted)" }}
-              >
-                {label}
-              </span>
+              <span className="text-xs text-text-muted">{label}</span>
             </div>
-            <span
-              className="text-2xl font-bold"
-              style={{ color: "var(--theme-text-primary)" }}
-            >
-              {value}
-            </span>
+            <span className="text-2xl font-bold text-text-primary">{value}</span>
           </GlassCard>
         </motion.div>
       ))}

@@ -1,13 +1,14 @@
-import { useState, useRef } from "react";
-import { Upload, Link as LinkIcon, Gamepad2, X } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { GlassModal } from "@/components/ui/GlassModal";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { GlassInput } from "@/components/ui/GlassInput";
+import { GlassModal } from "@/components/ui/GlassModal";
 import {
   useAddImageScreenshot,
   useAddTextScreenshot,
 } from "@/hooks/useScreenshots";
+import { cn } from "@/lib/cn";
+import { Gamepad2, Link as LinkIcon, Upload, X } from "lucide-react";
+import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { SteamScreenshotImportModal } from "./SteamScreenshotImportModal";
 
 interface AddScreenshotModalProps {
@@ -42,19 +43,15 @@ export function AddScreenshotModal({
   const addImage = useAddImageScreenshot(gameId);
   const addText = useAddTextScreenshot(gameId);
 
-  // FILE TAB STATE
   const [files, setFiles] = useState<
     Array<{ file: File; name: string; preview: string }>
   >([]);
-
-  // URL TAB STATE
   const [urlItems, setUrlItems] = useState<
     Array<{ url: string; name: string; isImageUrl: boolean }>
   >([]);
   const [urlInput, setUrlInput] = useState("");
 
   function handleClose() {
-    // Cleanup object URLs
     files.forEach((f) => URL.revokeObjectURL(f.preview));
     setFiles([]);
     setUrlItems([]);
@@ -62,7 +59,6 @@ export function AddScreenshotModal({
     onClose();
   }
 
-  // FILE TAB HANDLERS
   function handleFileChange(fileList: FileList | null) {
     if (!fileList?.length) return;
     const newFiles = Array.from(fileList).map((file) => ({
@@ -101,7 +97,6 @@ export function AddScreenshotModal({
     addImage.mutate(formData, { onSuccess: handleClose });
   }
 
-  // URL TAB HANDLERS
   function addUrlItem() {
     const trimmed = urlInput.trim();
     if (!trimmed) return;
@@ -130,17 +125,24 @@ export function AddScreenshotModal({
     if (!urlItems.length) return;
     addText.mutate(
       urlItems.map((item) => ({ url: item.url, name: item.name || undefined })),
-      {
-        onSuccess: handleClose,
-      },
+      { onSuccess: handleClose },
     );
   }
+
+  const dropzoneClass = (compact: boolean) =>
+    cn(
+      "border-2 border-dashed rounded-2xl flex flex-col items-center gap-3 cursor-pointer transition-colors",
+      compact ? "p-4 gap-2" : "p-10",
+      dragging
+        ? "border-accent/60 bg-accent-soft"
+        : "border-glass-border-hover hover:border-glass-border",
+    );
 
   return (
     <GlassModal
       open={open}
       onClose={handleClose}
-      title={t('screenshots.addTitle')}
+      title={t("translation:screenshots.addTitle")}
       size="md"
     >
       {/* Tabs */}
@@ -151,8 +153,12 @@ export function AddScreenshotModal({
           <button
             key={tabKey}
             onClick={() => setTab(tabKey)}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-sm rounded-xl transition-all ${tab === tabKey ? "glass-btn-primary" : ""}`}
-            style={{ color: tab === tabKey ? "white" : "var(--theme-text-muted)" }}
+            className={cn(
+              "flex-1 flex items-center justify-center gap-1.5 py-2 text-sm rounded-xl transition-all",
+              tab === tabKey
+                ? "glass-btn-primary text-white"
+                : "text-text-muted",
+            )}
           >
             {tabKey === "image" ? (
               <Upload size={14} />
@@ -162,17 +168,16 @@ export function AddScreenshotModal({
               <Gamepad2 size={14} />
             )}
             {tabKey === "image"
-              ? t('screenshots.tabImage')
+              ? t("translation:screenshots.tabImage")
               : tabKey === "text"
-                ? t('screenshots.tabText')
-                : t('screenshots.fromSteam')}
+                ? t("translation:screenshots.tabText")
+                : t("translation:screenshots.fromSteam")}
           </button>
         ))}
       </div>
 
       {tab === "image" ? (
         <div className="flex flex-col gap-4">
-          {/* Dropzone — hidden when files exist, shown otherwise */}
           {files.length === 0 ? (
             <div
               onDragOver={(e) => {
@@ -182,20 +187,14 @@ export function AddScreenshotModal({
               onDragLeave={() => setDragging(false)}
               onDrop={handleFileDrop}
               onClick={() => fileRef.current?.click()}
-              className={`border-2 border-dashed rounded-2xl p-10 flex flex-col items-center gap-3 cursor-pointer transition-colors ${dragging ? "border-purple-500/60 bg-purple-500/10" : "border-white/15 hover:border-white/25"}`}
+              className={dropzoneClass(false)}
             >
-              <Upload size={28} style={{ color: "var(--theme-text-muted)" }} />
+              <Upload size={28} className="text-text-muted" />
               <div className="text-center">
-                <p
-                  className="text-sm font-medium"
-                  style={{ color: "var(--theme-text-secondary)" }}
-                >
+                <p className="text-sm font-medium text-text-secondary">
                   Dosya sürükle veya tıkla
                 </p>
-                <p
-                  className="text-xs mt-1"
-                  style={{ color: "var(--theme-text-muted)" }}
-                >
+                <p className="text-xs mt-1 text-text-muted">
                   PNG, JPG, GIF, WebP — maks 10MB
                 </p>
               </div>
@@ -217,13 +216,10 @@ export function AddScreenshotModal({
               onDragLeave={() => setDragging(false)}
               onDrop={handleFileDrop}
               onClick={() => fileRef.current?.click()}
-              className={`border-2 border-dashed rounded-2xl p-4 flex flex-col items-center gap-2 cursor-pointer transition-colors ${dragging ? "border-purple-500/60 bg-purple-500/10" : "border-white/15 hover:border-white/25"}`}
+              className={dropzoneClass(true)}
             >
-              <Upload size={18} style={{ color: "var(--theme-text-muted)" }} />
-              <p
-                className="text-xs"
-                style={{ color: "var(--theme-text-muted)" }}
-              >
+              <Upload size={18} className="text-text-muted" />
+              <p className="text-xs text-text-muted">
                 Daha fazla eklemek için sürükle veya tıkla
               </p>
               <input
@@ -237,7 +233,6 @@ export function AddScreenshotModal({
             </div>
           )}
 
-          {/* Preview queue */}
           {files.length > 0 && (
             <div className="flex flex-col gap-2">
               {files.map((f, index) => (
@@ -257,8 +252,7 @@ export function AddScreenshotModal({
                   />
                   <button
                     onClick={() => removeFile(index)}
-                    className="p-1.5 rounded-lg hover:bg-white/10 flex-shrink-0 transition-colors"
-                    style={{ color: "var(--theme-text-muted)" }}
+                    className="p-1.5 rounded-lg hover:bg-glass-surface-hover flex-shrink-0 transition-colors text-text-muted"
                   >
                     <X size={14} />
                   </button>
@@ -279,7 +273,6 @@ export function AddScreenshotModal({
         </div>
       ) : tab === "text" ? (
         <div className="flex flex-col gap-4">
-          {/* Existing preview queue */}
           {urlItems.length > 0 && (
             <div className="flex flex-col gap-2">
               {urlItems.map((item, index) => (
@@ -297,11 +290,8 @@ export function AddScreenshotModal({
                       }}
                     />
                   ) : (
-                    <div className="w-12 h-12 flex items-center justify-center rounded-lg flex-shrink-0 bg-white/5">
-                      <LinkIcon
-                        size={16}
-                        style={{ color: "var(--theme-text-muted)" }}
-                      />
+                    <div className="w-12 h-12 flex items-center justify-center rounded-lg flex-shrink-0 bg-glass-surface">
+                      <LinkIcon size={16} className="text-text-muted" />
                     </div>
                   )}
                   <GlassInput
@@ -311,8 +301,7 @@ export function AddScreenshotModal({
                   />
                   <button
                     onClick={() => removeUrl(index)}
-                    className="p-1.5 rounded-lg hover:bg-white/10 flex-shrink-0 transition-colors"
-                    style={{ color: "var(--theme-text-muted)" }}
+                    className="p-1.5 rounded-lg hover:bg-glass-surface-hover flex-shrink-0 transition-colors text-text-muted"
                   >
                     <X size={14} />
                   </button>
@@ -321,10 +310,9 @@ export function AddScreenshotModal({
             </div>
           )}
 
-          {/* URL input */}
           <GlassInput
-            label={t('screenshots.urlOrText')}
-            placeholder={t('screenshots.urlPlaceholder')}
+            label={t("translation:screenshots.urlOrText")}
+            placeholder={t("translation:screenshots.urlPlaceholder")}
             value={urlInput}
             onChange={(e) => setUrlInput(e.target.value)}
             onKeyDown={(e) => {
@@ -342,7 +330,6 @@ export function AddScreenshotModal({
           >
             Listeye Ekle
           </GlassButton>
-
           <GlassButton
             variant="primary"
             loading={addText.isPending}

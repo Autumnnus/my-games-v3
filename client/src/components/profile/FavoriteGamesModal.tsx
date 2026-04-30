@@ -1,17 +1,17 @@
-import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { Search, Plus } from "lucide-react";
-import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
-import { toast } from "sonner";
-import { GlassModal } from "@/components/ui/GlassModal";
+import { isApiError } from "@/api/client";
+import { gamesApi } from "@/api/games.api";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { GlassInput } from "@/components/ui/GlassInput";
+import { GlassModal } from "@/components/ui/GlassModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { gamesApi } from "@/api/games.api";
-import { isApiError } from "@/api/client";
-import { useAuthStore } from "@/store/auth.store";
 import { formatCoverUrl } from "@/lib/formatters";
+import { useAuthStore } from "@/store/auth.store";
+import { useQueryClient } from "@tanstack/react-query";
+import { motion } from "framer-motion";
+import { Plus, Search } from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -20,14 +20,21 @@ interface Props {
   queryKey: unknown[];
 }
 
-export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props) {
+export function FavoriteGamesModal({
+  open,
+  onClose,
+  onToggle,
+  queryKey,
+}: Props) {
   const { t } = useTranslation();
   const user = useAuthStore((s) => s.user);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [saving, setSaving] = useState<string | null>(null);
 
-  const [allGames, setAllGames] = useState<Array<{ _id: string; name: string; photo?: string; platform: string }>>([]);
+  const [allGames, setAllGames] = useState<
+    Array<{ _id: string; name: string; photo?: string; platform: string }>
+  >([]);
   const [loading, setLoading] = useState(false);
 
   async function loadGames() {
@@ -43,7 +50,7 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
       });
       setAllGames(data.items.filter((g) => !g.isFavorite));
     } catch {
-      toast.error(t("favorite.couldNotAdd"));
+      toast.error(t("translation:favorite.couldNotAdd"));
     } finally {
       setLoading(false);
     }
@@ -55,7 +62,7 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
 
   const filtered = search.trim()
     ? allGames.filter((g) =>
-        g.name.toLowerCase().includes(search.trim().toLowerCase())
+        g.name.toLowerCase().includes(search.trim().toLowerCase()),
       )
     : allGames;
 
@@ -66,11 +73,17 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
       queryClient.invalidateQueries({ queryKey });
       setAllGames((prev) => prev.filter((g) => g._id !== game._id));
       onToggle(game._id, true);
-      toast.success(t("favorite.addedToFavorites"));
+      toast.success(t("translation:favorite.addedToFavorites"));
     } catch (err) {
-      const msg = isApiError(err) ? err.message : t("favorite.couldNotAdd");
-      if (isApiError(err) && err.httpStatus === 400 && err.message.toLowerCase().includes("favorite")) {
-        toast.error(t("favorite.favoriteLimitReached"));
+      const msg = isApiError(err)
+        ? err.message
+        : t("translation:favorite.couldNotAdd");
+      if (
+        isApiError(err) &&
+        err.httpStatus === 400 &&
+        err.message.toLowerCase().includes("favorite")
+      ) {
+        toast.error(t("translation:favorite.favoriteLimitReached"));
       } else {
         toast.error(msg);
       }
@@ -83,23 +96,20 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
     <GlassModal
       open={open}
       onClose={onClose}
-      title={t("favorite.title")}
+      title={t("translation:favorite.title")}
       size="md"
     >
       <div className="flex flex-col gap-3 min-h-0">
         <GlassInput
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder={t("favorite.searchPlaceholder")}
+          placeholder={t("translation:favorite.searchPlaceholder")}
           leftIcon={<Search size={13} />}
           className="shrink-0"
         />
 
-        <div
-          className="text-xs shrink-0"
-          style={{ color: "var(--theme-text-muted)" }}
-        >
-          {t("favorite.gamesAvailable", { count: allGames.length })}
+        <div className="text-xs shrink-0 text-text-muted">
+          {t("translation:favorite.gamesAvailable", { count: allGames.length })}
         </div>
 
         {loading ? (
@@ -107,11 +117,10 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
             <LoadingSpinner size="md" />
           </div>
         ) : filtered.length === 0 ? (
-          <p
-            className="text-center py-8 text-sm"
-            style={{ color: "var(--theme-text-muted)" }}
-          >
-            {search ? t("favorite.noResults") : t("favorite.allFavorited")}
+          <p className="text-center py-8 text-sm text-text-muted">
+            {search
+              ? t("translation:favorite.noResults")
+              : t("translation:favorite.allFavorited")}
           </p>
         ) : (
           <div className="flex flex-col gap-1 overflow-y-auto min-h-0 max-h-[clamp(200px,42vh,480px)] pr-1">
@@ -120,7 +129,7 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
                 key={game._id}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="group flex items-center gap-3 px-3 py-2.5 rounded-lg border border-transparent hover:border-white/10 transition-all cursor-pointer"
+                className="group flex items-center gap-3 px-3 py-2.5 rounded-lg border border-transparent hover:border-glass-border transition-all cursor-pointer"
                 style={{ background: "var(--theme-surface-subtle)" }}
                 onClick={() => saving === null && handleAddToFavorites(game)}
               >
@@ -142,20 +151,14 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
                   )}
                 </div>
 
-                <span
-                  className="flex-1 text-sm truncate"
-                  style={{ color: "var(--theme-text-secondary)" }}
-                >
+                <span className="flex-1 text-sm truncate text-text-secondary">
                   {game.name}
                 </span>
 
                 {saving === game._id ? (
                   <LoadingSpinner size="sm" />
                 ) : (
-                  <span
-                    className="shrink-0 text-sm opacity-0 group-hover:opacity-100 transition-opacity"
-                    style={{ color: "var(--theme-accent)" }}
-                  >
+                  <span className="shrink-0 text-sm opacity-0 group-hover:opacity-100 transition-opacity text-accent">
                     <Plus size={15} />
                   </span>
                 )}
@@ -164,9 +167,9 @@ export function FavoriteGamesModal({ open, onClose, onToggle, queryKey }: Props)
           </div>
         )}
 
-        <div className="flex justify-end pt-1 border-t border-white/8 shrink-0">
+        <div className="flex justify-end pt-1 border-t border-glass-border shrink-0">
           <GlassButton variant="ghost" size="sm" onClick={onClose}>
-            {t("favorite.close")}
+            {t("translation:favorite.close")}
           </GlassButton>
         </div>
       </div>

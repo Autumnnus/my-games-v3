@@ -121,18 +121,12 @@ function GamesPage() {
           {/* Header */}
           <div className="flex items-center justify-between gap-4">
             <div>
-              <h1
-                className="text-2xl font-bold"
-                style={{ color: "var(--theme-text-primary)" }}
-              >
-                {t("pages.games.title")}
+              <h1 className="text-2xl font-bold text-text-primary">
+                {t("translation:pages.games.title")}
               </h1>
               {totalGames > 0 && (
-                <p
-                  className="text-sm mt-0.5"
-                  style={{ color: "var(--theme-text-muted)" }}
-                >
-                  {t("games.gamesCount", { count: totalGames })}
+                <p className="text-sm mt-0.5 text-text-muted">
+                  {t("translation:games.gamesCount", { count: totalGames })}
                 </p>
               )}
             </div>
@@ -143,14 +137,14 @@ function GamesPage() {
                 onClick={() => setIeOpen(true)}
                 className="hidden sm:flex"
               >
-                {t("games.importExport")}
+                {t("translation:games.importExport")}
               </GlassButton>
               <GlassButton
                 variant="primary"
                 leftIcon={<Plus size={15} />}
                 onClick={() => setAddOpen(true)}
               >
-                {t("games.addGame")}
+                {t("translation:games.addGame")}
               </GlassButton>
             </div>
           </div>
@@ -192,9 +186,12 @@ function GamesPage() {
           ) : allGames.length === 0 ? (
             <EmptyState
               icon={<Gamepad2 size={28} />}
-              title={t("pages.games.emptyTitle")}
-              description={t("pages.games.emptyDesc")}
-              action={{ label: t("games.addGame"), onClick: () => setAddOpen(true) }}
+              title={t("translation:pages.games.emptyTitle")}
+              description={t("translation:pages.games.emptyDesc")}
+              action={{
+                label: t("translation:games.addGame"),
+                onClick: () => setAddOpen(true),
+              }}
             />
           ) : gamesViewMode === "grid" ? (
             <motion.div
@@ -257,7 +254,7 @@ function GamesPage() {
       <button
         onClick={() => setAddOpen(true)}
         className="fixed bottom-6 right-6 md:hidden w-14 h-14 rounded-full flex items-center justify-center glass-btn-primary glow-purple z-30"
-        aria-label={t("common.aria.addGame")}
+        aria-label={t("translation:common.aria.addGame")}
       >
         <Plus size={22} />
       </button>

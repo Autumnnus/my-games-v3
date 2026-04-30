@@ -11,6 +11,9 @@ async function addToWishlist(data: {
   coverUrl?: string;
   platform?: string;
   genres?: string[];
+  releaseYear?: number;
+  developer?: string;
+  igdbData?: object;
   source?: "manual" | "steam";
   steamAppId?: number;
 }) {

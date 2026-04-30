@@ -343,3 +343,90 @@
   backdrop-filter: blur(16px) saturate(120%);
   -webkit-backdrop-filter: blur(16px) saturate(120%);
 }
+
+/* ─── Radix Select / Popover Panel ──────────────────────────────── */
+.glass-panel {
+  background: linear-gradient(180deg, var(--theme-bg-overlay), var(--theme-bg-elevated));
+  border: 1px solid var(--theme-glass-border);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border-radius: var(--radius-glass-sm);
+  box-shadow:
+    inset 0 1px 0 var(--theme-glass-highlight),
+    0 20px 56px var(--theme-shadow);
+}
+
+.glass-panel-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: var(--theme-text-primary);
+  cursor: pointer;
+  outline: none;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.glass-panel-item:hover,
+.glass-panel-item[data-highlighted] {
+  background: var(--theme-glass-surface-hover);
+  color: var(--theme-text-primary);
+}
+
+.glass-panel-item[data-state="checked"] {
+  color: var(--theme-accent);
+}
+
+.glass-panel-item[data-disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ─── Radix Switch ───────────────────────────────────────────────── */
+.glass-switch {
+  position: relative;
+  display: inline-flex;
+  height: 20px;
+  width: 36px;
+  align-items: center;
+  border-radius: 9999px;
+  border: 1px solid var(--theme-glass-border);
+  background: var(--theme-glass-surface);
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease;
+  outline: none;
+}
+
+.glass-switch[data-state="checked"] {
+  background: var(--theme-accent-strong);
+  border-color: var(--theme-glass-border-hover);
+}
+
+.glass-switch:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.glass-switch:focus-visible {
+  outline: 2px solid var(--theme-focus-ring);
+  outline-offset: 2px;
+}
+
+.glass-switch-thumb {
+  display: block;
+  height: 14px;
+  width: 14px;
+  border-radius: 9999px;
+  background: var(--theme-text-muted);
+  transform: translateX(3px);
+  transition: transform 200ms ease, background 180ms ease;
+  pointer-events: none;
+}
+
+.glass-switch[data-state="checked"] .glass-switch-thumb {
+  background: #ffffff;
+  transform: translateX(18px);
+}

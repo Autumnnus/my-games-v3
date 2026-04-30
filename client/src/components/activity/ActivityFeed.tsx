@@ -1,10 +1,9 @@
+import { GlassButton } from "@/components/ui/GlassButton";
+import type { ActivityFeedResponse } from "@my-games/shared";
+import { motion } from "framer-motion";
+import { Activity, ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Activity, RefreshCw } from "lucide-react";
-import type { ActivityFeedResponse } from "@my-games/shared";
-import { GlassButton } from "@/components/ui/GlassButton";
-import { Skeleton } from "@/components/ui/Skeleton";
 import { ActivityItem } from "./ActivityItem";
 import type { ActivityFilter } from "./activityConfig";
 
@@ -82,7 +81,7 @@ export function ActivityFeed({
           }}
         >
           <RefreshCw size={11} className={isFetching ? "animate-spin" : ""} />
-          {t("activity.refresh")}
+          {t("translation:activity.refresh")}
         </button>
       </div>
 
@@ -113,7 +112,7 @@ export function ActivityFeed({
           >
             <ChevronLeft size={14} />
           </GlassButton>
-          <span className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
+          <span className="text-sm text-text-muted">
             {page} / {data.totalPages}
           </span>
           <GlassButton
@@ -131,11 +130,11 @@ export function ActivityFeed({
 
 function ActivitySkeleton() {
   return (
-    <div className="flex gap-3 p-4 rounded-xl border border-white/[0.07] bg-white/[0.03]">
-      <div className="w-7 h-7 rounded-full bg-white/10 animate-pulse shrink-0" />
+    <div className="flex gap-3 p-4 rounded-xl border border-glass-border bg-glass-surface">
+      <div className="w-7 h-7 rounded-full bg-glass-surface-hover animate-pulse shrink-0" />
       <div className="flex-1 flex flex-col gap-2">
-        <div className="h-4 w-2/3 rounded bg-white/10 animate-pulse" />
-        <div className="h-3 w-1/4 rounded bg-white/10 animate-pulse" />
+        <div className="h-4 w-2/3 rounded bg-glass-surface-hover animate-pulse" />
+        <div className="h-3 w-1/4 rounded bg-glass-surface-hover animate-pulse" />
       </div>
     </div>
   );
@@ -156,10 +155,12 @@ function EmptyFeed({ filter }: { filter: ActivityFilter }) {
           border: "1px solid var(--theme-glass-border)",
         }}
       >
-        <Activity size={20} style={{ color: "var(--theme-text-muted)" }} />
+        <Activity size={20} className="text-text-muted" />
       </div>
-      <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
-        {filter === "all" ? t("activity.noActivity") : t("activity.noActivityFiltered")}
+      <p className="text-sm text-text-muted">
+        {filter === "all"
+          ? t("translation:activity.noActivity")
+          : t("translation:activity.noActivityFiltered")}
       </p>
     </motion.div>
   );

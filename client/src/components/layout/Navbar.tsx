@@ -1,28 +1,30 @@
-import { useState } from "react";
-import { Link, useRouter } from "@tanstack/react-router";
-import {
-  Gamepad2,
-  LogOut,
-  User,
-  Menu,
-  X,
-  BookOpen,
-  Heart,
-  Image,
-  Users,
-  Activity,
-  Bell,
-  BarChart3,
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useTranslation } from "react-i18next";
-import { useAuthStore } from "@/store/auth.store";
-import { Avatar } from "@/components/ui/Avatar";
-import { GlassButton } from "@/components/ui/GlassButton";
-import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { NotificationPanel } from "@/components/notifications/NotificationPanel";
 import { ThemeControls } from "@/components/theme/ThemeControls";
+import { Avatar } from "@/components/ui/Avatar";
+import { GlassButton } from "@/components/ui/GlassButton";
+import { GlassPopover } from "@/components/ui/GlassPopover";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
 import { useUnreadCount } from "@/hooks/useNotifications";
+import { cn } from "@/lib/cn";
+import { useAuthStore } from "@/store/auth.store";
+import { Link, useRouter } from "@tanstack/react-router";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  Activity,
+  BarChart3,
+  Bell,
+  BookOpen,
+  Gamepad2,
+  Heart,
+  Image,
+  LogOut,
+  Menu,
+  User,
+  Users,
+  X,
+} from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const NAV_LINKS_AUTHED = [
   { to: "/games", labelKey: "navbar.library", icon: BookOpen },
@@ -43,9 +45,7 @@ export function Navbar() {
   const token = useAuthStore((s) => s.token);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const router = useRouter();
-  const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [notifOpen, setNotifOpen] = useState(false);
   const authed = !!token && !!user;
 
   const { data: unreadData } = useUnreadCount();
@@ -53,7 +53,6 @@ export function Navbar() {
 
   function handleLogout() {
     clearAuth();
-    setProfileOpen(false);
     router.navigate({ to: "/login" });
   }
 
@@ -63,18 +62,12 @@ export function Navbar() {
         {/* Logo */}
         <Link
           to="/"
-          className="flex items-center gap-2 font-bold text-base shrink-0"
+          className="flex items-center gap-2 font-bold text-base shrink-0 text-text-primary"
         >
-          <div
-            className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{
-              background:
-                "linear-gradient(135deg, var(--theme-accent), var(--theme-accent-2))",
-            }}
-          >
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-gradient-to-br from-accent to-accent-2">
             <Gamepad2 size={15} className="text-white" />
           </div>
-          <span style={{ color: "var(--theme-text-primary)" }}>MyGames</span>
+          MyGames
         </Link>
 
         {/* Desktop nav */}
@@ -84,13 +77,9 @@ export function Navbar() {
               <Link
                 key={to}
                 to={to}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm transition-colors"
-                style={{ color: "var(--theme-text-secondary)" }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm text-text-secondary transition-colors"
                 activeProps={{
-                  style: {
-                    color: "var(--theme-text-primary)",
-                    background: "var(--theme-glass-surface-hover)",
-                  },
+                  className: "text-text-primary bg-glass-surface-hover",
                 }}
               >
                 <Icon size={15} />
@@ -105,117 +94,69 @@ export function Navbar() {
           {authed && user ? (
             <>
               {/* Notification bell */}
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setNotifOpen((p) => !p);
-                    setProfileOpen(false);
-                  }}
-                  className="relative p-2 rounded-xl transition-colors hover:bg-white/5"
-                  style={{
-                    color: notifOpen
-                      ? "var(--theme-text-primary)"
-                      : "var(--theme-text-muted)",
-                  }}
-                  aria-label={t("navbar.notifications")}
-                >
-                  <Bell size={18} />
-                  {unreadCount > 0 && (
-                    <span
-                      className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
-                      style={{
-                        background: "var(--theme-accent)",
-                        color: "#fff",
-                      }}
-                    >
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </span>
-                  )}
-                </button>
-                <NotificationPanel
-                  open={notifOpen}
-                  onClose={() => setNotifOpen(false)}
-                />
-              </div>
+              <GlassPopover
+                trigger={
+                  <button
+                    className={cn(
+                      "relative p-2 rounded-xl transition-colors hover:bg-glass-surface-hover",
+                      "text-text-muted",
+                    )}
+                    aria-label={t("translation:navbar.notifications")}
+                  >
+                    <Bell size={18} />
+                    {unreadCount > 0 && (
+                      <span className="absolute top-1 right-1 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center bg-accent text-white">
+                        {unreadCount > 99 ? "99+" : unreadCount}
+                      </span>
+                    )}
+                  </button>
+                }
+                align="end"
+                sideOffset={8}
+              >
+                <NotificationPanel />
+              </GlassPopover>
 
               {/* Profile */}
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setProfileOpen((p) => !p);
-                    setNotifOpen(false);
-                  }}
-                  className="flex items-center gap-2 px-2 py-1.5 rounded-xl glass-btn border-transparent"
+              <GlassPopover
+                trigger={
+                  <button className="flex items-center gap-2 px-2 py-1.5 rounded-xl glass-btn border-transparent">
+                    <Avatar
+                      src={user.profileImage}
+                      name={user.name}
+                      size="sm"
+                    />
+                    <span className="hidden sm:block text-sm text-text-secondary">
+                      {user.name}
+                    </span>
+                  </button>
+                }
+                align="end"
+                sideOffset={8}
+                contentClassName="w-64 p-1"
+              >
+                <Link
+                  to="/users/$id"
+                  params={{ id: user._id }}
+                  className="glass-panel-item"
                 >
-                  <Avatar src={user.profileImage} name={user.name} size="sm" />
-                  <span
-                    className="hidden sm:block text-sm"
-                    style={{ color: "var(--theme-text-secondary)" }}
-                  >
-                    {user.name}
-                  </span>
+                  <User size={15} /> {t("translation:users.profile")}
+                </Link>
+                <Link to="/profile" className="glass-panel-item">
+                  <User size={15} /> {t("translation:navbar.accountSettings")}
+                </Link>
+                <div className="my-1 border-t border-glass-border" />
+                <ThemeControls />
+                <div className="my-1 border-t border-glass-border" />
+                <LanguageSwitcher />
+                <div className="my-1 border-t border-glass-border" />
+                <button
+                  onClick={handleLogout}
+                  className="glass-panel-item text-danger hover:bg-danger-soft"
+                >
+                  <LogOut size={15} /> {t("translation:navbar.signOut")}
                 </button>
-
-                <AnimatePresence>
-                  {profileOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-10"
-                        onClick={() => setProfileOpen(false)}
-                      />
-                      <motion.div
-                        className="absolute right-0 top-full mt-2 w-64 p-1 z-20"
-                        initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -4, scale: 0.97 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 400,
-                          damping: 30,
-                        }}
-                        style={{
-                          background: "rgba(20, 22, 30, 0.75)",
-                          backdropFilter: "blur(60px) saturate(220%)",
-                          WebkitBackdropFilter: "blur(60px) saturate(220%)",
-                          border: "1px solid rgba(255, 255, 255, 0.12)",
-                          borderRadius: "14px",
-                          boxShadow: "inset 0 1px 0 var(--theme-glass-border), 0 25px 60px rgba(0,0,0,0.4)",
-                        }}
-                      >
-                        <Link
-                          to="/users/$id"
-                          params={{ id: user._id }}
-                          onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5"
-                          style={{ color: "var(--theme-text-secondary)" }}
-                        >
-                          <User size={15} /> {t("users.profile")}
-                        </Link>
-                        <Link
-                          to="/profile"
-                          onClick={() => setProfileOpen(false)}
-                          className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5"
-                          style={{ color: "var(--theme-text-secondary)" }}
-                        >
-                          <User size={15} /> {t("navbar.accountSettings")}
-                        </Link>
-                        <div className="my-1 border-t border-white/8" />
-                        <ThemeControls />
-                        <div className="my-1 border-t border-white/8" />
-                        <LanguageSwitcher />
-                        <div className="my-1 border-t border-white/8" />
-                        <button
-                          onClick={handleLogout}
-                          className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-red-500/10 text-left"
-                          style={{ color: "rgba(239,68,68,0.85)" }}
-                        >
-                          <LogOut size={15} /> {t("navbar.signOut")}
-                        </button>
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
+              </GlassPopover>
             </>
           ) : (
             <div className="flex items-center gap-2">
@@ -223,14 +164,14 @@ export function Navbar() {
                 size="sm"
                 onClick={() => router.navigate({ to: "/login" })}
               >
-                {t("navbar.signIn")}
+                {t("translation:navbar.signIn")}
               </GlassButton>
               <GlassButton
                 size="sm"
                 variant="primary"
                 onClick={() => router.navigate({ to: "/register" })}
               >
-                {t("navbar.register")}
+                {t("translation:navbar.register")}
               </GlassButton>
             </div>
           )}
@@ -250,29 +191,26 @@ export function Navbar() {
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
-            className="md:hidden border-t border-white/8 px-4 py-3 flex flex-col gap-1"
+            className="md:hidden border-t border-glass-border px-4 py-3 flex flex-col gap-1"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
             {(authed ? NAV_LINKS_AUTHED : NAV_LINKS_PUBLIC).map(
               ({ to, labelKey, icon: Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                onClick={() => setMobileOpen(false)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm"
-                style={{ color: "var(--theme-text-secondary)" }}
-                activeProps={{
-                  style: {
-                    color: "var(--theme-text-primary)",
-                    background: "var(--theme-glass-surface-hover)",
-                  },
-                }}
-              >
-                <Icon size={16} /> {t(labelKey)}
-              </Link>
-            ))}
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-text-secondary"
+                  activeProps={{
+                    className: "text-text-primary bg-glass-surface-hover",
+                  }}
+                >
+                  <Icon size={16} /> {t(labelKey)}
+                </Link>
+              ),
+            )}
           </motion.div>
         )}
       </AnimatePresence>

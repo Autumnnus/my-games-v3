@@ -1,27 +1,9 @@
-import { FileSpreadsheet, FileJson } from "lucide-react";
-import { GlassSwitch } from "@/components/ui/GlassSwitch";
-import { GlassSelect } from "@/components/ui/GlassSelect";
-import type { Platform, GameStatus } from "@my-games/shared";
 import type { ExportFilters } from "@/api/importExport";
-
-const STATUS_OPTIONS: Array<{ value: GameStatus; label: string }> = [
-  { value: "completed", label: "Tamamlandı" },
-  { value: "activePlaying", label: "Oynuyor" },
-  { value: "toBeCompleted", label: "Beklemede" },
-  { value: "abandoned", label: "Bırakıldı" },
-];
-
-const PLATFORM_OPTIONS: Array<{ value: Platform; label: string }> = [
-  { value: "steam", label: "Steam" },
-  { value: "epicGames", label: "Epic Games" },
-  { value: "ubisoft", label: "Ubisoft" },
-  { value: "playstation", label: "PlayStation" },
-  { value: "xboxSeries", label: "Xbox Series" },
-  { value: "xboxPc", label: "Xbox PC" },
-  { value: "nintendo", label: "Nintendo" },
-  { value: "mobile", label: "Mobil" },
-  { value: "otherPlatforms", label: "Diğer" },
-];
+import { GlassSwitch } from "@/components/ui/GlassSwitch";
+import { ALL_PLATFORMS, ALL_STATUSES } from "@/lib/constants";
+import type { GameStatus, Platform } from "@my-games/shared";
+import { FileJson, FileSpreadsheet } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface ExportOptionsProps {
   format: "xlsx" | "json";
@@ -40,6 +22,8 @@ export function ExportOptions({
   filters,
   onFiltersChange,
 }: ExportOptionsProps) {
+  const { t } = useTranslation();
+
   function toggleStatus(s: GameStatus) {
     const cur = filters.status ?? [];
     const next = cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s];
@@ -59,11 +43,8 @@ export function ExportOptions({
     <div className="flex flex-col gap-6">
       {/* Format selector */}
       <div className="flex flex-col gap-2">
-        <span
-          className="text-sm font-medium"
-          style={{ color: "var(--theme-text-secondary)" }}
-        >
-          Format
+        <span className="text-sm font-medium text-text-secondary">
+          {t("translation:export.formatLabel")}
         </span>
         <div className="flex gap-3">
           <FormatButton
@@ -84,17 +65,11 @@ export function ExportOptions({
       {/* Screenshots toggle */}
       <div className="flex items-center justify-between">
         <div>
-          <p
-            className="text-sm font-medium"
-            style={{ color: "var(--theme-text-secondary)" }}
-          >
-            Ekran görüntüsü URL&apos;leri dahil et
+          <p className="text-sm font-medium text-text-secondary">
+            {t("translation:export.includeScreenshots")}
           </p>
-          <p
-            className="text-xs mt-0.5"
-            style={{ color: "var(--theme-text-muted)" }}
-          >
-            Dışa aktarılan dosyada screenshot linkleri
+          <p className="text-xs mt-0.5 text-text-muted">
+            {t("translation:export.includeScreenshotsHint")}
           </p>
         </div>
         <GlassSwitch
@@ -106,31 +81,27 @@ export function ExportOptions({
       {/* Status filter */}
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between">
-          <span
-            className="text-sm font-medium"
-            style={{ color: "var(--theme-text-secondary)" }}
-          >
-            Duruma göre filtrele
+          <span className="text-sm font-medium text-text-secondary">
+            {t("translation:export.filterByStatus")}
           </span>
           {hasFilters && (
             <button
-              className="text-xs transition-colors hover:underline"
-              style={{ color: "var(--theme-accent)" }}
+              className="text-xs transition-colors hover:underline text-accent"
               onClick={() =>
                 onFiltersChange({ ...filters, status: [], platforms: [] })
               }
             >
-              Temizle
+              {t("translation:export.clearFilters")}
             </button>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          {STATUS_OPTIONS.map((opt) => {
-            const active = filters.status?.includes(opt.value) ?? false;
+          {ALL_STATUSES.map((s) => {
+            const active = filters.status?.includes(s) ?? false;
             return (
               <button
-                key={opt.value}
-                onClick={() => toggleStatus(opt.value)}
+                key={s}
+                onClick={() => toggleStatus(s)}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={{
                   background: active
@@ -142,7 +113,7 @@ export function ExportOptions({
                     : "var(--theme-text-muted)",
                 }}
               >
-                {opt.label}
+                {t(`games.status.${s}`)}
               </button>
             );
           })}
@@ -151,19 +122,16 @@ export function ExportOptions({
 
       {/* Platform filter */}
       <div className="flex flex-col gap-2">
-        <span
-          className="text-sm font-medium"
-          style={{ color: "var(--theme-text-secondary)" }}
-        >
-          Platforma göre filtrele
+        <span className="text-sm font-medium text-text-secondary">
+          {t("translation:export.filterByPlatform")}
         </span>
         <div className="flex flex-wrap gap-2">
-          {PLATFORM_OPTIONS.map((opt) => {
-            const active = filters.platforms?.includes(opt.value) ?? false;
+          {ALL_PLATFORMS.map((p) => {
+            const active = filters.platforms?.includes(p) ?? false;
             return (
               <button
-                key={opt.value}
-                onClick={() => togglePlatform(opt.value)}
+                key={p}
+                onClick={() => togglePlatform(p)}
                 className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
                 style={{
                   background: active
@@ -175,7 +143,7 @@ export function ExportOptions({
                     : "var(--theme-text-muted)",
                 }}
               >
-                {opt.label}
+                {t(`games.platform.${p}`)}
               </button>
             );
           })}
@@ -201,7 +169,9 @@ function FormatButton({
       onClick={onClick}
       className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-medium transition-all"
       style={{
-        background: active ? "var(--theme-accent-soft)" : "var(--theme-surface-subtle)",
+        background: active
+          ? "var(--theme-accent-soft)"
+          : "var(--theme-surface-subtle)",
         border: `1.5px solid ${active ? "var(--theme-accent-soft)" : "var(--theme-glass-border)"}`,
         color: active ? "var(--theme-accent)" : "var(--theme-text-muted)",
       }}

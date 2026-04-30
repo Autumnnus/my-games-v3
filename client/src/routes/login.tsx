@@ -1,16 +1,16 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { motion } from "framer-motion";
-import { Mail, Lock, Gamepad2 } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { steamApi } from "@/api/steam.api";
+import { GlassButton } from "@/components/ui/GlassButton";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { GlassInput } from "@/components/ui/GlassInput";
-import { GlassButton } from "@/components/ui/GlassButton";
 import { useLogin } from "@/hooks/useAuth";
 import { pageTransition } from "@/lib/motion";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { Gamepad2, Lock, Mail } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
+import { z } from "zod";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -21,8 +21,8 @@ function LoginPage() {
   const login = useLogin();
 
   const schema = z.object({
-    email: z.string().email(t("auth.emailInvalid")),
-    password: z.string().min(6, t("auth.passwordTooShort")),
+    email: z.string().email(t("translation:auth.emailInvalid")),
+    password: z.string().min(6, t("translation:auth.passwordTooShort")),
   });
   type FormData = z.infer<typeof schema>;
 
@@ -46,22 +46,19 @@ function LoginPage() {
         <div className="flex flex-col items-center gap-3 mb-8">
           <div
             className="w-12 h-12 rounded-2xl flex items-center justify-center"
-            style={{ background: "linear-gradient(135deg, var(--theme-accent), var(--theme-accent-2))" }}
+            style={{
+              background:
+                "linear-gradient(135deg, var(--theme-accent), var(--theme-accent-2))",
+            }}
           >
             <Gamepad2 size={24} className="text-white" />
           </div>
           <div className="text-center">
-            <h1
-              className="text-2xl font-bold"
-              style={{ color: "var(--theme-text-primary)" }}
-            >
-              {t('auth.signInTitle')}
+            <h1 className="text-2xl font-bold text-text-primary">
+              {t("auth.signInTitle")}
             </h1>
-            <p
-              className="text-sm mt-1"
-              style={{ color: "var(--theme-text-muted)" }}
-            >
-              {t('auth.welcomeBack')}
+            <p className="text-sm mt-1 text-text-muted">
+              {t("auth.welcomeBack")}
             </p>
           </div>
         </div>
@@ -72,17 +69,17 @@ function LoginPage() {
             className="flex flex-col gap-4"
           >
             <GlassInput
-              label={t('common.labels.email')}
+              label={t("common.labels.email")}
               type="email"
-              placeholder={t('auth.emailPlaceholder')}
+              placeholder={t("auth.emailPlaceholder")}
               leftIcon={<Mail size={15} />}
               error={errors.email?.message}
               {...register("email")}
             />
             <GlassInput
-              label={t('auth.password')}
+              label={t("auth.password")}
               type="password"
-              placeholder={t('auth.passwordPlaceholder')}
+              placeholder={t("auth.passwordPlaceholder")}
               leftIcon={<Lock size={15} />}
               error={errors.password?.message}
               {...register("password")}
@@ -90,10 +87,9 @@ function LoginPage() {
             <div className="flex justify-between items-center">
               <Link
                 to="/forgot-password"
-                className="text-xs hover:underline"
-                style={{ color: "var(--theme-accent)" }}
+                className="text-xs hover:underline text-accent"
               >
-                {t('auth.forgotPassword')}
+                {t("auth.forgotPassword")}
               </Link>
             </div>
             <GlassButton
@@ -101,39 +97,33 @@ function LoginPage() {
               loading={login.isPending}
               className="w-full"
             >
-              {t('auth.signInButton')}
+              {t("auth.signInButton")}
             </GlassButton>
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t" style={{ borderColor: "var(--theme-glass-border)" }} />
+                <div className="w-full border-t border-glass-border" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="px-2" style={{ color: "var(--theme-text-muted)" }}>
-                  {t('auth.or')}
-                </span>
+                <span className="px-2 text-text-muted">{t("auth.or")}</span>
               </div>
             </div>
             <GlassButton
               variant="default"
               className="w-full flex items-center justify-center gap-2"
-              onClick={() => window.location.href = steamApi.getLoginUrl()}
+              onClick={() => (window.location.href = steamApi.getLoginUrl())}
             >
               <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor">
                 <path d="M11.979 0C5.678 0 .511 4.853.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.029 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.393 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.628 20.307 6.409 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.627.264-1.22.041-1.766-.062-.15-.152-.31-.252-.48-.443-.775-1.298-1.241-2.21-1.241-.35 0-.69.079-1.005.228-.315.148-.59.356-.81.614l1.063 3.38zm4.944-2.11c.556 0 1.006.45 1.006 1.006 0 .557-.45 1.007-1.006 1.007-.556 0-1.006-.45-1.006-1.007 0-.556.45-1.006 1.006-1.006zm4.016-5.072v-.003c-.003-.004-.006-.008-.009-.01.004.002.006.005.01.013zm-3.48 5.08c-.88 0-1.678.41-2.187 1.03-.12-.044-.244-.076-.37-.097l-.83-1.234c-.17.253-.27.548-.28.864l-.007.112c0 1.107.896 2.005 2.004 2.005h.003c.552 0 1-.447 1-1s-.448-1-1-1c-.35 0-.664.18-.848.457l-.65-.967c.472-.527 1.123-.849 1.834-.849.553 0 1 .447 1 1s-.447 1-1 1z" />
               </svg>
-              {t('common.buttons.signInWithSteam')}
+              {t("common.buttons.signInWithSteam")}
             </GlassButton>
-            <p
-              className="text-center text-xs"
-              style={{ color: "var(--theme-text-muted)" }}
-            >
-              {t('auth.noAccount')}{" "}
+            <p className="text-center text-xs text-text-muted">
+              {t("auth.noAccount")}{" "}
               <Link
                 to="/register"
-                className="underline hover:opacity-80 transition-opacity"
-                style={{ color: "var(--theme-accent)" }}
+                className="underline hover:opacity-80 transition-opacity text-accent"
               >
-                {t('auth.signUp')}
+                {t("auth.signUp")}
               </Link>
             </p>
           </form>

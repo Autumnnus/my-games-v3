@@ -1,13 +1,21 @@
+import type { ImportField } from "@/api/importExport";
+import { AnimatePresence, motion } from "framer-motion";
+import { Clock, Gamepad2, Star, XCircle } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { XCircle, Clock, Star, Gamepad2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import type { ImportField } from "@/api/importExport";
 
 const STATUS_OPTIONS_KEYS = [
   { value: "completed", labelKey: "games.status.completed", color: "#22c55e" },
-  { value: "activePlaying", labelKey: "games.status.activePlaying", color: "var(--theme-accent-2)" },
-  { value: "toBeCompleted", labelKey: "games.status.backlog", color: "#f59e0b" },
+  {
+    value: "activePlaying",
+    labelKey: "games.status.activePlaying",
+    color: "var(--theme-accent-2)",
+  },
+  {
+    value: "toBeCompleted",
+    labelKey: "games.status.backlog",
+    color: "#f59e0b",
+  },
   { value: "abandoned", labelKey: "games.status.abandoned", color: "#ef4444" },
 ];
 
@@ -33,7 +41,7 @@ function getMappedValue(
 function StatusBadge({ value }: { value: unknown }) {
   const { t } = useTranslation();
   const status = STATUS_OPTIONS_KEYS.find((o) => o.value === String(value));
-  if (!status) return <span style={{ color: "var(--theme-text-muted)" }}>—</span>;
+  if (!status) return <span className="text-text-muted">—</span>;
   return (
     <span
       className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium"
@@ -81,7 +89,10 @@ function GamePreviewCard({
     } else if (field === "platforms" || field === "genres") {
       onEdit(
         field,
-        editValue.split(",").map((s) => s.trim()).filter(Boolean),
+        editValue
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
       );
     } else {
       onEdit(field, editValue);
@@ -140,8 +151,7 @@ function GamePreviewCard({
           />
         ) : (
           <p
-            className="text-sm font-semibold truncate cursor-pointer hover:text-white transition-colors"
-            style={{ color: "var(--theme-text-primary)" }}
+            className="text-sm font-semibold truncate cursor-pointer hover:text-white transition-colors text-text-primary"
             onClick={() => startEdit("name", mapped.name)}
             title={name}
           >
@@ -210,14 +220,16 @@ function GamePreviewCard({
         <div className="flex items-center gap-4">
           <button
             onClick={() => startEdit("rating", rating)}
-            className="flex items-center gap-1 text-xs"
-            style={{ color: "var(--theme-text-muted)" }}
+            className="flex items-center gap-1 text-xs text-text-muted"
           >
             <Star size={12} style={{ color: "#f59e0b" }} />
             {editingField === "rating" ? (
               <input
                 className="w-10 text-xs bg-transparent border-b outline-none px-1"
-                style={{ borderColor: "var(--theme-text-muted)", color: "var(--theme-text-primary)" }}
+                style={{
+                  borderColor: "var(--theme-text-muted)",
+                  color: "var(--theme-text-primary)",
+                }}
                 type="number"
                 min={0}
                 max={10}
@@ -228,7 +240,11 @@ function GamePreviewCard({
                 onKeyDown={(e) => e.key === "Enter" && commitEdit("rating")}
               />
             ) : (
-              <span style={{ color: rating ? "#f59e0b" : "var(--theme-text-muted)" }}>
+              <span
+                style={{
+                  color: rating ? "#f59e0b" : "var(--theme-text-muted)",
+                }}
+              >
                 {rating ? `${rating}/10` : "—"}
               </span>
             )}
@@ -236,14 +252,16 @@ function GamePreviewCard({
 
           <button
             onClick={() => startEdit("playTime", playTime)}
-            className="flex items-center gap-1 text-xs"
-            style={{ color: "var(--theme-text-muted)" }}
+            className="flex items-center gap-1 text-xs text-text-muted"
           >
             <Clock size={12} />
             {editingField === "playTime" ? (
               <input
                 className="w-14 text-xs bg-transparent border-b outline-none px-1"
-                style={{ borderColor: "var(--theme-text-muted)", color: "var(--theme-text-primary)" }}
+                style={{
+                  borderColor: "var(--theme-text-muted)",
+                  color: "var(--theme-text-primary)",
+                }}
                 type="number"
                 min={0}
                 value={editValue}
@@ -253,26 +271,24 @@ function GamePreviewCard({
                 onKeyDown={(e) => e.key === "Enter" && commitEdit("playTime")}
               />
             ) : (
-              <span>{playTime ? `${playTime} ${t("import.minutes")}` : "—"}</span>
+              <span>
+                {playTime
+                  ? `${playTime} ${t("translation:import.minutes")}`
+                  : "—"}
+              </span>
             )}
           </button>
 
           {screenshots?.length ? (
-            <span
-              className="flex items-center gap-1 text-xs"
-              style={{ color: "var(--theme-text-muted)" }}
-            >
+            <span className="flex items-center gap-1 text-xs text-text-muted">
               <Gamepad2 size={12} />
-              {screenshots.length} {t("import.screenshots")}
+              {screenshots.length} {t("translation:import.screenshots")}
             </span>
           ) : null}
         </div>
 
         {(mapped.notes as string) && (
-          <p
-            className="text-xs line-clamp-1"
-            style={{ color: "var(--theme-text-muted)" }}
-          >
+          <p className="text-xs line-clamp-1 text-text-muted">
             {(mapped.notes as string).slice(0, 100)}
             {(mapped.notes as string).length > 100 ? "..." : ""}
           </p>
@@ -309,17 +325,21 @@ export function ImportPreviewTable({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex items-center justify-between">
-        <p className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
-          {t("import.rowsPreview", { count: previewRows.length, total: totalRows })}
+        <p className="text-xs text-text-muted">
+          {t("translation:import.rowsPreview", {
+            count: previewRows.length,
+            total: totalRows,
+          })}
           {ignoredCount > 0 && (
-            <span> • {ignoredCount} {t("import.ignoredColumns").toLowerCase()}</span>
+            <span>
+              {" "}
+              • {ignoredCount}{" "}
+              {t("translation:import.ignoredColumns").toLowerCase()}
+            </span>
           )}
         </p>
-        <p
-          className="text-xs"
-          style={{ color: "var(--theme-text-muted)" }}
-        >
-          {t("import.clickToEdit")}
+        <p className="text-xs text-text-muted">
+          {t("translation:import.clickToEdit")}
         </p>
       </div>
 
@@ -338,9 +358,9 @@ export function ImportPreviewTable({
 
         {previewRows.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 gap-2">
-            <XCircle size={32} style={{ color: "var(--theme-text-muted)" }} />
-            <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
-              {t("import.noMatchedRows")}
+            <XCircle size={32} className="text-text-muted" />
+            <p className="text-sm text-text-muted">
+              {t("translation:import.noMatchedRows")}
             </p>
           </div>
         )}

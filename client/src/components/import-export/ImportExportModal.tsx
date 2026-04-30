@@ -1,28 +1,23 @@
-import { useState, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  Upload,
-} from "lucide-react";
-import { GlassModal } from "@/components/ui/GlassModal";
+import type { ImportRunResult } from "@/api/importExport";
 import { GlassButton } from "@/components/ui/GlassButton";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { GlassModal } from "@/components/ui/GlassModal";
 import { GlassSwitch } from "@/components/ui/GlassSwitch";
-import { StepIndicator } from "./StepIndicator";
-import { FileDropper } from "./FileDropper";
-import { ColumnMappingTable } from "./ColumnMappingTable";
-import { ImportPreviewTable } from "./ImportPreviewTable";
-import { ConflictResolver } from "./ConflictResolver";
-import { ImportProgress } from "./ImportProgress";
-import { ImportResult } from "./ImportResult";
-import { ExportOptions } from "./ExportOptions";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import type { ConflictResolution, ImportStep } from "@/hooks/useImportExport";
 import { useImportExport } from "@/hooks/useImportExport";
 import { scaleIn } from "@/lib/motion";
-import type { ImportStep, ConflictResolution } from "@/hooks/useImportExport";
-import type { ImportRunResult } from "@/api/importExport";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Download, Upload } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { ColumnMappingTable } from "./ColumnMappingTable";
+import { ConflictResolver } from "./ConflictResolver";
+import { ExportOptions } from "./ExportOptions";
+import { FileDropper } from "./FileDropper";
+import { ImportPreviewTable } from "./ImportPreviewTable";
+import { ImportProgress } from "./ImportProgress";
+import { ImportResult } from "./ImportResult";
+import { StepIndicator } from "./StepIndicator";
 
 interface ImportExportModalProps {
   open: boolean;
@@ -164,13 +159,25 @@ export function ImportExportModal({
 
   function handleImportBack() {
     if (importStep === 1) return;
-    if (importStep === 2) { setImportStep(1); return; }
-    if (importStep === 3) { setImportStep(2); return; }
-    if (importStep === 4) { setImportStep(3); return; }
+    if (importStep === 2) {
+      setImportStep(1);
+      return;
+    }
+    if (importStep === 3) {
+      setImportStep(2);
+      return;
+    }
+    if (importStep === 4) {
+      setImportStep(3);
+      return;
+    }
   }
 
   function handleExportNext() {
-    if (exportStep === 1) { setExportStep(2); return; }
+    if (exportStep === 1) {
+      setExportStep(2);
+      return;
+    }
     if (exportStep === 2) {
       setExportStep(3);
       exportMutation.mutate();
@@ -195,9 +202,10 @@ export function ImportExportModal({
   const isExportLoading = exportMutation.isPending;
   const detectedConflicts = importState.conflicts;
 
-  const currentSteps = activeTab === "import"
-    ? IMPORT_STEPS_KEYS.map((k) => t(k))
-    : EXPORT_STEPS_KEYS.map((k) => t(k));
+  const currentSteps =
+    activeTab === "import"
+      ? IMPORT_STEPS_KEYS.map((k) => t(k))
+      : EXPORT_STEPS_KEYS.map((k) => t(k));
   const currentStep = activeTab === "import" ? importStep : exportStep;
 
   return (
@@ -211,11 +219,8 @@ export function ImportExportModal({
       <div className="flex flex-col gap-0">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h2
-            className="text-lg font-semibold"
-            style={{ color: "var(--theme-text-primary)" }}
-          >
-            {t("import.titleImportExport")}
+          <h2 className="text-lg font-semibold text-text-primary">
+            {t("translation:import.titleImportExport")}
           </h2>
           <div
             className="flex gap-1 p-1 rounded-xl"
@@ -225,13 +230,13 @@ export function ImportExportModal({
               active={activeTab === "import"}
               onClick={() => setActiveTab("import")}
             >
-              <Upload size={14} /> {t("import.import")}
+              <Upload size={14} /> {t("translation:import.import")}
             </TabBtn>
             <TabBtn
               active={activeTab === "export"}
               onClick={() => setActiveTab("export")}
             >
-              <Download size={14} /> {t("import.export")}
+              <Download size={14} /> {t("translation:import.export")}
             </TabBtn>
           </div>
         </div>
@@ -240,10 +245,7 @@ export function ImportExportModal({
         <StepIndicator steps={currentSteps} currentStep={currentStep} />
 
         {/* Content */}
-        <div
-          className="min-h-64 max-h-96 overflow-y-auto pr-1"
-          style={{ color: "var(--theme-text-secondary)" }}
-        >
+        <div className="min-h-64 max-h-96 overflow-y-auto pr-1 text-text-secondary">
           <AnimatePresence mode="wait">
             {activeTab === "import" && (
               <motion.div
@@ -255,11 +257,8 @@ export function ImportExportModal({
               >
                 {importStep === 1 && (
                   <div className="flex flex-col gap-4">
-                    <p
-                      className="text-sm"
-                      style={{ color: "var(--theme-text-muted)" }}
-                    >
-                      {t("import.step1Hint")}
+                    <p className="text-sm text-text-muted">
+                      {t("translation:import.step1Hint")}
                     </p>
                     <FileDropper
                       onFileSelected={handleFileSelected}
@@ -268,11 +267,8 @@ export function ImportExportModal({
                     {isImportLoading && (
                       <div className="flex items-center gap-2 justify-center py-4">
                         <LoadingSpinner size="sm" />
-                        <span
-                          className="text-xs"
-                          style={{ color: "var(--theme-text-muted)" }}
-                        >
-                          {t("import.fileProcessing")}
+                        <span className="text-xs text-text-muted">
+                          {t("translation:import.fileProcessing")}
                         </span>
                       </div>
                     )}
@@ -282,17 +278,14 @@ export function ImportExportModal({
                 {importStep === 2 && importState.parseResult && (
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                      <p
-                        className="text-sm"
-                        style={{ color: "var(--theme-text-muted)" }}
-                      >
-                        {t("import.matchColumns")}
+                      <p className="text-sm text-text-muted">
+                        {t("translation:import.matchColumns")}
                       </p>
-                      <div
-                        className="flex items-center gap-3 text-xs"
-                        style={{ color: "var(--theme-text-muted)" }}
-                      >
-                        <span>{importState.parseResult.totalRows} {t("import.rows")}</span>
+                      <div className="flex items-center gap-3 text-xs text-text-muted">
+                        <span>
+                          {importState.parseResult.totalRows}{" "}
+                          {t("translation:import.rows")}
+                        </span>
                         <span>•</span>
                         <span>
                           {importState.parseResult.format.toUpperCase()}
@@ -313,24 +306,16 @@ export function ImportExportModal({
                 {importStep === 3 && (
                   <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                      <p
-                        className="text-sm"
-                        style={{ color: "var(--theme-text-muted)" }}
-                      >
-                        {t("import.checkData")}
+                      <p className="text-sm text-text-muted">
+                        {t("translation:import.checkData")}
                       </p>
                       <div className="flex items-center gap-3">
-                        <span
-                          className="text-xs"
-                          style={{ color: "var(--theme-text-muted)" }}
-                        >
-                          {t("import.importScreenshots")}
+                        <span className="text-xs text-text-muted">
+                          {t("translation:import.importScreenshots")}
                         </span>
                         <GlassSwitch
                           checked={importState.importScreenshots}
-                          onChange={(checked) =>
-                            setImportScreenshots(checked)
-                          }
+                          onChange={(checked) => setImportScreenshots(checked)}
                         />
                       </div>
                     </div>
@@ -413,12 +398,10 @@ export function ImportExportModal({
                 )}
                 {exportStep === 2 && (
                   <div className="flex flex-col gap-4">
-                    <p
-                      className="text-sm"
-                      style={{ color: "var(--theme-text-muted)" }}
-                    >
-                      {t("export.ready")} {t("export.formatLabel")}:{" "}
-                      <strong style={{ color: "var(--theme-text-secondary)" }}>
+                    <p className="text-sm text-text-muted">
+                      {t("translation:export.ready")}{" "}
+                      {t("translation:export.formatLabel")}:{" "}
+                      <strong className="text-text-secondary">
                         {exportState.format.toUpperCase()}
                       </strong>
                     </p>
@@ -430,31 +413,31 @@ export function ImportExportModal({
                       }}
                     >
                       <SummaryRow
-                        label={t("export.formatLabel")}
+                        label={t("translation:export.formatLabel")}
                         value={exportState.format.toUpperCase()}
                       />
                       <SummaryRow
-                        label={t("export.includeScreenshots")}
+                        label={t("translation:export.includeScreenshots")}
                         value={
                           exportState.filters.includeScreenshots
-                            ? t("export.yes")
-                            : t("export.no")
+                            ? t("translation:export.yes")
+                            : t("translation:export.no")
                         }
                       />
                       <SummaryRow
-                        label={t("export.statusFilter")}
+                        label={t("translation:export.statusFilter")}
                         value={
                           exportState.filters.status?.length
                             ? exportState.filters.status.join(", ")
-                            : t("export.all")
+                            : t("translation:export.all")
                         }
                       />
                       <SummaryRow
-                        label={t("export.platformFilter")}
+                        label={t("translation:export.platformFilter")}
                         value={
                           exportState.filters.platforms?.length
                             ? exportState.filters.platforms.join(", ")
-                            : t("export.all")
+                            : t("translation:export.all")
                         }
                       />
                     </div>
@@ -465,11 +448,8 @@ export function ImportExportModal({
                     {isExportLoading ? (
                       <>
                         <LoadingSpinner size="lg" />
-                        <p
-                          className="text-sm"
-                          style={{ color: "var(--theme-text-muted)" }}
-                        >
-                          {t("export.exporting")}
+                        <p className="text-sm text-text-muted">
+                          {t("translation:export.exporting")}
                         </p>
                       </>
                     ) : (
@@ -483,17 +463,11 @@ export function ImportExportModal({
                             style={{ color: "rgba(34,197,94,0.8)" }}
                           />
                         </div>
-                        <p
-                          className="text-sm font-medium"
-                          style={{ color: "var(--theme-text-secondary)" }}
-                        >
-                          {t("export.exportComplete")}
+                        <p className="text-sm font-medium text-text-secondary">
+                          {t("translation:export.exportComplete")}
                         </p>
-                        <p
-                          className="text-xs"
-                          style={{ color: "var(--theme-text-muted)" }}
-                        >
-                          {t("export.fileDownloaded")}
+                        <p className="text-xs text-text-muted">
+                          {t("translation:export.fileDownloaded")}
                         </p>
                       </>
                     )}
@@ -518,7 +492,7 @@ export function ImportExportModal({
                 disabled={importStep === 1}
                 leftIcon={<ChevronLeft size={15} />}
               >
-                {t("import.back")}
+                {t("translation:import.back")}
               </GlassButton>
               <GlassButton
                 variant="primary"
@@ -537,10 +511,10 @@ export function ImportExportModal({
                 loading={isImportLoading || runImportMutation.isPending}
               >
                 {importStep === 4
-                  ? t("export.startImport")
+                  ? t("translation:export.startImport")
                   : importStep === 3
-                    ? t("export.checkConflicts")
-                    : t("import.continue")}
+                    ? t("translation:export.checkConflicts")
+                    : t("translation:import.continue")}
               </GlassButton>
             </div>
           )}
@@ -556,7 +530,7 @@ export function ImportExportModal({
               disabled={exportStep === 1}
               leftIcon={<ChevronLeft size={15} />}
             >
-              {t("import.back")}
+              {t("translation:import.back")}
             </GlassButton>
             <GlassButton
               variant="primary"
@@ -570,7 +544,9 @@ export function ImportExportModal({
               }
               loading={isExportLoading}
             >
-              {exportStep === 2 ? t("export.exportButton") : t("import.continue")}
+              {exportStep === 2
+                ? t("translation:export.exportButton")
+                : t("translation:import.continue")}
             </GlassButton>
           </div>
         )}
@@ -605,8 +581,8 @@ function TabBtn({
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-center text-sm">
-      <span style={{ color: "var(--theme-text-muted)" }}>{label}</span>
-      <span style={{ color: "var(--theme-text-secondary)" }}>{value}</span>
+      <span className="text-text-muted">{label}</span>
+      <span className="text-text-secondary">{value}</span>
     </div>
   );
 }

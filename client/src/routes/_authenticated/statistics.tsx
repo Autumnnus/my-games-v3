@@ -1,21 +1,15 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { motion } from "framer-motion";
-import {
-  Gamepad2,
-  Trophy,
-  Clock,
-  Star,
-  BarChart3,
-} from "lucide-react";
+import { statisticsApi } from "@/api/statistics.api";
 import { PageContainer } from "@/components/layout/PageContainer";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { useAuthStore } from "@/store/auth.store";
-import { statisticsApi } from "@/api/statistics.api";
-import { useQuery } from "@tanstack/react-query";
 import { fadeUp, staggerContainer } from "@/lib/motion";
+import { useAuthStore } from "@/store/auth.store";
 import type { UserAggregateStatistics } from "@my-games/shared";
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { BarChart3, Clock, Gamepad2, Star, Trophy } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // ─── Stat Card ─────────────────────────────────────────────────────────────────
 interface StatCardProps {
@@ -36,11 +30,9 @@ function StatCard({ icon: Icon, label, value, color }: StatCardProps) {
           >
             <Icon size={15} style={{ color }} />
           </div>
-          <span className="text-xs leading-tight" style={{ color: "var(--theme-text-muted)" }}>
-            {label}
-          </span>
+          <span className="text-xs leading-tight text-text-muted">{label}</span>
         </div>
-        <span className="text-2xl font-bold leading-none" style={{ color: "var(--theme-text-primary)" }}>
+        <span className="text-2xl font-bold leading-none text-text-primary">
           {value}
         </span>
       </GlassCard>
@@ -61,10 +53,10 @@ function HorizontalBar({ label, count, maxCount, color }: BarItem) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex justify-between text-xs">
-        <span style={{ color: "var(--theme-text-secondary)" }}>{label}</span>
-        <span style={{ color: "var(--theme-text-muted)" }}>{count}</span>
+        <span className="text-text-secondary">{label}</span>
+        <span className="text-text-muted">{count}</span>
       </div>
-      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+      <div className="h-1.5 rounded-full bg-glass-surface-hover overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-700"
           style={{ width: `${pct}%`, background: color }}
@@ -83,9 +75,7 @@ interface SectionProps {
 function Section({ title, children }: SectionProps) {
   return (
     <GlassCard className="p-5 flex flex-col gap-4">
-      <h3 className="text-sm font-semibold" style={{ color: "var(--theme-text-secondary)" }}>
-        {title}
-      </h3>
+      <h3 className="text-sm font-semibold text-text-secondary">{title}</h3>
       {children}
     </GlassCard>
   );
@@ -97,8 +87,8 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 gap-4">
       <BarChart3 size={48} className="text-white/20" />
-      <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
-        {t("statistics.noData")}
+      <p className="text-sm text-text-muted">
+        {t("translation:statistics.noData")}
       </p>
     </div>
   );
@@ -142,21 +132,59 @@ function StatisticsPage() {
   const fmtTime = (mins: number) => {
     if (mins < 60) return `${mins}m`;
     const h = Math.floor(mins / 60);
-    return `${h}${t("statistics.hoursAbbrev")}`;
+    return `${h}${t("translation:statistics.hoursAbbrev")}`;
   };
 
   const statCards = [
-    { icon: Gamepad2, label: t("statistics.totalGames"), value: stats.summary.totalGames, color: "var(--theme-accent)" },
-    { icon: Trophy, label: t("statistics.completed"), value: stats.summary.completedCount, color: "#22c55e" },
-    { icon: Clock, label: t("statistics.totalPlayTime"), value: fmtTime(stats.summary.totalPlayTime), color: "var(--theme-accent-2)" },
-    { icon: Star, label: t("statistics.avgRating"), value: stats.summary.avgRating ? stats.summary.avgRating.toFixed(1) : "—", color: "#f59e0b" },
+    {
+      icon: Gamepad2,
+      label: t("translation:statistics.totalGames"),
+      value: stats.summary.totalGames,
+      color: "var(--theme-accent)",
+    },
+    {
+      icon: Trophy,
+      label: t("translation:statistics.completed"),
+      value: stats.summary.completedCount,
+      color: "#22c55e",
+    },
+    {
+      icon: Clock,
+      label: t("translation:statistics.totalPlayTime"),
+      value: fmtTime(stats.summary.totalPlayTime),
+      color: "var(--theme-accent-2)",
+    },
+    {
+      icon: Star,
+      label: t("translation:statistics.avgRating"),
+      value: stats.summary.avgRating ? stats.summary.avgRating.toFixed(1) : "—",
+      color: "#f59e0b",
+    },
   ];
 
   const maxPlatform = Math.max(...stats.platformStats.map((p) => p.count), 1);
   const maxGenre = Math.max(...stats.genreStats.map((g) => g.count), 1);
 
-  const platformColors = ["var(--theme-accent)", "var(--theme-accent-2)", "#22c55e", "#f59e0b", "#ef4444", "#06b6d4", "#8b5cf6", "#ec4899"];
-  const genreColors = ["var(--theme-accent-2)", "#22c55e", "var(--theme-accent)", "#f59e0b", "#ef4444", "#06b6d4", "#8b5cf6", "#ec4899"];
+  const platformColors = [
+    "var(--theme-accent)",
+    "var(--theme-accent-2)",
+    "#22c55e",
+    "#f59e0b",
+    "#ef4444",
+    "#06b6d4",
+    "#8b5cf6",
+    "#ec4899",
+  ];
+  const genreColors = [
+    "var(--theme-accent-2)",
+    "#22c55e",
+    "var(--theme-accent)",
+    "#f59e0b",
+    "#ef4444",
+    "#06b6d4",
+    "#8b5cf6",
+    "#ec4899",
+  ];
 
   return (
     <PageContainer>
@@ -168,8 +196,8 @@ function StatisticsPage() {
       >
         {/* Title */}
         <motion.div variants={fadeUp}>
-          <h1 className="text-2xl font-bold" style={{ color: "var(--theme-text-primary)" }}>
-            {t("statistics.title")}
+          <h1 className="text-2xl font-bold text-text-primary">
+            {t("translation:statistics.title")}
           </h1>
         </motion.div>
 
@@ -183,7 +211,7 @@ function StatisticsPage() {
         {/* Platform Distribution */}
         {stats.platformStats.length > 0 && (
           <motion.div variants={fadeUp}>
-            <Section title={t("statistics.platformDistribution")}>
+            <Section title={t("translation:statistics.platformDistribution")}>
               <div className="flex flex-col gap-3">
                 {stats.platformStats.map((p, i) => (
                   <HorizontalBar
@@ -202,7 +230,7 @@ function StatisticsPage() {
         {/* Genre Distribution */}
         {stats.genreStats.length > 0 && (
           <motion.div variants={fadeUp}>
-            <Section title={t("statistics.genreDistribution")}>
+            <Section title={t("translation:statistics.genreDistribution")}>
               <div className="flex flex-col gap-3">
                 {stats.genreStats.slice(0, 8).map((g, i) => (
                   <HorizontalBar
@@ -221,14 +249,17 @@ function StatisticsPage() {
         {/* Rating Distribution */}
         {stats.ratingStats.some((r) => r.count > 0) && (
           <motion.div variants={fadeUp}>
-            <Section title={t("statistics.ratingDistribution")}>
+            <Section title={t("translation:statistics.ratingDistribution")}>
               <div className="flex flex-col gap-3">
                 {stats.ratingStats.map((r) => (
                   <HorizontalBar
                     key={r.range}
                     label={r.range}
                     count={r.count}
-                    maxCount={Math.max(...stats.ratingStats.map((s) => s.count), 1)}
+                    maxCount={Math.max(
+                      ...stats.ratingStats.map((s) => s.count),
+                      1,
+                    )}
                     color="#f59e0b"
                   />
                 ))}
@@ -242,15 +273,31 @@ function StatisticsPage() {
           const total = stats.summary.totalGames;
           if (total === 0) return null;
           const statuses = [
-            { label: t("statistics.completed"), count: stats.summary.completedCount, color: "#22c55e" },
-            { label: t("statistics.playing"), count: stats.summary.playingCount, color: "var(--theme-accent-2)" },
-            { label: t("statistics.backlog"), count: stats.summary.backlogCount, color: "var(--theme-accent)" },
-            { label: t("statistics.dropped"), count: stats.summary.droppedCount, color: "#ef4444" },
+            {
+              label: t("translation:statistics.completed"),
+              count: stats.summary.completedCount,
+              color: "#22c55e",
+            },
+            {
+              label: t("translation:statistics.playing"),
+              count: stats.summary.playingCount,
+              color: "var(--theme-accent-2)",
+            },
+            {
+              label: t("translation:statistics.backlog"),
+              count: stats.summary.backlogCount,
+              color: "var(--theme-accent)",
+            },
+            {
+              label: t("translation:statistics.dropped"),
+              count: stats.summary.droppedCount,
+              color: "#ef4444",
+            },
           ].filter((s) => s.count > 0);
 
           return (
             <motion.div variants={fadeUp}>
-              <Section title={t("statistics.statusDistribution")}>
+              <Section title={t("translation:statistics.statusDistribution")}>
                 <div className="flex flex-col gap-3">
                   {statuses.map((s) => (
                     <HorizontalBar

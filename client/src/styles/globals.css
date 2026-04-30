@@ -16,6 +16,10 @@
   --color-glass-surface-hover: var(--theme-glass-surface-hover);
   --color-glass-border-hover: var(--theme-glass-border-hover);
 
+  --color-accent: var(--theme-accent);
+  --color-accent-soft: var(--theme-accent-soft);
+  --color-accent-strong: var(--theme-accent-strong);
+  --color-accent-2: var(--theme-accent-2);
   --color-accent-purple: var(--theme-accent);
   --color-accent-purple-dim: var(--theme-accent-soft);
   --color-accent-blue: var(--theme-accent-2);
@@ -25,6 +29,18 @@
   --color-text-primary: var(--theme-text-primary);
   --color-text-secondary: var(--theme-text-secondary);
   --color-text-muted: var(--theme-text-muted);
+  --color-text-inverse: var(--theme-text-inverse);
+
+  --color-danger: var(--theme-danger);
+  --color-danger-soft: var(--theme-danger-soft);
+  --color-warning: var(--theme-warning);
+  --color-warning-soft: var(--theme-warning-soft);
+  --color-success: var(--theme-success);
+  --color-success-soft: var(--theme-success-soft);
+
+  --color-surface-subtle: var(--theme-surface-subtle);
+  --color-surface-strong: var(--theme-surface-strong);
+  --color-shadow: var(--theme-shadow);
 
   --color-status-completed: #22c55e;
   --color-status-active: #3b82f6;

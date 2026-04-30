@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { cn } from "@/lib/cn";
+import { modalContent, modalOverlay } from "@/lib/motion";
+import * as Dialog from "@radix-ui/react-dialog";
+import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { modalOverlay, modalContent } from "@/lib/motion";
 import { GlassButton } from "./GlassButton";
 
 interface GlassModalProps {
@@ -16,6 +16,13 @@ interface GlassModalProps {
   allowOverflow?: boolean;
 }
 
+const sizeClass = {
+  sm: "max-w-sm",
+  md: "max-w-md",
+  lg: "max-w-lg",
+  xl: "max-w-2xl",
+} as const;
+
 export function GlassModal({
   open,
   onClose,
@@ -26,89 +33,82 @@ export function GlassModal({
   allowOverflow = false,
 }: GlassModalProps) {
   const { t } = useTranslation();
-  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  return (
+    <Dialog.Root open={open} onOpenChange={(o) => !o && onClose()}>
+      <Dialog.Portal>
+        <AnimatePresence>
+          {open && (
+            <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4 p-0">
+              <Dialog.Overlay asChild>
+                <motion.div
+                  className="glass-overlay absolute inset-0"
+                  variants={modalOverlay}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                />
+              </Dialog.Overlay>
 
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [open, onClose]);
-
-  useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [open]);
-
-  const maxWidth = {
-    sm: "max-w-sm",
-    md: "max-w-md",
-    lg: "max-w-lg",
-    xl: "max-w-2xl",
-  }[size];
-
-  if (!mounted) return null;
-
-  return createPortal(
-    <AnimatePresence>
-      {open && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4 p-0">
-          <motion.div
-            className="glass-overlay absolute inset-0"
-            variants={modalOverlay}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            onClick={onClose}
-          />
-          <motion.div
-            className={`glass-card relative w-full ${maxWidth} p-6 z-10 flex flex-col ${allowOverflow ? "overflow-visible" : "overflow-hidden"}`}
-            style={{ maxHeight: "calc(100dvh - 32px)" }}
-            variants={modalContent}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-          >
-            {(title || !hideClose) && (
-              <div className="flex items-center justify-between mb-5 shrink-0">
-                {title && (
-                  <h2
-                    className="text-lg font-semibold"
-                    style={{ color: "var(--theme-text-primary)" }}
+              <Dialog.Content
+                asChild
+                onEscapeKeyDown={onClose}
+                onPointerDownOutside={(e) => {
+                  // Don't close when clicking inside a Radix portal (e.g. Popover, Select dropdown)
+                  const target = e.target as HTMLElement;
+                  if (target.closest("[data-radix-popper-content-wrapper]"))
+                    return;
+                  onClose();
+                }}
+              >
+                <motion.div
+                  className={cn(
+                    "glass-card relative w-full z-10 flex flex-col p-6",
+                    sizeClass[size],
+                    allowOverflow ? "overflow-visible" : "overflow-hidden",
+                  )}
+                  style={{ maxHeight: "calc(100dvh - 32px)" }}
+                  variants={modalContent}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
+                >
+                  {(title || !hideClose) && (
+                    <div className="flex items-center justify-between mb-5 shrink-0">
+                      {title && (
+                        <Dialog.Title className="text-lg font-semibold text-text-primary">
+                          {title}
+                        </Dialog.Title>
+                      )}
+                      {!hideClose && (
+                        <Dialog.Close asChild>
+                          <GlassButton
+                            variant="ghost"
+                            size="sm"
+                            onClick={onClose}
+                            className="ml-auto p-1.5 rounded-lg"
+                            aria-label={t("translation:common.aria.close")}
+                          >
+                            <X size={16} />
+                          </GlassButton>
+                        </Dialog.Close>
+                      )}
+                    </div>
+                  )}
+                  <div
+                    className={cn(
+                      "min-h-0 flex-1",
+                      allowOverflow ? "overflow-visible" : "overflow-hidden",
+                    )}
                   >
-                    {title}
-                  </h2>
-                )}
-                {!hideClose && (
-                  <GlassButton
-                    variant="ghost"
-                    size="sm"
-                    onClick={onClose}
-                    className="ml-auto p-1.5 rounded-lg"
-                    aria-label={t('common.aria.close')}
-                  >
-                    <X size={16} />
-                  </GlassButton>
-                )}
-              </div>
-            )}
-            <div
-              className={`min-h-0 flex-1 ${allowOverflow ? "overflow-visible" : "overflow-hidden"}`}
-            >
-              {children}
+                    {children}
+                  </div>
+                </motion.div>
+              </Dialog.Content>
             </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>,
-    document.body,
+          )}
+        </AnimatePresence>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

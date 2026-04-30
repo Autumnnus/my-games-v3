@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { CheckSquare, Square } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import { GlassModal } from "@/components/ui/GlassModal";
+import { isApiError } from "@/api/client";
+import type { SteamScreenshotItem } from "@/api/steam.api";
+import { steamApi } from "@/api/steam.api";
 import { GlassButton } from "@/components/ui/GlassButton";
+import { GlassModal } from "@/components/ui/GlassModal";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useImportSteamScreenshots } from "@/hooks/useScreenshots";
-import { steamApi } from "@/api/steam.api";
-import type { SteamScreenshotItem } from "@/api/steam.api";
-import { isApiError } from "@/api/client";
+import { useQuery } from "@tanstack/react-query";
+import { CheckSquare, Square } from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface Props {
   gameId: string;
@@ -33,47 +33,30 @@ function ScreenshotThumb({
   return (
     <button
       onClick={onToggle}
-      className="relative group rounded-xl overflow-hidden aspect-video"
-      style={{
-        outline: selected ? "2px solid var(--theme-accent)" : "2px solid transparent",
-        outlineOffset: "2px",
-      }}
+      className={`relative group rounded-xl overflow-hidden aspect-video outline-2 outline-offset-2 ${selected ? "outline-accent" : "outline-transparent"}`}
     >
       {thumb ? (
         <img
           src={thumb}
-          alt={item.title || t('screenshots.steamScreenshot')}
+          alt={item.title || t("translation:screenshots.steamScreenshot")}
           className="w-full h-full object-cover"
           loading="lazy"
         />
       ) : (
-        <div
-          className="w-full h-full flex items-center justify-center text-xs"
-          style={{
-            background: "var(--theme-surface-subtle)",
-            color: "var(--theme-text-muted)",
-          }}
-        >
+        <div className="w-full h-full flex items-center justify-center text-xs bg-surface-subtle text-text-muted">
           Önizleme yok
         </div>
       )}
 
       {/* Overlay */}
       <div
-        className="absolute inset-0 transition-opacity"
-        style={{
-          background: selected ? "var(--theme-accent-soft)" : "rgba(0,0,0,0.0)",
-          opacity: selected ? 1 : 0,
-        }}
+        className={`absolute inset-0 transition-opacity ${selected ? "opacity-100 bg-accent-soft" : "opacity-0"}`}
       />
 
       {/* Checkbox */}
       <span
-        className="absolute top-1.5 right-1.5 transition-opacity"
-        style={{
-          color: selected ? "var(--theme-accent)" : "var(--theme-text-muted)",
-          opacity: selected ? 1 : 0,
-        }}
+        className={`absolute top-1.5 right-1.5 transition-opacity ${selected ? "opacity-100 text-accent" : "opacity-0 text-text-muted"}`}
+        style={{}}
       >
         <CheckSquare size={18} />
       </span>
@@ -84,21 +67,15 @@ function ScreenshotThumb({
         style={{ background: "rgba(0,0,0,0.4)" }}
       >
         {selected ? (
-          <CheckSquare size={24} style={{ color: "var(--theme-accent)" }} />
+          <CheckSquare size={24} className="text-accent" />
         ) : (
-          <Square size={24} style={{ color: "var(--theme-text-secondary)" }} />
+          <Square size={24} className="text-text-secondary" />
         )}
       </div>
 
       {/* Title tooltip */}
       {item.title && (
-        <div
-          className="absolute bottom-0 left-0 right-0 px-2 py-1 text-xs truncate opacity-0 group-hover:opacity-100 transition-opacity"
-          style={{
-            background: "rgba(0,0,0,0.7)",
-            color: "var(--theme-text-primary)",
-          }}
-        >
+        <div className="absolute bottom-0 left-0 right-0 px-2 py-1 text-xs text-text-primary truncate opacity-0 group-hover:opacity-100 transition-opacity bg-black/70">
           {item.title}
         </div>
       )}
@@ -174,7 +151,7 @@ export function SteamScreenshotImportModal({
   const errorMessage = error
     ? isApiError(error)
       ? error.message
-      : t('screenshots.steamLoadFailed')
+      : t("screenshots.steamLoadFailed")
     : null;
 
   const content = isLoading ? (
@@ -182,40 +159,32 @@ export function SteamScreenshotImportModal({
       <LoadingSpinner size="lg" />
     </div>
   ) : errorMessage ? (
-    <div
-      className="text-center py-12 text-sm"
-      style={{ color: "var(--theme-text-muted)" }}
-    >
+    <div className="text-center py-12 text-sm text-text-muted">
       {errorMessage}
     </div>
   ) : !screenshots?.length ? (
-    <div
-      className="text-center py-12 text-sm"
-      style={{ color: "var(--theme-text-muted)" }}
-    >
-      {t('screenshots.noPublicScreenshots')}
+    <div className="text-center py-12 text-sm text-text-muted">
+      {t("translation:screenshots.noPublicScreenshots")}
       <br />
-      <span
-        className="text-xs mt-1 block"
-        style={{ color: "var(--theme-text-muted)" }}
-      >
-        {t('screenshots.onlyPublicHint')}
+      <span className="text-xs mt-1 block text-text-muted">
+        {t("translation:screenshots.onlyPublicHint")}
       </span>
     </div>
   ) : (
     <div className="flex flex-col gap-4">
       {/* Header row */}
       <div className="flex items-center justify-between">
-        <span className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
-          {screenshots.length} {t('screenshots.count')}
+        <span className="text-sm text-text-muted">
+          {screenshots.length} {t("translation:screenshots.count")}
         </span>
         <button
           onClick={toggleAll}
-          className="text-xs flex items-center gap-1.5 transition-colors"
-          style={{ color: allSelected ? "var(--theme-accent)" : "var(--theme-text-muted)" }}
+          className={`text-xs flex items-center gap-1.5 transition-colors ${allSelected ? "text-accent" : "text-text-muted"}`}
         >
           {allSelected ? <CheckSquare size={14} /> : <Square size={14} />}
-          {allSelected ? t('screenshots.deselectAll') : t('screenshots.selectAll')}
+          {allSelected
+            ? t("screenshots.deselectAll")
+            : t("screenshots.selectAll")}
         </button>
       </div>
 
@@ -240,8 +209,8 @@ export function SteamScreenshotImportModal({
         className="w-full"
       >
         {selected.size > 0
-          ? t('screenshots.addN', { count: selected.size })
-          : t('screenshots.selectToAdd')}
+          ? t("screenshots.addN", { count: selected.size })
+          : t("screenshots.selectToAdd")}
       </GlassButton>
     </div>
   );
@@ -252,7 +221,7 @@ export function SteamScreenshotImportModal({
     <GlassModal
       open={open}
       onClose={handleClose}
-      title={t('screenshots.steamTitle')}
+      title={t("screenshots.steamTitle")}
       size="lg"
     >
       {content}

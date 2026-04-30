@@ -24,7 +24,8 @@
       "unlink": "Bağlantıyı Kaldır",
       "link": "Bağla",
       "deleteAll": "Tümünü Sil",
-      "goToLibrary": "Kütüphaneye Git"
+      "goToLibrary": "Kütüphaneye Git",
+      "update": "Güncelle"
     },
     "labels": {
       "name": "Ad",
@@ -66,6 +67,10 @@
     "empty": {
       "noGames": "Henüz oyun yok",
       "noResults": "Sonuç bulunamadı"
+    },
+    "datePicker": {
+      "placeholder": "Tarih seç",
+      "clear": "Temizle"
     }
   },
   "hero": {
@@ -196,7 +201,14 @@
       "applyToAll": "Tümüne uygula:",
       "skip": "Atla",
       "update": "Güncelle",
-      "keepBoth": "Her İkini Tut"
+      "keepBoth": "Her İkini Tut",
+      "existing": "Mevcut",
+      "incoming": "İçe Aktarılacak",
+      "currentEntry": "Mevcut:",
+      "statusLabel": "Durum",
+      "ratingLabel": "Puan",
+      "playTimeLabel": "Süre",
+      "platformLabel": "Platform"
     },
     "result": {
       "added": "Eklendi",
@@ -230,7 +242,11 @@
     "yes": "Evet",
     "no": "Hayır",
     "startImport": "İçe Aktarı Başlat",
-    "checkConflicts": "Çakışma Kontrolü"
+    "checkConflicts": "Çakışma Kontrolü",
+    "includeScreenshotsHint": "Screenshot URL'leri dışa aktarılan dosyaya ekle",
+    "filterByStatus": "Duruma göre filtrele",
+    "filterByPlatform": "Platforma göre filtrele",
+    "clearFilters": "Temizle"
   },
   "users": {
     "title": "Kullanıcılar",
@@ -541,5 +557,40 @@
   "social": {
     "title": "Sosyal Akış",
     "subtitle": "Oyun kütüphanesindeki aktiviteleri takip et"
+  },
+  "steamSync": {
+    "autoSync": "Otomatik Steam Senkronizasyonu",
+    "autoSyncHint": "Her gün Steam'den oynama süresini otomatik olarak çek",
+    "enabled": "Otomatik senkronizasyon açıldı",
+    "disabled": "Otomatik senkronizasyon kapatıldı",
+    "intervalUpdated": "Senkronizasyon aralığı güncellendi",
+    "settingsError": "Ayarlar güncellenemedi",
+    "syncStarted": "Senkronizasyon başlatıldı",
+    "syncError": "Senkronizasyon başlatılamadı",
+    "intervalLabel": "Senkronizasyon aralığı",
+    "lastSync": "Son senkronizasyon:",
+    "neverSynced": "Henüz senkronizasyon yapılmadı",
+    "pendingConflicts": "{{count}} çözülmemiş çakışma var — uygulamayı açtığında karşına çıkacak",
+    "syncNow": "Şimdi Senkronize Et",
+    "interval": {
+      "1": "1 saat",
+      "6": "6 saat",
+      "12": "12 saat",
+      "24": "24 saat (her gün)",
+      "168": "1 hafta"
+    }
+  },
+  "fileDrop": {
+    "dragOrClick": "Dosyayı sürükle veya tıkla",
+    "dropHere": "Bırak dosyayı",
+    "sizeHint": ".xlsx, .json, .csv — maks. {{max}}MB",
+    "unsupportedFormat": "Desteklenmeyen format. Kabul edilen: {{formats}}",
+    "fileTooLarge": "Dosya çok büyük. Maksimum {{max}}MB",
+    "removeFile": "Dosyayı kaldır"
+  },
+  "validation": {
+    "nameRequired": "Oyun adı gerekli",
+    "invalidUrl": "Geçerli bir URL girin",
+    "minPlayTime": "Süre 0'dan küçük olamaz"
   }
 }

@@ -24,7 +24,8 @@
       "unlink": "Unlink",
       "link": "Link",
       "deleteAll": "Delete All",
-      "goToLibrary": "Go to Library"
+      "goToLibrary": "Go to Library",
+      "update": "Update"
     },
     "labels": {
       "name": "Name",
@@ -68,6 +69,10 @@
       "edit": "Edit",
       "back": "Back",
       "addGame": "Add game"
+    },
+    "datePicker": {
+      "placeholder": "Pick a date",
+      "clear": "Clear"
     }
   },
   "hero": {
@@ -198,7 +203,14 @@
       "applyToAll": "Apply to all:",
       "skip": "Skip",
       "update": "Update",
-      "keepBoth": "Keep Both"
+      "keepBoth": "Keep Both",
+      "existing": "Existing",
+      "incoming": "Will Import",
+      "currentEntry": "Existing:",
+      "statusLabel": "Status",
+      "ratingLabel": "Rating",
+      "playTimeLabel": "Time",
+      "platformLabel": "Platform"
     },
     "result": {
       "added": "Added",
@@ -232,7 +244,11 @@
     "yes": "Yes",
     "no": "No",
     "startImport": "Start Import",
-    "checkConflicts": "Check Conflicts"
+    "checkConflicts": "Check Conflicts",
+    "includeScreenshotsHint": "Include screenshot links in the exported file",
+    "filterByStatus": "Filter by status",
+    "filterByPlatform": "Filter by platform",
+    "clearFilters": "Clear"
   },
   "users": {
     "title": "Users",
@@ -551,5 +567,40 @@
   "social": {
     "title": "Social Feed",
     "subtitle": "Follow game library activities"
+  },
+  "steamSync": {
+    "autoSync": "Automatic Steam Sync",
+    "autoSyncHint": "Automatically pull playtime from Steam daily",
+    "enabled": "Auto sync enabled",
+    "disabled": "Auto sync disabled",
+    "intervalUpdated": "Sync interval updated",
+    "settingsError": "Failed to update settings",
+    "syncStarted": "Sync started",
+    "syncError": "Failed to start sync",
+    "intervalLabel": "Sync interval",
+    "lastSync": "Last sync:",
+    "neverSynced": "Never synced",
+    "pendingConflicts": "{{count}} unresolved conflicts — will appear when you open the app",
+    "syncNow": "Sync Now",
+    "interval": {
+      "1": "1 hour",
+      "6": "6 hours",
+      "12": "12 hours",
+      "24": "24 hours (daily)",
+      "168": "1 week"
+    }
+  },
+  "fileDrop": {
+    "dragOrClick": "Drag file or click to upload",
+    "dropHere": "Drop the file",
+    "sizeHint": ".xlsx, .json, .csv — max {{max}}MB",
+    "unsupportedFormat": "Unsupported format. Accepted: {{formats}}",
+    "fileTooLarge": "File too large. Maximum {{max}}MB",
+    "removeFile": "Remove file"
+  },
+  "validation": {
+    "nameRequired": "Game name is required",
+    "invalidUrl": "Enter a valid URL",
+    "minPlayTime": "Play time cannot be negative"
   }
 }

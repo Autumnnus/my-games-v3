@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { z } from "zod";
-import { motion } from "framer-motion";
-import { CheckCircle, XCircle } from "lucide-react";
-import { useTranslation } from "react-i18next";
+import { authApi } from "@/api/auth.api";
 import { GlassCard } from "@/components/ui/GlassCard";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { authApi } from "@/api/auth.api";
 import { pageTransition } from "@/lib/motion";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { CheckCircle, XCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { z } from "zod";
 
 export const Route = createFileRoute("/verify-account")({
   validateSearch: z.object({ verificationToken: z.string().optional() }),
@@ -43,40 +43,30 @@ function VerifyAccountPage() {
         {state === "loading" && (
           <div className="flex flex-col items-center gap-3">
             <LoadingSpinner size="lg" />
-            <p style={{ color: "var(--theme-text-secondary)" }}>
-              {t("verifyAccount.loading")}
+            <p className="text-text-secondary">
+              {t("translation:verifyAccount.loading")}
             </p>
           </div>
         )}
         {state === "success" && (
           <div className="flex flex-col items-center gap-4">
             <CheckCircle size={40} style={{ color: "#22c55e" }} />
-            <h2
-              className="text-lg font-semibold"
-              style={{ color: "var(--theme-text-primary)" }}
-            >
-              {t("verifyAccount.successTitle")}
+            <h2 className="text-lg font-semibold text-text-primary">
+              {t("translation:verifyAccount.successTitle")}
             </h2>
-            <Link
-              to="/login"
-              className="text-sm hover:underline"
-              style={{ color: "var(--theme-accent)" }}
-            >
-              {t("verifyAccount.goToLogin")}
+            <Link to="/login" className="text-sm hover:underline text-accent">
+              {t("translation:verifyAccount.goToLogin")}
             </Link>
           </div>
         )}
         {state === "error" && (
           <div className="flex flex-col items-center gap-4">
             <XCircle size={40} style={{ color: "#ef4444" }} />
-            <h2
-              className="text-lg font-semibold"
-              style={{ color: "var(--theme-text-primary)" }}
-            >
-              {t("verifyAccount.errorTitle")}
+            <h2 className="text-lg font-semibold text-text-primary">
+              {t("translation:verifyAccount.errorTitle")}
             </h2>
-            <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
-              {t("verifyAccount.errorSubtitle")}
+            <p className="text-sm text-text-muted">
+              {t("translation:verifyAccount.errorSubtitle")}
             </p>
           </div>
         )}

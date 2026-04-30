@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
-import { Edit2, Trash2, Star } from "lucide-react";
 import type { GameListItem } from "@/api/types";
+import { SyncStatusBadge } from "@/components/steam-sync/SyncStatusBadge";
+import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { formatCoverUrl } from "@/lib/formatters";
 import { fadeUp } from "@/lib/motion";
-import { StatusBadge } from "./StatusBadge";
-import { PlayTimeBadge } from "./PlayTimeBadge";
+import { Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { Edit2, Star, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { PlatformIcon } from "./PlatformIcon";
-import { WishlistButton } from "@/components/wishlist/WishlistButton";
-import { SyncStatusBadge } from "@/components/steam-sync/SyncStatusBadge";
+import { PlayTimeBadge } from "./PlayTimeBadge";
+import { StatusBadge } from "./StatusBadge";
 
 interface GameCardProps {
   game: GameListItem;
@@ -84,24 +84,24 @@ export function GameCard({
             </div>
           )}
           {/* Wishlist button */}
-          {game.steamAppId && (
+          {(game.igdb?.id || game.steamAppId) && (
             <WishlistButton
-              igdbId={game.steamAppId}
+              igdbId={game.igdb?.id ?? game.steamAppId!}
               gameName={game.name}
               coverUrl={game.photo ?? game.igdb?.cover?.url}
               platform={game.platform}
               genres={game.igdb?.genres?.map((g) => g.name) ?? []}
+              releaseYear={
+                game.igdb?.first_release_date
+                  ? new Date(game.igdb.first_release_date * 1000).getFullYear()
+                  : undefined
+              }
+              developer={
+                game.igdb?.involved_companies?.find((c) => c.developer)?.company
+                  .name
+              }
+              igdbData={game.igdb}
               steamAppId={game.steamAppId}
-              variant="card"
-            />
-          )}
-          {(!game.steamAppId && game.igdb?.id) && (
-            <WishlistButton
-              igdbId={game.igdb!.id}
-              gameName={game.name}
-              coverUrl={game.photo ?? game.igdb?.cover?.url}
-              platform={game.platform}
-              genres={game.igdb?.genres?.map((g) => g.name) ?? []}
               variant="card"
             />
           )}
@@ -115,7 +115,7 @@ export function GameCard({
                     onEdit(game);
                   }}
                   className="glass-btn p-2 rounded-xl"
-                  aria-label={t("common.buttons.edit")}
+                  aria-label={t("translation:common.buttons.edit")}
                 >
                   <Edit2 size={15} />
                 </button>
@@ -127,7 +127,7 @@ export function GameCard({
                     onDelete(game);
                   }}
                   className="glass-btn glass-btn-danger p-2 rounded-xl"
-                  aria-label={t("common.buttons.delete")}
+                  aria-label={t("translation:common.buttons.delete")}
                 >
                   <Trash2 size={15} />
                 </button>
@@ -139,10 +139,7 @@ export function GameCard({
 
       {/* Info */}
       <div className="p-3 flex flex-col gap-1.5">
-        <p
-          className="text-sm font-medium leading-snug line-clamp-1"
-          style={{ color: "var(--theme-text-primary)" }}
-        >
+        <p className="text-sm font-medium leading-snug line-clamp-1 text-text-primary">
           {game.name}
         </p>
         <div className="flex items-center justify-between gap-2">

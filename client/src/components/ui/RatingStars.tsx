@@ -41,19 +41,14 @@ export function RatingStars({
               className={
                 i < filled
                   ? "fill-yellow-400 text-yellow-400"
-                  : "text-[var(--theme-text-muted)] opacity-45"
+                  : "text-text-muted opacity-45"
               }
             />
           </button>
         );
       })}
       {value > 0 && (
-        <span
-          className="ml-1 text-xs"
-          style={{ color: "var(--theme-text-muted)" }}
-        >
-          {value}/{max}
-        </span>
+        <span className="ml-1 text-xs text-text-muted">{value}/{max}</span>
       )}
     </div>
   );

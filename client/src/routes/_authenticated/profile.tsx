@@ -1,45 +1,44 @@
-import { useEffect, useRef, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { z } from "zod";
-import { motion } from "framer-motion";
-import { toast } from "sonner";
-import { useTranslation } from "react-i18next";
-import {
-  Gamepad2,
-  Trophy,
-  Clock,
-  Star,
-  Zap,
-  Settings2,
-  User,
-  CheckCircle2,
-} from "lucide-react";
-import { PageContainer } from "@/components/layout/PageContainer";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { GlassButton } from "@/components/ui/GlassButton";
-import { GlassInput } from "@/components/ui/GlassInput";
-import { GlassBadge } from "@/components/ui/GlassBadge";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { Avatar } from "@/components/ui/Avatar";
-import { useAuthStore } from "@/store/auth.store";
-import { steamApi } from "@/api/steam.api";
+import { authApi } from "@/api/auth.api";
 import { isApiError } from "@/api/client";
+import { gamesApi } from "@/api/games.api";
+import { statisticsApi } from "@/api/statistics.api";
+import { steamApi } from "@/api/steam.api";
+import type { GameListItem } from "@/api/types";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { FavoriteGamesSection } from "@/components/profile/FavoriteGamesSection";
+import { SteamSyncSettings } from "@/components/steam-sync/SteamSyncSettings";
+import { SteamImportModal } from "@/components/steam/SteamImportModal";
+import { Avatar } from "@/components/ui/Avatar";
+import { GlassBadge } from "@/components/ui/GlassBadge";
+import { GlassButton } from "@/components/ui/GlassButton";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { GlassInput } from "@/components/ui/GlassInput";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
   useSteamProfile,
   useSteamSyncStatus,
   useUnlinkSteam,
 } from "@/hooks/useSteam";
-import { SteamImportModal } from "@/components/steam/SteamImportModal";
-import { SteamSyncSettings } from "@/components/steam-sync/SteamSyncSettings";
-import { FavoriteGamesSection } from "@/components/profile/FavoriteGamesSection";
-import { pageTransition, fadeUp, staggerContainer } from "@/lib/motion";
-import { formatPlayTime, formatDate, formatCoverUrl } from "@/lib/formatters";
-import { gamesApi } from "@/api/games.api";
-import { statisticsApi } from "@/api/statistics.api";
+import { formatCoverUrl, formatDate, formatPlayTime } from "@/lib/formatters";
+import { fadeUp, pageTransition, staggerContainer } from "@/lib/motion";
+import { useAuthStore } from "@/store/auth.store";
 import { useQuery } from "@tanstack/react-query";
-import { authApi } from "@/api/auth.api";
-import type { GameListItem } from "@/api/types";
-import { Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import {
+  CheckCircle2,
+  Clock,
+  Gamepad2,
+  Settings2,
+  Star,
+  Trophy,
+  User,
+  Zap,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
+import { z } from "zod";
 
 const searchSchema = z.object({
   steamLinked: z.string().optional(),
@@ -54,7 +53,12 @@ export const Route = createFileRoute("/_authenticated/profile")({
 // ─── Steam Icon ───────────────────────────────────────────────────────────────
 function SteamIcon({ size = 20 }: { size?: number }) {
   return (
-    <svg viewBox="0 0 24 24" fill="currentColor" className={`w-${size / 4} h-${size / 4}`} style={{ width: size, height: size }}>
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className={`w-${size / 4} h-${size / 4}`}
+      style={{ width: size, height: size }}
+    >
       <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.606 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.455 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.252 0-2.265-1.014-2.265-2.265z" />
     </svg>
   );
@@ -89,17 +93,11 @@ function StatsGrid({ stats }: { stats: StatItem[] }) {
               >
                 <Icon size={15} style={{ color }} />
               </div>
-              <span
-                className="text-xs leading-tight"
-                style={{ color: "var(--theme-text-muted)" }}
-              >
+              <span className="text-xs leading-tight text-text-muted">
                 {label}
               </span>
             </div>
-            <span
-              className="text-2xl font-bold leading-none"
-              style={{ color: "var(--theme-text-primary)" }}
-            >
+            <span className="text-2xl font-bold leading-none text-text-primary">
               {value}
             </span>
           </GlassCard>
@@ -137,11 +135,11 @@ function GameThumbnail({ game }: { game: GameListItem }) {
 function RecentlyPlayedCard({ games }: { games: GameListItem[] }) {
   const { t } = useTranslation();
   const statusLabel: Record<string, string> = {
-    completed: t("games.statusLabel.completed"),
-    playing: t("games.statusLabel.playing"),
-    paused: t("games.statusLabel.paused"),
-    backlog: t("games.statusLabel.backlog"),
-    dropped: t("games.statusLabel.dropped"),
+    completed: t("translation:games.statusLabel.completed"),
+    playing: t("translation:games.statusLabel.playing"),
+    paused: t("translation:games.statusLabel.paused"),
+    backlog: t("translation:games.statusLabel.backlog"),
+    dropped: t("translation:games.statusLabel.dropped"),
   };
 
   return (
@@ -149,19 +147,12 @@ function RecentlyPlayedCard({ games }: { games: GameListItem[] }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Zap size={14} style={{ color: "#f59e0b" }} />
-          <h3
-            className="text-sm font-semibold"
-            style={{ color: "var(--theme-text-secondary)" }}
-          >
-            {t("games.recentlyPlayed.title")}
+          <h3 className="text-sm font-semibold text-text-secondary">
+            {t("translation:games.recentlyPlayed.title")}
           </h3>
         </div>
-        <Link
-          to="/games"
-          className="text-xs hover:underline"
-          style={{ color: "var(--theme-accent)" }}
-        >
-          {t("games.recentlyPlayed.viewAll")} →
+        <Link to="/games" className="text-xs hover:underline text-accent">
+          {t("translation:games.recentlyPlayed.viewAll")} →
         </Link>
       </div>
       <div className="flex flex-col gap-2">
@@ -170,40 +161,43 @@ function RecentlyPlayedCard({ games }: { games: GameListItem[] }) {
             key={game._id}
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
-            className="group flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-white/10 transition-all cursor-pointer"
+            className="group flex items-center gap-3 p-2 rounded-xl border border-transparent hover:border-glass-border transition-all cursor-pointer"
             style={{ background: "var(--theme-surface-subtle)" }}
           >
-            <Link to="/games/$id" params={{ id: game._id }} className="shrink-0 w-12 h-16">
+            <Link
+              to="/games/$id"
+              params={{ id: game._id }}
+              className="shrink-0 w-12 h-16"
+            >
               <GameThumbnail game={game} />
             </Link>
             <div className="flex-1 min-w-0">
               <Link
                 to="/games/$id"
                 params={{ id: game._id }}
-                className="text-sm font-medium truncate block hover:text-white transition-colors"
-                style={{ color: "var(--theme-text-primary)" }}
+                className="text-sm font-medium truncate block hover:text-white transition-colors text-text-primary"
               >
                 {game.name}
               </Link>
               <div className="flex items-center gap-2 mt-1">
-                <GlassBadge color={game.status === "completed" ? "#22c55e" : "var(--theme-accent-2)"}>
+                <GlassBadge
+                  color={
+                    game.status === "completed"
+                      ? "#22c55e"
+                      : "var(--theme-accent-2)"
+                  }
+                >
                   {statusLabel[game.status] ?? game.status}
                 </GlassBadge>
                 {game.playTime > 0 && (
-                  <span
-                    className="text-xs"
-                    style={{ color: "var(--theme-text-muted)" }}
-                  >
+                  <span className="text-xs text-text-muted">
                     {formatPlayTime(game.playTime)}
                   </span>
                 )}
               </div>
             </div>
             {game.lastPlay && (
-              <span
-                className="text-xs shrink-0"
-                style={{ color: "var(--theme-text-muted)" }}
-              >
+              <span className="text-xs shrink-0 text-text-muted">
                 {formatDate(game.lastPlay)}
               </span>
             )}
@@ -236,7 +230,7 @@ function SteamSection() {
       prevSyncStatus.current === "syncing" &&
       syncStatus?.syncStatus === "idle"
     ) {
-      toast.success(t("profile.steamScanComplete"));
+      toast.success(t("translation:profile.steamScanComplete"));
     }
     prevSyncStatus.current = syncStatus?.syncStatus;
   }, [syncStatus?.syncStatus]);
@@ -248,9 +242,13 @@ function SteamSection() {
   async function handleUnlink() {
     try {
       await unlinkMutation.mutateAsync();
-      toast.success(t("profile.steamUnlinkSuccess"));
+      toast.success(t("translation:profile.steamUnlinkSuccess"));
     } catch (err) {
-      toast.error(isApiError(err) ? err.message : t("profile.steamUnlinkFailed"));
+      toast.error(
+        isApiError(err)
+          ? err.message
+          : t("translation:profile.steamUnlinkFailed"),
+      );
     }
   }
 
@@ -265,10 +263,7 @@ function SteamSection() {
   return (
     <>
       <div className="flex flex-col gap-4">
-        <div
-          className="flex items-center gap-2"
-          style={{ color: "var(--theme-text-secondary)" }}
-        >
+        <div className="flex items-center gap-2 text-text-secondary">
           <SteamIcon size={18} />
           <span className="font-semibold text-sm">Steam</span>
           {isLinked && (
@@ -277,7 +272,7 @@ function SteamSection() {
               style={{ color: "rgba(34,197,94,0.8)" }}
             >
               <CheckCircle2 size={12} />
-              {t("profile.steamLinked")}
+              {t("translation:profile.steamLinked")}
             </span>
           )}
         </div>
@@ -293,27 +288,19 @@ function SteamSection() {
                 />
               )}
               <div>
-                <p
-                  className="text-sm font-medium"
-                  style={{ color: "var(--theme-text-primary)" }}
-                >
+                <p className="text-sm font-medium text-text-primary">
                   {profile.displayName}
                 </p>
                 {syncStatus?.lastSyncAt && (
-                  <p
-                    className="text-xs mt-0.5"
-                    style={{ color: "var(--theme-text-muted)" }}
-                  >
-                    {t("profile.lastScan")}
+                  <p className="text-xs mt-0.5 text-text-muted">
+                    {t("translation:profile.lastScan")}
                     {new Date(syncStatus.lastSyncAt).toLocaleDateString()}
                   </p>
                 )}
                 {isSyncing && (
-                  <p
-                    className="text-xs mt-0.5 flex items-center gap-1"
-                    style={{ color: "var(--theme-accent)" }}
-                  >
-                    <LoadingSpinner size="sm" /> {t("profile.scanning")}
+                  <p className="text-xs mt-0.5 flex items-center gap-1 text-accent">
+                    <LoadingSpinner size="sm" />{" "}
+                    {t("translation:profile.scanning")}
                   </p>
                 )}
               </div>
@@ -326,7 +313,7 @@ function SteamSection() {
                 onClick={() => setImportOpen(true)}
                 leftIcon={<SteamIcon size={14} />}
               >
-                {t("profile.scanLibrary")}
+                {t("translation:profile.scanLibrary")}
               </GlassButton>
               <GlassButton
                 size="sm"
@@ -334,21 +321,21 @@ function SteamSection() {
                 loading={unlinkMutation.isPending}
                 onClick={handleUnlink}
               >
-                {t("profile.unlinkSteam")}
+                {t("translation:profile.unlinkSteam")}
               </GlassButton>
             </div>
           </div>
         ) : (
           <div className="flex items-center justify-between">
-            <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
-              {t("profile.steamNotLinked")}
+            <p className="text-sm text-text-muted">
+              {t("translation:profile.steamNotLinked")}
             </p>
             <GlassButton
               size="sm"
               onClick={handleLinkSteam}
               leftIcon={<SteamIcon size={14} />}
             >
-              {t("profile.linkSteam")}
+              {t("translation:profile.linkSteam")}
             </GlassButton>
           </div>
         )}
@@ -383,9 +370,13 @@ function EditProfileSection({
       const updated = await authApi.editProfile({ name, profileImage });
       updateUser(updated);
       setEditing(false);
-      toast.success(t("profile.profileUpdated"));
+      toast.success(t("translation:profile.profileUpdated"));
     } catch (err) {
-      toast.error(isApiError(err) ? err.message : t("profile.profileUpdateFailed"));
+      toast.error(
+        isApiError(err)
+          ? err.message
+          : t("translation:profile.profileUpdateFailed"),
+      );
     } finally {
       setSaving(false);
     }
@@ -393,31 +384,18 @@ function EditProfileSection({
 
   return (
     <div className="flex flex-col gap-3">
-      <div
-        className="flex items-center gap-2"
-        style={{ color: "var(--theme-text-secondary)" }}
-      >
+      <div className="flex items-center gap-2 text-text-secondary">
         <User size={15} />
-        <span className="font-semibold text-sm">{t("profile.profileInfo")}</span>
+        <span className="font-semibold text-sm">
+          {t("translation:profile.profileInfo")}
+        </span>
       </div>
 
       <div className="flex items-center gap-4">
         <Avatar src={profileImage} name={name} size="xl" />
         <div className="flex-1 min-w-0">
-          <p
-            className="text-base font-semibold"
-            style={{ color: "var(--theme-text-primary)" }}
-          >
-            {name}
-          </p>
-          {email && (
-            <p
-              className="text-sm mt-0.5"
-              style={{ color: "var(--theme-text-muted)" }}
-            >
-              {email}
-            </p>
-          )}
+          <p className="text-base font-semibold text-text-primary">{name}</p>
+          {email && <p className="text-sm mt-0.5 text-text-muted">{email}</p>}
         </div>
         <GlassButton
           size="sm"
@@ -425,7 +403,7 @@ function EditProfileSection({
           onClick={() => setEditing(!editing)}
           leftIcon={<Settings2 size={13} />}
         >
-          {t("profile.edit")}
+          {t("translation:profile.edit")}
         </GlassButton>
       </div>
 
@@ -437,9 +415,9 @@ function EditProfileSection({
           className="flex flex-col gap-3 pt-1"
         >
           <GlassInput
-            label={t('profile.username')}
+            label={t("profile.username")}
             defaultValue={name}
-            placeholder={t('profile.usernamePlaceholder')}
+            placeholder={t("profile.usernamePlaceholder")}
             id="profile-name"
           />
           <div className="flex justify-end gap-2">
@@ -448,7 +426,7 @@ function EditProfileSection({
               variant="ghost"
               onClick={() => setEditing(false)}
             >
-              {t('common.buttons.cancel')}
+              {t("common.buttons.cancel")}
             </GlassButton>
             <GlassButton
               size="sm"
@@ -456,7 +434,7 @@ function EditProfileSection({
               loading={saving}
               onClick={handleSave}
             >
-              {t('common.buttons.save')}
+              {t("common.buttons.save")}
             </GlassButton>
           </div>
         </motion.div>
@@ -513,27 +491,41 @@ function ProfilePage() {
   // Fetch user statistics to get avgRating and totalPlayTime
   const { data: statsData } = useQuery({
     queryKey: ["statistics", "user", user?._id],
-    queryFn: () => (user?._id ? statisticsApi.getByUser(user._id) : Promise.resolve(null)),
+    queryFn: () =>
+      user?._id ? statisticsApi.getByUser(user._id) : Promise.resolve(null),
     enabled: !!user?._id,
     staleTime: 60_000,
   });
 
   // Compute avg rating and total play time from statistics data
   const avgRating = statsData?.statistics?.myGamesRatingStats
-    ? statsData.statistics.myGamesRatingStats.reduce((sum, b) => sum + (b.averageRating ?? 0) * b.count, 0) /
-      (statsData.statistics.myGamesRatingStats.reduce((sum, b) => sum + b.count, 0) || 1)
+    ? statsData.statistics.myGamesRatingStats.reduce(
+        (sum, b) => sum + (b.averageRating ?? 0) * b.count,
+        0,
+      ) /
+      (statsData.statistics.myGamesRatingStats.reduce(
+        (sum, b) => sum + b.count,
+        0,
+      ) || 1)
     : 0;
 
   const totalPlayTimeHours = statsData?.statistics?.statusStats
-    ? statsData.statistics.statusStats.reduce((sum, s) => sum + (s.playTime > 0 ? s.playTime / 60 : 0), 0)
+    ? statsData.statistics.statusStats.reduce(
+        (sum, s) => sum + (s.playTime > 0 ? s.playTime / 60 : 0),
+        0,
+      )
     : 0;
 
   useEffect(() => {
     if (steamLinked === "true") {
-      toast.success(t("steam.linkSuccess"));
+      toast.success(t("translation:steam.linkSuccess"));
     }
     if (steamError) {
-      toast.error(t("steam.linkFailed", { error: decodeURIComponent(steamError) }));
+      toast.error(
+        t("translation:steam.linkFailed", {
+          error: decodeURIComponent(steamError),
+        }),
+      );
     }
   }, [steamLinked, steamError]);
 
@@ -543,25 +535,28 @@ function ProfilePage() {
   const statItems: StatItem[] = [
     {
       icon: Gamepad2,
-      label: t("statistics.totalGames"),
+      label: t("translation:statistics.totalGames"),
       value: user.gameSize ?? 0,
       color: "var(--theme-accent)",
     },
     {
       icon: Trophy,
-      label: t("statistics.completed"),
+      label: t("translation:statistics.completed"),
       value: user.completedGameSize ?? 0,
       color: "#22c55e",
     },
     {
       icon: Clock,
-      label: t("statistics.totalPlayTime"),
-      value: totalPlayTimeHours > 0 ? `${totalPlayTimeHours.toLocaleString()} ${t("statistics.hoursAbbrev")}` : "—",
+      label: t("translation:statistics.totalPlayTime"),
+      value:
+        totalPlayTimeHours > 0
+          ? `${totalPlayTimeHours.toLocaleString()} ${t("translation:statistics.hoursAbbrev")}`
+          : "—",
       color: "var(--theme-accent-2)",
     },
     {
       icon: Star,
-      label: t("statistics.avgRating"),
+      label: t("translation:statistics.avgRating"),
       value: avgRating > 0 ? avgRating.toFixed(1) : "—",
       color: "#f59e0b",
     },
@@ -576,14 +571,10 @@ function ProfilePage() {
     >
       <PageContainer>
         <div className="max-w-2xl mx-auto flex flex-col gap-6">
-
           {/* Page title */}
           <div className="flex items-center gap-3">
-            <h1
-              className="text-2xl font-bold"
-              style={{ color: "var(--theme-text-primary)" }}
-            >
-              {t("profile.titleMy")}
+            <h1 className="text-2xl font-bold text-text-primary">
+              {t("translation:profile.titleMy")}
             </h1>
           </div>
 
@@ -614,22 +605,16 @@ function ProfilePage() {
 
           {/* Connected accounts */}
           <GlassCard className="p-6">
-            <h2
-              className="text-base font-semibold mb-4"
-              style={{ color: "var(--theme-text-secondary)" }}
-            >
-              {t("profile.connectedAccounts")}
+            <h2 className="text-base font-semibold mb-4 text-text-secondary">
+              {t("translation:profile.connectedAccounts")}
             </h2>
             <SteamSection />
           </GlassCard>
 
           {/* Steam Auto-Sync settings */}
           <GlassCard className="p-6">
-            <h2
-              className="text-base font-semibold mb-4"
-              style={{ color: "var(--theme-text-secondary)" }}
-            >
-              {t("profile.steamAutoSync")}
+            <h2 className="text-base font-semibold mb-4 text-text-secondary">
+              {t("translation:profile.steamAutoSync")}
             </h2>
             <SteamSyncSettings />
           </GlassCard>

@@ -66,15 +66,13 @@ function GameRow({
       {/* Title + conflict details */}
       <div className="flex-1 min-w-0">
         <p
-          className="text-sm truncate"
-          style={{ color: "var(--theme-text-secondary)" }}
+          className="text-sm truncate text-text-secondary"
         >
           {item.title}
         </p>
         {hasConflict && (
           <div
-            className="mt-1.5 text-xs flex flex-wrap items-center gap-x-2 gap-y-1"
-            style={{ color: "var(--theme-text-muted)" }}
+            className="mt-1.5 text-xs flex flex-wrap items-center gap-x-2 gap-y-1 text-text-muted"
           >
             <span>
               Mevcut: {formatPlayTime(item.existingPlaytimeMinutes ?? 0)}
@@ -89,7 +87,7 @@ function GameRow({
 
       {/* Playtime + conflict */}
       <div className="flex flex-col items-end gap-0.5 shrink-0">
-        <span className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
+        <span className="text-xs text-text-muted">
           {item.playtimeMinutes > 0
             ? formatPlayTime(item.playtimeMinutes)
             : t('steamImport.zeroPlaytime')}
@@ -290,12 +288,11 @@ export function SteamImportModal({ open, onClose }: Props) {
 
           {/* Stats */}
           <div
-            className="flex items-center gap-3 text-sm shrink-0"
-            style={{ color: "var(--theme-text-muted)" }}
+            className="flex items-center gap-3 text-sm shrink-0 text-text-muted"
           >
             <span>{library?.length ?? 0} oyun</span>
             <span>·</span>
-            <span style={{ color: "var(--theme-accent)" }}>{selected.size} seçili</span>
+            <span className="text-accent">{selected.size} seçili</span>
             <span>·</span>
             <span>{notAddedCount} eklenmemiş</span>
             {conflictCount > 0 && (
@@ -316,12 +313,11 @@ export function SteamImportModal({ open, onClose }: Props) {
             >
               <div className="flex flex-col items-start">
                 <span
-                  className="text-xs mb-0.5"
-                  style={{ color: "var(--theme-text-muted)" }}
+                  className="text-xs mb-0.5 text-text-muted"
                 >
                   Görünüm filtreleri
                 </span>
-                <span style={{ color: "var(--theme-text-secondary)" }}>
+                <span className="text-text-secondary">
                   {showNotAdded ? "Eklenmemişler" : ""}
                   {showNotAdded && showConflicts ? " + " : ""}
                   {showConflicts ? "Çakışanlar" : ""}
@@ -454,12 +450,11 @@ export function SteamImportModal({ open, onClose }: Props) {
               >
                 <div className="flex flex-col items-start">
                   <span
-                    className="text-xs mb-0.5"
-                    style={{ color: "var(--theme-text-muted)" }}
+                    className="text-xs mb-0.5 text-text-muted"
                   >
                     Çakışma çözümü
                   </span>
-                  <span style={{ color: "var(--theme-text-secondary)" }}>
+                  <span className="text-text-secondary">
                     {selectedConflictOption.label}
                   </span>
                 </div>
@@ -486,7 +481,7 @@ export function SteamImportModal({ open, onClose }: Props) {
                           setConflictResolution(opt.value);
                           setShowConflictPicker(false);
                         }}
-                        className="w-full flex flex-col items-start px-3 py-2 rounded-lg text-left hover:bg-white/5 transition-colors"
+                        className="w-full flex flex-col items-start px-3 py-2 rounded-lg text-left hover:bg-glass-surface transition-colors"
                       >
                         <span
                           className="text-sm font-medium"
@@ -500,8 +495,7 @@ export function SteamImportModal({ open, onClose }: Props) {
                           {opt.label}
                         </span>
                         <span
-                          className="text-xs mt-0.5"
-                          style={{ color: "var(--theme-text-muted)" }}
+                          className="text-xs mt-0.5 text-text-muted"
                         >
                           {opt.desc}
                         </span>
@@ -533,8 +527,7 @@ export function SteamImportModal({ open, onClose }: Props) {
             ))}
             {filtered.length === 0 && (
               <p
-                className="text-center py-8 text-sm"
-                style={{ color: "var(--theme-text-muted)" }}
+                className="text-center py-8 text-sm text-text-muted"
               >
                 Oyun bulunamadı
               </p>
@@ -542,7 +535,7 @@ export function SteamImportModal({ open, onClose }: Props) {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/8 shrink-0">
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-glass-border shrink-0">
             <GlassButton variant="ghost" size="sm" onClick={onClose}>
               İptal
             </GlassButton>

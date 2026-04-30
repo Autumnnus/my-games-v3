@@ -1,4 +1,5 @@
 import { apiFetch } from "./client";
+import type { IGDBData } from "@my-games/shared";
 
 export interface WishlistItem {
   _id: string;
@@ -8,6 +9,9 @@ export interface WishlistItem {
   coverUrl?: string;
   platform: string;
   genres: string[];
+  releaseYear?: number;
+  developer?: string;
+  igdbData?: IGDBData;
   addedAt: string;
   source: "manual" | "steam";
   steamAppId?: number;

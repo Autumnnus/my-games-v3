@@ -1,27 +1,27 @@
-import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useTranslation } from "react-i18next";
-import { motion } from "framer-motion";
-import {
-  ArrowLeft,
-  Gamepad2,
-  CheckCircle,
-  Image,
-  Clock,
-  Activity,
-} from "lucide-react";
-import { PageContainer } from "@/components/layout/PageContainer";
-import { GlassCard } from "@/components/ui/GlassCard";
-import { GlassBadge } from "@/components/ui/GlassBadge";
-import { Avatar } from "@/components/ui/Avatar";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { GameCard } from "@/components/games/GameCard";
 import { ActivityFeed } from "@/components/activity/ActivityFeed";
-import { useUser } from "@/hooks/useUsers";
-import { useUserGamesById } from "@/hooks/useGames";
+import { GameCard } from "@/components/games/GameCard";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { Avatar } from "@/components/ui/Avatar";
+import { GlassBadge } from "@/components/ui/GlassBadge";
+import { GlassCard } from "@/components/ui/GlassCard";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useUserActivity } from "@/hooks/useActivity";
+import { useUserGamesById } from "@/hooks/useGames";
+import { useUser } from "@/hooks/useUsers";
 import { formatPlayTime } from "@/lib/formatters";
 import { pageTransition, staggerContainer } from "@/lib/motion";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import {
+  Activity,
+  ArrowLeft,
+  CheckCircle,
+  Clock,
+  Gamepad2,
+  Image,
+} from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export const Route = createFileRoute("/users/$id")({
   component: UserProfilePage,
@@ -57,11 +57,8 @@ function UserProfilePage() {
   if (!user) {
     return (
       <PageContainer>
-        <div
-          className="text-center py-20"
-          style={{ color: "var(--theme-text-muted)" }}
-        >
-          {t("users.userNotFound")}
+        <div className="text-center py-20 text-text-muted">
+          {t("translation:users.userNotFound")}
         </div>
       </PageContainer>
     );
@@ -80,10 +77,9 @@ function UserProfilePage() {
           <div>
             <Link
               to="/users"
-              className="inline-flex items-center gap-1.5 text-sm mb-4 hover:underline"
-              style={{ color: "var(--theme-text-muted)" }}
+              className="inline-flex items-center gap-1.5 text-sm mb-4 hover:underline text-text-muted"
             >
-              <ArrowLeft size={14} /> {t("users.backToUsers")}
+              <ArrowLeft size={14} /> {t("translation:users.backToUsers")}
             </Link>
 
             {/* Profile card */}
@@ -91,10 +87,7 @@ function UserProfilePage() {
               <Avatar src={user.profileImage} name={user.name} size="xl" />
               <div className="flex-1 flex flex-col gap-2 text-center sm:text-left">
                 <div className="flex items-center gap-2 justify-center sm:justify-start">
-                  <h1
-                    className="text-2xl font-bold"
-                    style={{ color: "var(--theme-text-primary)" }}
-                  >
+                  <h1 className="text-2xl font-bold text-text-primary">
                     {user.name}
                   </h1>
                   {user.role !== "user" && (
@@ -108,43 +101,31 @@ function UserProfilePage() {
                 </div>
 
                 <div className="flex items-center gap-4 flex-wrap justify-center sm:justify-start mt-2">
-                  <div
-                    className="flex items-center gap-1.5 text-sm"
-                    style={{ color: "var(--theme-text-secondary)" }}
-                  >
+                  <div className="flex items-center gap-1.5 text-sm text-text-secondary">
                     <Gamepad2 size={14} />{" "}
-                    <strong style={{ color: "var(--theme-text-primary)" }}>
+                    <strong className="text-text-primary">
                       {user.gameSize}
                     </strong>{" "}
-                    {t("games.game")}
+                    {t("translation:games.game")}
                   </div>
-                  <div
-                    className="flex items-center gap-1.5 text-sm"
-                    style={{ color: "var(--theme-text-secondary)" }}
-                  >
+                  <div className="flex items-center gap-1.5 text-sm text-text-secondary">
                     <CheckCircle size={14} />{" "}
-                    <strong style={{ color: "var(--theme-text-primary)" }}>
+                    <strong className="text-text-primary">
                       {user.completedGameSize}
                     </strong>{" "}
-                    {t("statistics.completed").toLowerCase()}
+                    {t("translation:statistics.completed").toLowerCase()}
                   </div>
-                  <div
-                    className="flex items-center gap-1.5 text-sm"
-                    style={{ color: "var(--theme-text-secondary)" }}
-                  >
+                  <div className="flex items-center gap-1.5 text-sm text-text-secondary">
                     <Image size={14} />{" "}
-                    <strong style={{ color: "var(--theme-text-primary)" }}>
+                    <strong className="text-text-primary">
                       {user.screenshotSize}
                     </strong>{" "}
-                    {t("navbar.screenshots").toLowerCase()}
+                    {t("translation:navbar.screenshots").toLowerCase()}
                   </div>
                   {totalPlayTime > 0 && (
-                    <div
-                      className="flex items-center gap-1.5 text-sm"
-                      style={{ color: "var(--theme-text-secondary)" }}
-                    >
+                    <div className="flex items-center gap-1.5 text-sm text-text-secondary">
                       <Clock size={14} />{" "}
-                      <strong style={{ color: "var(--theme-text-primary)" }}>
+                      <strong className="text-text-primary">
                         {formatPlayTime(totalPlayTime)}
                       </strong>
                     </div>
@@ -165,14 +146,14 @@ function UserProfilePage() {
             <ProfileTabBtn
               active={tab === "games"}
               icon={<Gamepad2 size={14} />}
-              label={t("users.tabsGames")}
+              label={t("translation:users.tabsGames")}
               count={games.length}
               onClick={() => setTab("games")}
             />
             <ProfileTabBtn
               active={tab === "activity"}
               icon={<Activity size={14} />}
-              label={t("users.tabsActivities")}
+              label={t("translation:users.tabsActivities")}
               count={activityFeed.data?.total}
               onClick={() => setTab("activity")}
             />
@@ -235,7 +216,10 @@ function ProfileTabBtn({
               color: "var(--theme-accent)",
               border: "1px solid var(--theme-accent-soft)",
             }
-          : { color: "var(--theme-text-muted)", border: "1px solid transparent" }
+          : {
+              color: "var(--theme-text-muted)",
+              border: "1px solid transparent",
+            }
       }
     >
       {icon}

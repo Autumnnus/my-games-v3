@@ -1,5 +1,6 @@
+import { AlertCircle, FileText, Upload, X } from "lucide-react";
 import { useCallback, useState } from "react";
-import { Upload, FileText, X, AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface FileDropperProps {
   onFileSelected: (file: File) => void;
@@ -14,20 +15,21 @@ export function FileDropper({
   accept = ".xlsx,.json,.csv",
   maxSizeMB = 10,
 }: FileDropperProps) {
+  const { t } = useTranslation();
   const [dropState, setDropState] = useState<DropState>("idle");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  const ACCEPTED = accept.split(",").map((t) => t.trim().toLowerCase());
+  const ACCEPTED = accept.split(",").map((s) => s.trim().toLowerCase());
   const MAX_BYTES = maxSizeMB * 1024 * 1024;
 
   function validateFile(file: File): string | null {
     const ext = "." + file.name.split(".").pop()?.toLowerCase();
     if (!ACCEPTED.includes(ext)) {
-      return `Desteklenmeyen format. Kabul edilen: ${accept}`;
+      return t("translation:fileDrop.unsupportedFormat", { formats: accept });
     }
     if (file.size > MAX_BYTES) {
-      return `Dosya çok büyük. Maksimum ${maxSizeMB}MB`;
+      return t("translation:fileDrop.fileTooLarge", { max: maxSizeMB });
     }
     return null;
   }
@@ -90,16 +92,13 @@ export function FileDropper({
           ? "rgba(34,197,94,0.4)"
           : "var(--theme-glass-border)";
 
-  const borderStyle =
-    dropState === "dragover" || dropState === "selected" ? "dashed" : "dashed";
-
   return (
     <div className="flex flex-col gap-2">
       {dropState !== "selected" ? (
         <label
           className="relative flex flex-col items-center justify-center gap-3 py-10 px-6 rounded-xl cursor-pointer transition-all duration-200 select-none"
           style={{
-            border: `2px ${borderStyle} ${borderColor}`,
+            border: `2px dashed ${borderColor}`,
             background:
               dropState === "dragover"
                 ? "var(--theme-mesh-b)"
@@ -125,25 +124,19 @@ export function FileDropper({
             }}
           >
             {dropState === "dragover" ? (
-              <Upload size={22} style={{ color: "var(--theme-accent-2)" }} />
+              <Upload size={22} className="text-accent-2" />
             ) : (
-              <Upload size={22} style={{ color: "var(--theme-text-muted)" }} />
+              <Upload size={22} className="text-text-muted" />
             )}
           </div>
           <div className="text-center">
-            <p
-              className="text-sm font-medium"
-              style={{ color: "var(--theme-text-secondary)" }}
-            >
+            <p className="text-sm font-medium text-text-secondary">
               {dropState === "dragover"
-                ? "Bırak dosyayı"
-                : "Dosyayı sürükle veya tıkla"}
+                ? t("translation:fileDrop.dropHere")
+                : t("translation:fileDrop.dragOrClick")}
             </p>
-            <p
-              className="text-xs mt-1"
-              style={{ color: "var(--theme-text-muted)" }}
-            >
-              .xlsx, .json, .csv — maks. {maxSizeMB}MB
+            <p className="text-xs mt-1 text-text-muted">
+              {t("translation:fileDrop.sizeHint", { max: maxSizeMB })}
             </p>
           </div>
         </label>
@@ -162,13 +155,10 @@ export function FileDropper({
             <FileText size={18} style={{ color: "rgba(34,197,94,0.8)" }} />
           </div>
           <div className="flex-1 min-w-0">
-            <p
-              className="text-sm font-medium truncate"
-              style={{ color: "var(--theme-text-secondary)" }}
-            >
+            <p className="text-sm font-medium truncate text-text-secondary">
               {selectedFile?.name}
             </p>
-            <p className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
+            <p className="text-xs text-text-muted">
               {(selectedFile?.size ?? 0) > 1024 * 1024
                 ? `${((selectedFile?.size ?? 0) / (1024 * 1024)).toFixed(1)} MB`
                 : `${Math.round((selectedFile?.size ?? 0) / 1024)} KB`}
@@ -176,19 +166,16 @@ export function FileDropper({
           </div>
           <button
             onClick={removeFile}
-            className="p-1.5 rounded-lg transition-colors hover:bg-white/10 shrink-0"
-            aria-label="Dosyayı kaldır"
+            className="p-1.5 rounded-lg transition-colors hover:bg-glass-surface-hover shrink-0"
+            aria-label={t("translation:fileDrop.removeFile")}
           >
-            <X size={15} style={{ color: "var(--theme-text-muted)" }} />
+            <X size={15} className="text-text-muted" />
           </button>
         </div>
       )}
 
       {errorMsg && (
-        <div
-          className="flex items-center gap-1.5 text-xs"
-          style={{ color: "rgba(239,68,68,0.85)" }}
-        >
+        <div className="flex items-center gap-1.5 text-xs text-danger">
           <AlertCircle size={12} />
           {errorMsg}
         </div>

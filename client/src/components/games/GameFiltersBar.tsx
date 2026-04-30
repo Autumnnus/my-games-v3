@@ -1,13 +1,10 @@
-import { Search, Grid3X3, List } from "lucide-react";
-import { useTranslation } from "react-i18next";
-import type { GameStatus, Platform } from "@my-games/shared";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { GlassSelect } from "@/components/ui/GlassSelect";
-import {
-  ALL_STATUSES,
-  ALL_PLATFORMS,
-} from "@/lib/constants";
+import { ALL_PLATFORMS, ALL_STATUSES } from "@/lib/constants";
 import { useUIStore } from "@/store/ui.store";
+import type { GameStatus, Platform } from "@my-games/shared";
+import { Grid3X3, List, Search } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface GameFiltersBarProps {
   status?: GameStatus;
@@ -47,12 +44,11 @@ export function GameFiltersBar({
       <div className="relative">
         <Search
           size={15}
-          className="absolute left-3 top-1/2 -translate-y-1/2"
-          style={{ color: "var(--theme-text-muted)" }}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
         />
         <input
           type="text"
-          placeholder={t("common.buttons.search")}
+          placeholder={t("translation:common.buttons.search")}
           value={search ?? ""}
           onChange={(e) => onSearchChange(e.target.value)}
           className="glass-input w-full pl-9 pr-4 py-2.5 text-sm"
@@ -67,7 +63,7 @@ export function GameFiltersBar({
             onClick={() => onStatusChange(undefined)}
             className={`glass-btn text-xs px-3 py-1.5 rounded-full ${!status ? "glass-btn-primary" : ""}`}
           >
-            {t("export.all")}
+            {t("translation:export.all")}
           </button>
           {ALL_STATUSES.map((s) => (
             <button
@@ -84,27 +80,37 @@ export function GameFiltersBar({
           {/* Platform filter */}
           <GlassSelect
             value={platform ?? ""}
-            onChange={(e) =>
-              onPlatformChange((e.target.value as Platform) || undefined)
-            }
+            onChange={(v) => onPlatformChange((v as Platform) || undefined)}
             options={ALL_PLATFORMS.map((p) => ({
               value: p,
               label: t(`games.platform.${p}`),
             }))}
-            placeholder={t("games.form.platform")}
+            placeholder={t("translation:games.form.platform")}
             className="text-xs py-1.5 min-w-32"
           />
 
           {/* Sort */}
           <GlassSelect
             value={currentSort}
-            onChange={(e) => handleSortChange(e.target.value)}
+            onChange={handleSortChange}
             options={[
-              { value: "lastPlay:desc", label: t("games.sort.lastPlayed") },
-              { value: "createdAt:desc", label: t("games.sort.createdAt") },
-              { value: "name:asc", label: t("games.sort.name") },
-              { value: "rating:desc", label: t("games.sort.highestRated") },
-              { value: "playTime:desc", label: t("games.sort.mostPlayed") },
+              {
+                value: "lastPlay:desc",
+                label: t("translation:games.sort.lastPlayed"),
+              },
+              {
+                value: "createdAt:desc",
+                label: t("translation:games.sort.createdAt"),
+              },
+              { value: "name:asc", label: t("translation:games.sort.name") },
+              {
+                value: "rating:desc",
+                label: t("translation:games.sort.highestRated"),
+              },
+              {
+                value: "playTime:desc",
+                label: t("translation:games.sort.mostPlayed"),
+              },
             ]}
             className="text-xs py-1.5 min-w-36"
           />
@@ -116,7 +122,7 @@ export function GameFiltersBar({
               size="sm"
               onClick={() => setGamesViewMode("grid")}
               className="p-1.5 rounded-lg border-0"
-              aria-label={t("games.view.grid")}
+              aria-label={t("translation:games.view.grid")}
             >
               <Grid3X3 size={14} />
             </GlassButton>
@@ -125,7 +131,7 @@ export function GameFiltersBar({
               size="sm"
               onClick={() => setGamesViewMode("list")}
               className="p-1.5 rounded-lg border-0"
-              aria-label={t("games.view.list")}
+              aria-label={t("translation:games.view.list")}
             >
               <List size={14} />
             </GlassButton>

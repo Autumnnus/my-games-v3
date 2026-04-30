@@ -52,14 +52,12 @@ function ForgotPasswordPage() {
               >
                 <div>
                   <h1
-                    className="text-xl font-bold"
-                    style={{ color: "var(--theme-text-primary)" }}
+                    className="text-xl font-bold text-text-primary"
                   >
                     {t('forgotPassword.title')}
                   </h1>
                   <p
-                    className="text-sm mt-1"
-                    style={{ color: "var(--theme-text-muted)" }}
+                    className="text-sm mt-1 text-text-muted"
                   >
                     {t('forgotPassword.subtitle')}
                   </p>
@@ -107,14 +105,12 @@ function ForgotPasswordPage() {
                 </div>
                 <div>
                   <h2
-                    className="text-lg font-semibold"
-                    style={{ color: "var(--theme-text-primary)" }}
+                    className="text-lg font-semibold text-text-primary"
                   >
                     {t('forgotPassword.successTitle')}
                   </h2>
                   <p
-                    className="text-sm mt-1"
-                    style={{ color: "var(--theme-text-muted)" }}
+                    className="text-sm mt-1 text-text-muted"
                   >
                     {t('forgotPassword.successSubtitle')}
                   </p>
@@ -127,8 +123,7 @@ function ForgotPasswordPage() {
         <div className="flex justify-center mt-5">
           <Link
             to="/login"
-            className="flex items-center gap-1.5 text-sm hover:underline"
-            style={{ color: "var(--theme-text-muted)" }}
+            className="flex items-center gap-1.5 text-sm hover:underline text-text-muted"
           >
             <ArrowLeft size={14} /> {t('forgotPassword.backToLogin')}
           </Link>

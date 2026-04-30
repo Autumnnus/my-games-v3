@@ -1,8 +1,9 @@
-import { GlassModal } from "@/components/ui/GlassModal";
-import { GameForm } from "./GameForm";
-import { useEditGame } from "@/hooks/useGames";
-import type { GameListItem } from "@/api/types";
 import type { AddGameInput } from "@/api/games.api";
+import type { GameListItem } from "@/api/types";
+import { GlassModal } from "@/components/ui/GlassModal";
+import { useEditGame } from "@/hooks/useGames";
+import { useTranslation } from "react-i18next";
+import { GameForm } from "./GameForm";
 
 interface EditGameModalProps {
   game: GameListItem | null;
@@ -10,6 +11,7 @@ interface EditGameModalProps {
 }
 
 export function EditGameModal({ game, onClose }: EditGameModalProps) {
+  const { t } = useTranslation();
   const editGame = useEditGame();
 
   function handleSubmit(data: Partial<AddGameInput>) {
@@ -18,13 +20,18 @@ export function EditGameModal({ game, onClose }: EditGameModalProps) {
   }
 
   return (
-    <GlassModal open={!!game} onClose={onClose} title="Oyunu Düzenle" size="md">
+    <GlassModal
+      open={!!game}
+      onClose={onClose}
+      title={t("translation:games.form.editTitle")}
+      size="md"
+    >
       {game && (
         <GameForm
           defaultValues={game}
           onSubmit={handleSubmit}
           isLoading={editGame.isPending}
-          submitLabel="Güncelle"
+          submitLabel={t("translation:common.buttons.update")}
         />
       )}
     </GlassModal>

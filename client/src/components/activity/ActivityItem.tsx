@@ -1,10 +1,10 @@
-import { Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
-import { Pencil } from "lucide-react";
-import type { Activity } from "@my-games/shared";
 import { Avatar } from "@/components/ui/Avatar";
 import { timeAgo } from "@/lib/formatters";
+import type { Activity } from "@my-games/shared";
+import { Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { ACTIVITY_CONFIG } from "./activityConfig";
 
 interface Props {
@@ -40,7 +40,7 @@ export function ActivityItem({ activity, index }: Props) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index * 0.04, 0.4), duration: 0.3 }}
-      className="group relative flex gap-3 p-4 rounded-xl border transition-all duration-200 hover:border-white/20"
+      className="group relative flex gap-3 p-4 rounded-xl border transition-all duration-200 hover:border-glass-border-hover"
       style={{
         background: "var(--theme-surface-subtle)",
         borderColor: "var(--theme-glass-border)",
@@ -68,8 +68,7 @@ export function ActivityItem({ activity, index }: Props) {
           <Link
             to="/users/$id"
             params={{ id: user._id }}
-            className="font-semibold hover:text-white transition-colors"
-            style={{ color: "var(--theme-text-primary)" }}
+            className="font-semibold hover:text-white transition-colors text-text-primary"
           >
             {user.name}
           </Link>
@@ -88,21 +87,19 @@ export function ActivityItem({ activity, index }: Props) {
 
           {game && (
             <>
-              <span style={{ color: "var(--theme-text-muted)" }}>·</span>
+              <span className="text-text-muted">·</span>
               {entryId ? (
                 <Link
                   to="/games/$id"
                   params={{ id: entryId }}
-                  className="font-medium truncate max-w-[200px] text-sm hover:text-white transition-colors"
-                  style={{ color: "var(--theme-text-secondary)" }}
+                  className="font-medium truncate max-w-[200px] text-sm hover:text-white transition-colors text-text-secondary"
                   title={game.title}
                 >
                   {game.title}
                 </Link>
               ) : (
                 <span
-                  className="font-medium truncate max-w-[200px] text-sm"
-                  style={{ color: "var(--theme-text-secondary)" }}
+                  className="font-medium truncate max-w-[200px] text-sm text-text-secondary"
                   title={game.title}
                 >
                   {game.title}
@@ -132,7 +129,7 @@ export function ActivityItem({ activity, index }: Props) {
                   <img
                     src={activity.metadata.firstScreenshotUrl}
                     alt="screenshot"
-                    className="h-20 w-auto rounded-lg object-cover border border-white/10 opacity-80 group-hover:opacity-100 transition-opacity hover:border-white/30"
+                    className="h-20 w-auto rounded-lg object-cover border border-glass-border opacity-80 group-hover:opacity-100 transition-opacity hover:border-glass-border-hover"
                     loading="lazy"
                   />
                 </Link>
@@ -140,7 +137,7 @@ export function ActivityItem({ activity, index }: Props) {
                 <img
                   src={activity.metadata.firstScreenshotUrl}
                   alt="screenshot"
-                  className="h-20 w-auto rounded-lg object-cover border border-white/10 opacity-80 group-hover:opacity-100 transition-opacity"
+                  className="h-20 w-auto rounded-lg object-cover border border-glass-border opacity-80 group-hover:opacity-100 transition-opacity"
                   loading="lazy"
                 />
               )}
@@ -168,25 +165,26 @@ export function ActivityItem({ activity, index }: Props) {
         )}
 
         {activity.type === "milestone_playtime" && activity.metadata.hours && (
-          <p className="mt-1.5 text-xs font-medium" style={{ color: config?.rawColor ?? "var(--theme-text-secondary)" }}>
+          <p
+            className="mt-1.5 text-xs font-medium"
+            style={{ color: config?.rawColor ?? "var(--theme-text-secondary)" }}
+          >
             {activity.metadata.hours >= 1000
               ? `${(activity.metadata.hours / 1000).toFixed(1)}k`
-              : activity.metadata.hours} {t("activity.hoursAbbrev")}
+              : activity.metadata.hours}{" "}
+            {t("translation:activity.hoursAbbrev")}
           </p>
         )}
 
         <div className="mt-1.5 flex items-center gap-1.5">
-          <p className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
-            {timeAgo(displayTime)}
-          </p>
+          <p className="text-xs text-text-muted">{timeAgo(displayTime)}</p>
           {wasEdited && (
             <span
-              className="inline-flex items-center gap-0.5 text-xs"
-              style={{ color: "var(--theme-text-muted)" }}
+              className="inline-flex items-center gap-0.5 text-xs text-text-muted"
               title="Bu aktivite güncellendi"
             >
               <Pencil size={9} />
-              {t("activity.edited")}
+              {t("translation:activity.edited")}
             </span>
           )}
         </div>
@@ -199,7 +197,7 @@ export function ActivityItem({ activity, index }: Props) {
               <img
                 src={game.coverUrl}
                 alt={game.title}
-                className="w-9 h-[52px] rounded object-cover border border-white/10 opacity-70 group-hover:opacity-100 hover:border-white/30 transition-all"
+                className="w-9 h-[52px] rounded object-cover border border-glass-border opacity-70 group-hover:opacity-100 hover:border-glass-border-hover transition-all"
                 loading="lazy"
               />
             </Link>
@@ -207,7 +205,7 @@ export function ActivityItem({ activity, index }: Props) {
             <img
               src={game.coverUrl}
               alt={game.title}
-              className="w-9 h-[52px] rounded object-cover border border-white/10 opacity-70 group-hover:opacity-100 transition-opacity"
+              className="w-9 h-[52px] rounded object-cover border border-glass-border opacity-70 group-hover:opacity-100 transition-opacity"
               loading="lazy"
             />
           )}

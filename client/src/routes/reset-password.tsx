@@ -47,8 +47,7 @@ function ResetPasswordPage() {
           </p>
           <Link
             to="/forgot-password"
-            className="text-sm mt-3 block hover:underline"
-            style={{ color: "var(--theme-accent)" }}
+            className="text-sm mt-3 block hover:underline text-accent"
           >
             {t('resetPassword.requestNewLink')}
           </Link>
@@ -68,14 +67,12 @@ function ResetPasswordPage() {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <h1
-            className="text-2xl font-bold"
-            style={{ color: "var(--theme-text-primary)" }}
+            className="text-2xl font-bold text-text-primary"
           >
             {t('resetPassword.title')}
           </h1>
           <p
-            className="text-sm mt-1"
-            style={{ color: "var(--theme-text-muted)" }}
+            className="text-sm mt-1 text-text-muted"
           >
             {t('resetPassword.hint')}
           </p>

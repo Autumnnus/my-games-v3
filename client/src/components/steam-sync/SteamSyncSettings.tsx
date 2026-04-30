@@ -1,32 +1,24 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
-import {
-  RefreshCw,
-  CheckCircle,
-  XCircle,
-  AlertCircle,
-  Clock,
-} from "lucide-react";
-import { GlassCard } from "@/components/ui/GlassCard";
 import { GlassButton } from "@/components/ui/GlassButton";
-import { GlassSwitch } from "@/components/ui/GlassSwitch";
 import { GlassSelect } from "@/components/ui/GlassSelect";
+import { GlassSwitch } from "@/components/ui/GlassSwitch";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { toast } from "sonner";
 import {
   useSteamSyncSettings,
-  useUpdateSteamSyncSettings,
   useSteamSyncStatus,
   useTriggerSteamSync,
+  useUpdateSteamSyncSettings,
 } from "@/hooks/useSteamSync";
-
-const INTERVAL_OPTIONS = [
-  { value: 1, label: "1 saat" },
-  { value: 6, label: "6 saat" },
-  { value: 12, label: "12 saat" },
-  { value: 24, label: "24 saat (her gün)" },
-  { value: 168, label: "1 hafta" },
-];
+import { motion } from "framer-motion";
+import {
+  AlertCircle,
+  CheckCircle,
+  Clock,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { toast } from "sonner";
 
 function StatusIcon({
   status,
@@ -40,11 +32,12 @@ function StatusIcon({
   if (status === "partial")
     return <AlertCircle {...props} className="text-amber-400" />;
   if (status === "failed")
-    return <XCircle {...props} className="text-red-400" />;
+    return <XCircle {...props} className="text-danger" />;
   return null;
 }
 
 export function SteamSyncSettings() {
+  const { t } = useTranslation();
   const { data: settings, isLoading: settingsLoading } = useSteamSyncSettings();
   const { data: status } = useSteamSyncStatus();
   const updateMutation = useUpdateSteamSyncSettings();
@@ -56,6 +49,14 @@ export function SteamSyncSettings() {
   const enabled = pendingEnabled ?? settings?.enabled ?? false;
   const intervalHours = pendingInterval ?? settings?.intervalHours ?? 24;
 
+  const INTERVAL_OPTIONS = [
+    { value: "1", label: t("translation:steamSync.interval.1") },
+    { value: "6", label: t("translation:steamSync.interval.6") },
+    { value: "12", label: t("translation:steamSync.interval.12") },
+    { value: "24", label: t("translation:steamSync.interval.24") },
+    { value: "168", label: t("translation:steamSync.interval.168") },
+  ];
+
   function handleToggleEnabled(value: boolean) {
     setPendingEnabled(value);
     updateMutation.mutate(
@@ -65,30 +66,31 @@ export function SteamSyncSettings() {
           setPendingEnabled(null);
           toast.success(
             value
-              ? "Otomatik senkronizasyon açıldı"
-              : "Otomatik senkronizasyon kapatıldı",
+              ? t("translation:steamSync.enabled")
+              : t("translation:steamSync.disabled"),
           );
         },
         onError: () => {
           setPendingEnabled(null);
-          toast.error("Ayarlar güncellenemedi");
+          toast.error(t("translation:steamSync.settingsError"));
         },
       },
     );
   }
 
-  function handleIntervalChange(value: number) {
-    setPendingInterval(value);
+  function handleIntervalChange(value: string) {
+    const numValue = Number(value);
+    setPendingInterval(numValue);
     updateMutation.mutate(
-      { intervalHours: value },
+      { intervalHours: numValue },
       {
         onSuccess: () => {
           setPendingInterval(null);
-          toast.success("Senkronizasyon aralığı güncellendi");
+          toast.success(t("translation:steamSync.intervalUpdated"));
         },
         onError: () => {
           setPendingInterval(null);
-          toast.error("Ayarlar güncellenemedi");
+          toast.error(t("translation:steamSync.settingsError"));
         },
       },
     );
@@ -97,10 +99,10 @@ export function SteamSyncSettings() {
   function handleSyncNow() {
     triggerMutation.mutate(undefined, {
       onSuccess: (data) => {
-        toast.success(data.message ?? "Senkronizasyon başlatıldı");
+        toast.success(data.message ?? t("translation:steamSync.syncStarted"));
       },
       onError: () => {
-        toast.error("Senkronizasyon başlatılamadı");
+        toast.error(t("translation:steamSync.syncError"));
       },
     });
   }
@@ -114,11 +116,11 @@ export function SteamSyncSettings() {
   }
 
   const lastSyncLabel = settings?.lastSyncAt
-    ? new Date(settings.lastSyncAt).toLocaleString("tr-TR", {
+    ? new Date(settings.lastSyncAt).toLocaleString(undefined, {
         dateStyle: "medium",
         timeStyle: "short",
       })
-    : "Henüz senkronizasyon yapılmadı";
+    : t("translation:steamSync.neverSynced");
 
   const pendingCount = status?.pendingConflicts ?? 0;
 
@@ -131,14 +133,11 @@ export function SteamSyncSettings() {
       {/* Enable auto-sync */}
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-0.5">
-          <span
-            className="text-sm font-medium"
-            style={{ color: "var(--theme-text-secondary)" }}
-          >
-            Otomatik Steam Senkronizasyonu
+          <span className="text-sm font-medium text-text-secondary">
+            {t("translation:steamSync.autoSync")}
           </span>
-          <span className="text-xs" style={{ color: "var(--theme-text-muted)" }}>
-            Her gün Steam'den oynama süresini otomatik olarak çek
+          <span className="text-xs text-text-muted">
+            {t("translation:steamSync.autoSyncHint")}
           </span>
         </div>
         <GlassSwitch
@@ -152,45 +151,27 @@ export function SteamSyncSettings() {
         <>
           {/* Interval */}
           <div className="flex items-center justify-between gap-4">
-            <span
-              className="text-sm"
-              style={{ color: "var(--theme-text-secondary)" }}
-            >
-              Senkronizasyon aralığı
+            <span className="text-sm text-text-secondary">
+              {t("translation:steamSync.intervalLabel")}
             </span>
             <div className="w-48">
               <GlassSelect
-                value={intervalHours}
-                onChange={(e) => handleIntervalChange(Number(e.target.value))}
+                value={String(intervalHours)}
+                onChange={handleIntervalChange}
                 disabled={updateMutation.isPending}
-                options={INTERVAL_OPTIONS.map((o) => ({
-                  value: String(o.value),
-                  label: o.label,
-                }))}
+                options={INTERVAL_OPTIONS}
               />
             </div>
           </div>
 
           {/* Last sync status */}
-          <div
-            className="flex items-center justify-between p-3 rounded-xl"
-            style={{
-              background: "var(--theme-surface-subtle)",
-              border: "1px solid var(--theme-glass-border)",
-            }}
-          >
+          <div className="flex items-center justify-between p-3 rounded-xl bg-surface-subtle border border-glass-border">
             <div className="flex items-center gap-2">
-              <Clock size={13} style={{ color: "var(--theme-text-muted)" }} />
-              <span
-                className="text-xs"
-                style={{ color: "var(--theme-text-muted)" }}
-              >
-                Son senkronizasyon:
+              <Clock size={13} className="text-text-muted" />
+              <span className="text-xs text-text-muted">
+                {t("translation:steamSync.lastSync")}
               </span>
-              <span
-                className="text-xs"
-                style={{ color: "var(--theme-text-secondary)" }}
-              >
+              <span className="text-xs text-text-secondary">
                 {lastSyncLabel}
               </span>
             </div>
@@ -201,20 +182,12 @@ export function SteamSyncSettings() {
 
           {/* Pending conflicts warning */}
           {pendingCount > 0 && (
-            <div
-              className="flex items-center gap-2 p-3 rounded-xl"
-              style={{
-                background: "rgba(251,191,36,0.08)",
-                border: "1px solid rgba(251,191,36,0.2)",
-              }}
-            >
-              <AlertCircle size={14} className="text-amber-400" />
-              <span
-                className="text-xs"
-                style={{ color: "rgba(251,191,36,0.9)" }}
-              >
-                {pendingCount} çözülmemiş çakışma var — uygulamayı açtığında
-                karşına çıkacak
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-warning-soft border border-warning/20">
+              <AlertCircle size={14} className="text-warning" />
+              <span className="text-xs text-warning">
+                {t("translation:steamSync.pendingConflicts", {
+                  count: pendingCount,
+                })}
               </span>
             </div>
           )}
@@ -228,7 +201,7 @@ export function SteamSyncSettings() {
               loading={triggerMutation.isPending}
               onClick={handleSyncNow}
             >
-              Şimdi Senkronize Et
+              {t("translation:steamSync.syncNow")}
             </GlassButton>
           </div>
         </>

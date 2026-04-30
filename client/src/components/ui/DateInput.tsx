@@ -1,184 +1,314 @@
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/cn";
+import * as Popover from "@radix-ui/react-popover";
+import { CalendarDays, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { useState } from "react";
 import { Controller, type ControllerProps } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 
-interface DateInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange" | "value"> {
+// ─── Date helpers ────────────────────────────────────────────────────────────
+
+function isoToDate(iso: string | undefined): Date | undefined {
+  if (!iso || iso.length !== 10) return undefined;
+  const [y, m, d] = iso.split("-").map(Number);
+  const date = new Date(y, m - 1, d);
+  return isNaN(date.getTime()) ? undefined : date;
+}
+
+function dateToIso(date: Date): string {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function formatDisplay(iso: string | undefined, locale: string): string {
+  const date = isoToDate(iso);
+  if (!date) return "";
+  return date.toLocaleDateString(locale, {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+}
+
+function getDaysInMonth(year: number, month: number) {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function getFirstDayOfWeek(year: number, month: number) {
+  const day = new Date(year, month, 1).getDay();
+  return day === 0 ? 6 : day - 1; // Monday = 0
+}
+
+// ─── Calendar ────────────────────────────────────────────────────────────────
+
+interface CalendarProps {
+  selected: Date | undefined;
+  onSelect: (date: Date) => void;
+  locale: string;
+}
+
+function Calendar({ selected, onSelect, locale }: CalendarProps) {
+  const today = new Date();
+  const [viewYear, setViewYear] = useState(
+    selected?.getFullYear() ?? today.getFullYear(),
+  );
+  const [viewMonth, setViewMonth] = useState(
+    selected?.getMonth() ?? today.getMonth(),
+  );
+
+  const daysInMonth = getDaysInMonth(viewYear, viewMonth);
+  const firstDow = getFirstDayOfWeek(viewYear, viewMonth);
+  const daysInPrev = getDaysInMonth(viewYear, viewMonth - 1);
+
+  const monthLabel = new Date(viewYear, viewMonth, 1).toLocaleDateString(
+    locale,
+    {
+      month: "long",
+      year: "numeric",
+    },
+  );
+
+  const weekdays = Array.from({ length: 7 }, (_, i) =>
+    new Date(2024, 0, i + 1)
+      .toLocaleDateString(locale, { weekday: "short" })
+      .slice(0, 2),
+  );
+
+  function prev() {
+    if (viewMonth === 0) {
+      setViewYear((y) => y - 1);
+      setViewMonth(11);
+    } else setViewMonth((m) => m - 1);
+  }
+
+  function next() {
+    if (viewMonth === 11) {
+      setViewYear((y) => y + 1);
+      setViewMonth(0);
+    } else setViewMonth((m) => m + 1);
+  }
+
+  function isSelected(d: number) {
+    return (
+      selected?.getFullYear() === viewYear &&
+      selected?.getMonth() === viewMonth &&
+      selected?.getDate() === d
+    );
+  }
+
+  function isToday(d: number) {
+    return (
+      today.getFullYear() === viewYear &&
+      today.getMonth() === viewMonth &&
+      today.getDate() === d
+    );
+  }
+
+  // Build cell grid: prev-month trailing + current + next-month leading
+  const cells: { day: number; current: boolean }[] = [];
+  for (let i = firstDow - 1; i >= 0; i--) {
+    cells.push({ day: daysInPrev - i, current: false });
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push({ day: d, current: true });
+  }
+  const remaining = 42 - cells.length;
+  for (let d = 1; d <= remaining; d++) {
+    cells.push({ day: d, current: false });
+  }
+
+  return (
+    <div className="flex flex-col gap-3 select-none" style={{ width: 264 }}>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <button
+          type="button"
+          onClick={prev}
+          className="glass-btn p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors"
+        >
+          <ChevronLeft size={14} />
+        </button>
+        <span className="text-sm font-semibold text-text-primary capitalize">
+          {monthLabel}
+        </span>
+        <button
+          type="button"
+          onClick={next}
+          className="glass-btn p-1.5 rounded-lg text-text-muted hover:text-text-primary transition-colors"
+        >
+          <ChevronRight size={14} />
+        </button>
+      </div>
+
+      {/* Weekday headers */}
+      <div className="grid grid-cols-7">
+        {weekdays.map((wd) => (
+          <div
+            key={wd}
+            className="text-center text-[11px] font-medium text-text-muted py-1"
+          >
+            {wd}
+          </div>
+        ))}
+      </div>
+
+      {/* Day grid */}
+      <div className="grid grid-cols-7 gap-y-0.5">
+        {cells.map((cell, idx) => {
+          const sel = cell.current && isSelected(cell.day);
+          const tod = cell.current && isToday(cell.day);
+          return (
+            <button
+              key={idx}
+              type="button"
+              disabled={!cell.current}
+              onClick={() =>
+                cell.current &&
+                onSelect(new Date(viewYear, viewMonth, cell.day))
+              }
+              className={cn(
+                "h-8 w-full rounded-lg text-sm transition-all",
+                !cell.current && "opacity-20 pointer-events-none",
+                cell.current &&
+                  !sel &&
+                  "text-text-secondary hover:bg-glass-surface-hover hover:text-text-primary",
+                tod && !sel && "text-accent font-semibold",
+                sel && "bg-accent text-white font-semibold hover:bg-accent",
+              )}
+            >
+              {cell.day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── DateInput ───────────────────────────────────────────────────────────────
+
+interface DateInputProps {
   label?: string;
   value?: string; // YYYY-MM-DD
-  onChange?: (value: string) => void; // YYYY-MM-DD
+  onChange?: (value: string) => void;
+  placeholder?: string;
   error?: string;
+  name?: string;
+  disabled?: boolean;
 }
 
-/**
- * Formats YYYY-MM-DD → DD.MM.YYYY for display.
- */
-function toDisplay(dateValue: string | undefined): string {
-  if (!dateValue || dateValue.length !== 10) return "";
-  const [y, m, d] = dateValue.split("-");
-  return `${d}.${m}.${y}`;
-}
+export function DateInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  error,
+  name,
+  disabled,
+}: DateInputProps) {
+  const { i18n, t } = useTranslation();
+  const [open, setOpen] = useState(false);
 
-/**
- * Parses DD.MM.YYYY → YYYY-MM-DD for form submission.
- * Returns empty string for invalid input.
- */
-function toIso(displayValue: string): string {
-  const parts = displayValue.split(".");
-  if (parts.length !== 3) return "";
-  const [d, m, y] = parts;
-  if (!d || !m || !y || y.length !== 4) return "";
-  const paddedD = d.padStart(2, "0");
-  const paddedM = m.padStart(2, "0");
-  return `${y}-${paddedM}-${paddedD}`;
-}
+  const locale = i18n.language === "tr" ? "tr-TR" : "en-US";
+  const selected = isoToDate(value);
+  const inputId = name ?? label?.toLowerCase().replace(/\s+/g, "-");
 
-/**
- * Validates a display string (DD.MM.YYYY) in real-time.
- * Returns true if the current input is a valid day/month/year.
- */
-function isValidDisplayInput(display: string): boolean {
-  if (!display) return true;
-  // Only allow digits and dots
-  if (!/^[\d.]*$/.test(display)) return false;
-  const parts = display.split(".");
-  if (parts.length > 3) return false;
-  // Check day
-  if (parts[0] && (Number(parts[0]) < 1 || Number(parts[0]) > 31)) return false;
-  // Check month
-  if (parts[1] && (Number(parts[1]) < 1 || Number(parts[1]) > 12)) return false;
-  // Check year
-  if (parts[2] && (Number(parts[2]) < 1 || Number(parts[2]) > 9999)) return false;
-  return true;
-}
+  function handleSelect(date: Date) {
+    onChange?.(dateToIso(date));
+    setOpen(false);
+  }
 
-export const DateInput = forwardRef<HTMLInputElement, DateInputProps>(
-  ({ label, value, onChange, placeholder = "GG.AA.YYYY", error, name }, ref) => {
-    // The display value shown in the text input (DD.MM.YYYY)
-    const [displayValue, setDisplayValue] = useState<string>(() => toDisplay(value));
-    // The hidden date input value (YYYY-MM-DD) — used for form submission
-    const hiddenRef = useRef<HTMLInputElement>(null);
+  function handleClear(e: React.MouseEvent) {
+    e.stopPropagation();
+    onChange?.("");
+  }
 
-    // Sync when external value changes (e.g., form reset or defaultValues)
-    useEffect(() => {
-      setDisplayValue(toDisplay(value));
-      if (hiddenRef.current && value !== undefined) {
-        hiddenRef.current.value = value;
-      }
-    }, [value]);
+  return (
+    <div className="flex flex-col gap-1.5">
+      {label && (
+        <label
+          htmlFor={inputId}
+          className="text-sm font-medium text-text-secondary"
+        >
+          {label}
+        </label>
+      )}
 
-    // Keep ref in sync for react-hook-form
-    useEffect(() => {
-      if (typeof ref === "function") {
-        ref(hiddenRef.current);
-      } else if (ref && "current" in ref) {
-        ref.current = hiddenRef.current;
-      }
-    }, [ref]);
-
-    function handleTextChange(e: React.ChangeEvent<HTMLInputElement>) {
-      const raw = e.target.value;
-      if (!isValidDisplayInput(raw)) return;
-
-      // Auto-format: add dots as user types
-      let formatted = raw.replace(/[^0-9]/g, "");
-      if (formatted.length > 0) {
-        if (formatted.length <= 2) {
-          // DD
-          formatted = formatted;
-        } else if (formatted.length <= 4) {
-          // DD.MM
-          formatted = `${formatted.slice(0, 2)}.${formatted.slice(2)}`;
-        } else {
-          // DD.MM.YYYY
-          formatted = `${formatted.slice(0, 2)}.${formatted.slice(2, 4)}.${formatted.slice(4, 8)}`;
-        }
-      }
-
-      setDisplayValue(formatted);
-
-      // Sync to hidden date input and call onChange only when full date is valid
-      const iso = toIso(formatted);
-      if (hiddenRef.current) hiddenRef.current.value = iso;
-      if (onChange) onChange(iso);
-    }
-
-    function handleDatePickerChange(e: React.ChangeEvent<HTMLInputElement>) {
-      const iso = e.target.value; // YYYY-MM-DD from native picker
-      setDisplayValue(toDisplay(iso));
-      if (onChange) onChange(iso);
-    }
-
-    const inputId = name ?? label?.toLowerCase().replace(/\s+/g, "-");
-
-    return (
-      <div className="flex flex-col gap-1.5">
-        {label && (
-          <label
-            htmlFor={inputId}
-            className="text-sm font-medium"
-            style={{ color: "var(--theme-text-secondary)" }}
-          >
-            {label}
-          </label>
-        )}
-
-        {/* Wrapper with relative positioning for layering */}
-        <div className="relative">
-          {/* Top layer: visible text input showing DD.MM.YYYY */}
-          <input
-            type="text"
+      <Popover.Root open={open} onOpenChange={setOpen}>
+        <Popover.Trigger asChild>
+          <button
             id={inputId}
-            value={displayValue}
-            onChange={handleTextChange}
-            placeholder={placeholder}
-            className="glass-input w-full px-3 py-2.5 rounded-xl text-sm border"
-            style={{
-              borderColor: error
-                ? "color-mix(in srgb, var(--theme-danger) 60%, transparent)"
-                : "var(--theme-glass-border)",
-            }}
-            inputMode="numeric"
-            autoComplete="off"
-          />
+            type="button"
+            disabled={disabled}
+            className={cn(
+              "glass-input w-full px-3 py-2.5 text-sm flex items-center gap-2 text-left",
+              error && "glass-input-error",
+              disabled && "opacity-50 cursor-not-allowed",
+            )}
+          >
+            <CalendarDays size={14} className="text-text-muted shrink-0" />
+            <span
+              className={cn(
+                "flex-1 truncate",
+                selected ? "text-text-primary" : "text-text-muted",
+              )}
+            >
+              {formatDisplay(value, locale) ||
+                placeholder ||
+                t("translation:common.datePicker.placeholder")}
+            </span>
+            {selected && !disabled && (
+              <span
+                role="button"
+                aria-label={t("translation:common.datePicker.clear")}
+                onClick={handleClear}
+                className="text-text-muted hover:text-text-secondary transition-colors shrink-0"
+              >
+                <X size={13} />
+              </span>
+            )}
+          </button>
+        </Popover.Trigger>
 
-          {/* Bottom layer: hidden date input that holds YYYY-MM-DD for forms */}
-          <input
-            type="date"
-            ref={hiddenRef}
-            name={name}
-            onChange={handleDatePickerChange}
-            style={{ position: "absolute", inset: 0, opacity: 0, pointerEvents: "none", width: "100%", height: "100%" }}
-            tabIndex={-1}
-            aria-hidden="true"
-          />
-        </div>
+        <Popover.Portal>
+          <Popover.Content
+            sideOffset={6}
+            align="start"
+            className="z-[300] glass-panel p-3 rounded-2xl"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+          >
+            <Calendar
+              selected={selected}
+              onSelect={handleSelect}
+              locale={locale}
+            />
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
 
-        {error && (
-          <p className="text-xs text-red-400">{error}</p>
-        )}
-      </div>
-    );
-  },
-);
+      {error && <p className="text-xs text-danger">{error}</p>}
+    </div>
+  );
+}
 
-DateInput.displayName = "DateInput";
+// ─── react-hook-form wrapper ─────────────────────────────────────────────────
 
-interface DateInputFieldProps
-  extends Omit<ControllerProps, "render"> {
+interface DateInputFieldProps extends Omit<ControllerProps, "render"> {
   label?: string;
   placeholder?: string;
   error?: string;
+  disabled?: boolean;
 }
 
-/**
- * Wrapper to use DateInput inside react-hook-form Controller.
- */
 export function DateInputField({
   control,
   name,
   label,
   placeholder,
   error,
-  ...rest
+  disabled,
 }: DateInputFieldProps) {
   return (
     <Controller
@@ -192,8 +322,7 @@ export function DateInputField({
           name={field.name}
           value={field.value}
           onChange={field.onChange}
-          ref={field.ref}
-          {...rest}
+          disabled={disabled}
         />
       )}
     />

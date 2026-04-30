@@ -75,11 +75,10 @@ export function ScreenshotCard({
     >
       {showAsImage ? (
         imgError ? (
-          <div className="w-full flex flex-col items-center justify-center gap-2 py-12 border border-dashed border-white/20 rounded-xl bg-white/5">
-            <ImageOff size={32} style={{ color: "var(--theme-text-muted)" }} />
+          <div className="w-full flex flex-col items-center justify-center gap-2 py-12 border border-dashed border-glass-border-hover rounded-xl bg-glass-surface">
+            <ImageOff size={32} className="text-text-muted" />
             <span
-              className="text-xs"
-              style={{ color: "var(--theme-text-muted)" }}
+              className="text-xs text-text-muted"
             >
               Görsel yüklenemedi
             </span>
@@ -176,8 +175,7 @@ export function ScreenshotCard({
         return (
           <div className="mt-1 px-1">
             <span
-              className="text-xs truncate block"
-              style={{ color: "var(--theme-text-muted)" }}
+              className="text-xs truncate block text-text-muted"
             >
               <Gamepad2 size={10} className="inline mr-1" />
               {game.name}

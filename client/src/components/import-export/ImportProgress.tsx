@@ -36,10 +36,10 @@ export function ImportProgress({
     <div className="flex flex-col gap-5 py-4">
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between text-xs">
-          <span style={{ color: "var(--theme-text-secondary)" }}>
+          <span className="text-text-secondary">
             {STATUS_LABELS[status]}
           </span>
-          <span style={{ color: "var(--theme-text-muted)" }}>
+          <span className="text-text-muted">
             {current} / {total} ({pct}%)
           </span>
         </div>
@@ -67,8 +67,7 @@ export function ImportProgress({
         <div className="flex items-center gap-2 text-xs">
           <LoadingSpinner size="sm" />
           <span
-            className="truncate"
-            style={{ color: "var(--theme-text-muted)" }}
+            className="truncate text-text-muted"
             title={currentItem}
           >
             {currentItem}

@@ -123,7 +123,7 @@ export function ScreenshotLightbox({
                       src={current.thumbnail ?? current.url}
                       alt={current.name ?? "Ekran görüntüsü"}
                       className="max-h-[80vh] max-w-full rounded-2xl object-contain"
-                      style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }}
+                      style={{ boxShadow: "0 24px 64px rgba(0,0,0,0.6)" }} /* deep image shadow, no token */
                     />
                   );
                 }
@@ -132,8 +132,7 @@ export function ScreenshotLightbox({
                     href={current.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="glass-card p-6 max-w-lg w-full text-base leading-relaxed hover:text-white underline"
-                    style={{ color: "var(--theme-text-secondary)" }}
+                    className="glass-card p-6 max-w-lg w-full text-base leading-relaxed text-text-secondary hover:text-text-primary underline"
                   >
                     {current.url}
                   </a>
@@ -156,10 +155,7 @@ export function ScreenshotLightbox({
 
           {/* Close & counter */}
           <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
-            <span
-              className="text-sm glass-card-sm px-3 py-1"
-              style={{ color: "var(--theme-text-secondary)" }}
-            >
+            <span className="text-sm glass-card-sm px-3 py-1 text-text-secondary">
               {index + 1} / {screenshots.length}
             </span>
             <GlassButton
@@ -180,16 +176,8 @@ export function ScreenshotLightbox({
             return (
               <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2">
                 <div className="glass-card-sm px-3 py-1.5 flex items-center gap-2">
-                  <Gamepad2
-                    size={14}
-                    style={{ color: "var(--theme-text-secondary)" }}
-                  />
-                  <span
-                    className="text-sm"
-                    style={{ color: "var(--theme-text-secondary)" }}
-                  >
-                    {game.name}
-                  </span>
+                  <Gamepad2 size={14} className="text-text-secondary" />
+                  <span className="text-sm text-text-secondary">{game.name}</span>
                 </div>
                 {entryId && (
                   <GlassButton

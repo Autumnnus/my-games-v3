@@ -1,40 +1,32 @@
-import { useTranslation } from 'react-i18next';
+import { cn } from "@/lib/cn";
+import { useTranslation } from "react-i18next";
 
 const LANGUAGES = [
-  { code: 'tr', label: 'Türkçe', flag: '🇹🇷' },
-  { code: 'en', label: 'English', flag: '🇬🇧' },
+  { code: "tr", label: "Türkçe", flag: "🇹🇷" },
+  { code: "en", label: "English", flag: "🇬🇧" },
 ] as const;
 
 export function LanguageSwitcher() {
   const { i18n, t } = useTranslation();
-
-  function handleChange(code: string) {
-    i18n.changeLanguage(code);
-  }
-
-  const currentLang = LANGUAGES.find((l) => l.code === i18n.resolvedLanguage) ?? LANGUAGES[0];
+  const currentLang =
+    LANGUAGES.find((l) => l.code === i18n.resolvedLanguage) ?? LANGUAGES[0];
 
   return (
-    <div className="flex items-center gap-1">
-      <span className="text-xs" style={{ color: 'var(--theme-text-muted)' }}>
-        {t('settings.language')}
+    <div className="flex items-center gap-1 px-3 py-1.5">
+      <span className="text-xs text-text-muted">
+        {t("translation:settings.language")}
       </span>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 ml-auto">
         {LANGUAGES.map((lang) => (
           <button
             key={lang.code}
-            onClick={() => handleChange(lang.code)}
-            className={`px-2 py-1 rounded-lg text-xs transition-colors ${
+            onClick={() => i18n.changeLanguage(lang.code)}
+            className={cn(
+              "px-2 py-1 rounded-lg text-xs transition-colors",
               currentLang.code === lang.code
-                ? 'bg-white/10'
-                : 'hover:bg-white/5'
-            }`}
-            style={{
-              color:
-                currentLang.code === lang.code
-                  ? 'var(--theme-text-primary)'
-                  : 'var(--theme-text-muted)',
-            }}
+                ? "bg-glass-surface-hover text-text-primary"
+                : "text-text-muted hover:bg-glass-surface hover:text-text-secondary",
+            )}
             aria-label={lang.label}
           >
             {lang.flag} {lang.code.toUpperCase()}

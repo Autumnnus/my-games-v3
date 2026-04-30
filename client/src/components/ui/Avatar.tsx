@@ -1,3 +1,5 @@
+import { cn } from "@/lib/cn";
+
 interface AvatarProps {
   src?: string;
   name: string;
@@ -12,34 +14,24 @@ const SIZES = {
   xl: "w-20 h-20 text-2xl",
 };
 
+const ACCENT_COLORS = [
+  "var(--theme-accent)",
+  "var(--theme-accent-2)",
+  "#ec4899",
+  "#f59e0b",
+  "#22c55e",
+  "#14b8a6",
+];
+
 function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join("")
-    .toUpperCase();
+  return name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase();
 }
 
 function getAvatarColor(name: string) {
-  const colors = [
-    "var(--theme-accent)",
-    "var(--theme-accent-2)",
-    "#ec4899",
-    "#f59e0b",
-    "#22c55e",
-    "#14b8a6",
-  ];
-  const idx = name.charCodeAt(0) % colors.length;
-  return colors[idx];
+  return ACCENT_COLORS[name.charCodeAt(0) % ACCENT_COLORS.length];
 }
 
-export function Avatar({
-  src,
-  name,
-  size = "md",
-  className = "",
-}: AvatarProps) {
+export function Avatar({ src, name, size = "md", className = "" }: AvatarProps) {
   const sizeClass = SIZES[size];
   const color = getAvatarColor(name);
 
@@ -50,20 +42,15 @@ export function Avatar({
         alt={name}
         loading="lazy"
         decoding="async"
-        className={`${sizeClass} rounded-full object-cover border ${className}`}
-        style={{ borderColor: "var(--theme-glass-border)" }}
+        className={cn(sizeClass, "rounded-full object-cover border border-glass-border", className)}
       />
     );
   }
 
   return (
     <div
-      className={`${sizeClass} rounded-full flex items-center justify-center font-semibold border ${className}`}
-      style={{
-        background: `${color}22`,
-        borderColor: "var(--theme-glass-border)",
-        color,
-      }}
+      className={cn(sizeClass, "rounded-full flex items-center justify-center font-semibold border border-glass-border", className)}
+      style={{ background: `${color}22`, color }}
     >
       {getInitials(name)}
     </div>

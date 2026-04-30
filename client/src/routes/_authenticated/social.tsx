@@ -1,13 +1,13 @@
-import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { ActivityFeed } from "@/components/activity/ActivityFeed";
+import { PageContainer } from "@/components/layout/PageContainer";
+import { useActivityFeed, useUserActivity } from "@/hooks/useActivity";
+import { pageTransition } from "@/lib/motion";
+import { useAuthStore } from "@/store/auth.store";
+import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Activity, Globe, User } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PageContainer } from "@/components/layout/PageContainer";
-import { ActivityFeed } from "@/components/activity/ActivityFeed";
-import { useActivityFeed, useUserActivity } from "@/hooks/useActivity";
-import { useAuthStore } from "@/store/auth.store";
-import { pageTransition } from "@/lib/motion";
 
 export const Route = createFileRoute("/_authenticated/social")({
   component: SocialPage,
@@ -39,20 +39,18 @@ function SocialPage() {
               <div
                 className="w-8 h-8 rounded-xl flex items-center justify-center"
                 style={{
-                  background: "linear-gradient(135deg, var(--theme-accent), var(--theme-accent-2))",
+                  background:
+                    "linear-gradient(135deg, var(--theme-accent), var(--theme-accent-2))",
                 }}
               >
                 <Activity size={16} className="text-white" />
               </div>
-              <h1
-                className="text-xl font-bold"
-                style={{ color: "var(--theme-text-primary)" }}
-              >
-                {t("social.title")}
+              <h1 className="text-xl font-bold text-text-primary">
+                {t("translation:social.title")}
               </h1>
             </div>
-            <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
-              {t("social.subtitle")}
+            <p className="text-sm text-text-muted">
+              {t("translation:social.subtitle")}
             </p>
           </div>
 
@@ -67,13 +65,13 @@ function SocialPage() {
             <TabBtn
               active={tab === "global"}
               icon={<Globe size={14} />}
-              label={t("pages.social.showAll")}
+              label={t("translation:pages.social.showAll")}
               onClick={() => setTab("global")}
             />
             <TabBtn
               active={tab === "mine"}
               icon={<User size={14} />}
-              label={t("pages.social.myActivities")}
+              label={t("translation:pages.social.myActivities")}
               onClick={() => setTab("mine")}
             />
           </div>

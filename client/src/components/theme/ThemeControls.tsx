@@ -22,8 +22,7 @@ export function ThemeControls() {
     <div className="px-2 py-2">
       <div className="flex items-center justify-between gap-3 px-1 pb-2">
         <span
-          className="flex items-center gap-2 text-xs font-medium"
-          style={{ color: "var(--theme-text-secondary)" }}
+          className="flex items-center gap-2 text-xs font-medium text-text-secondary"
         >
           <Palette size={14} />
           Tema

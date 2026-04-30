@@ -1,8 +1,8 @@
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { useTranslation } from "react-i18next";
-import { GlassSelect } from "@/components/ui/GlassSelect";
 import type { ImportField, ImportPreset } from "@/api/importExport";
+import { GlassSelect } from "@/components/ui/GlassSelect";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const FIELD_OPTIONS_KEYS: Array<{ value: ImportField; labelKey: string }> = [
   { value: "name", labelKey: "import.nameField" },
@@ -68,7 +68,9 @@ export function ColumnMappingTable({
           }}
         >
           <span>●</span>
-          {t("import.presetDetected", { preset: t(PRESET_LABELS_KEYS[detectedPreset]) })}
+          {t("translation:import.presetDetected", {
+            preset: t(PRESET_LABELS_KEYS[detectedPreset]),
+          })}
         </div>
       )}
 
@@ -87,9 +89,11 @@ export function ColumnMappingTable({
           ⚡
         </span>
         <span>
-          {t("import.columnMappingHint")}{" "}
-          <span style={{ color: "var(--theme-text-secondary)", fontWeight: 600 }}>
-            {t("import.nameRequired")}
+          {t("translation:import.columnMappingHint")}{" "}
+          <span
+            style={{ color: "var(--theme-text-secondary)", fontWeight: 600 }}
+          >
+            {t("translation:import.nameRequired")}
           </span>
         </span>
       </div>
@@ -106,8 +110,8 @@ export function ColumnMappingTable({
               color: "var(--theme-text-muted)",
             }}
           >
-            <span>{t("import.sourceColumn")}</span>
-            <span>{t("import.targetField")}</span>
+            <span>{t("translation:import.sourceColumn")}</span>
+            <span>{t("translation:import.targetField")}</span>
           </div>
 
           <div
@@ -123,8 +127,7 @@ export function ColumnMappingTable({
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span
-                      className="text-sm truncate"
-                      style={{ color: "var(--theme-text-secondary)" }}
+                      className="text-sm truncate text-text-secondary"
                       title={col}
                     >
                       {col}
@@ -138,15 +141,13 @@ export function ColumnMappingTable({
                           color: "rgba(251,191,36,0.9)",
                         }}
                       >
-                        {t("import.required")}
+                        {t("translation:import.required")}
                       </span>
                     )}
                   </div>
                   <GlassSelect
                     value={mapping[col] ?? "ignore"}
-                    onChange={(e) =>
-                      handleChange(col, e.target.value as ImportField)
-                    }
+                    onChange={(v) => handleChange(col, v as ImportField)}
                     options={FIELD_OPTIONS_KEYS.map((opt) => ({
                       value: opt.value,
                       label: t(opt.labelKey),
@@ -168,7 +169,7 @@ export function ColumnMappingTable({
           }}
         >
           <span className="text-2xl">📋</span>
-          <p className="text-sm">{t("import.noMatchedRowsHint")}</p>
+          <p className="text-sm">{t("translation:import.noMatchedRowsHint")}</p>
         </div>
       )}
 
@@ -194,8 +195,8 @@ export function ColumnMappingTable({
               ▶
             </span>
             {showIgnored
-              ? t("import.hideIgnored")
-              : t("import.showIgnored")}
+              ? t("translation:import.hideIgnored")
+              : t("translation:import.showIgnored")}
             <span
               className="ml-1 px-1.5 py-0.5 rounded text-xs"
               style={{
@@ -226,12 +227,14 @@ export function ColumnMappingTable({
                       color: "var(--theme-text-muted)",
                     }}
                   >
-                    <span>{t("import.sourceColumn")}</span>
-                    <span>{t("import.targetField")}</span>
+                    <span>{t("translation:import.sourceColumn")}</span>
+                    <span>{t("translation:import.targetField")}</span>
                   </div>
                   <div
                     className="divide-y"
-                    style={{ borderTop: "1px solid var(--theme-surface-subtle)" }}
+                    style={{
+                      borderTop: "1px solid var(--theme-surface-subtle)",
+                    }}
                   >
                     {ignoredColumns.map((col) => (
                       <div
@@ -239,17 +242,14 @@ export function ColumnMappingTable({
                         className="grid grid-cols-2 items-center gap-4 px-4 py-2"
                       >
                         <span
-                          className="text-xs truncate"
-                          style={{ color: "var(--theme-text-muted)" }}
+                          className="text-xs truncate text-text-muted"
                           title={col}
                         >
                           {col}
                         </span>
                         <GlassSelect
                           value="ignore"
-                          onChange={(e) =>
-                            handleChange(col, e.target.value as ImportField)
-                          }
+                          onChange={(v) => handleChange(col, v as ImportField)}
                           options={FIELD_OPTIONS_KEYS.map((opt) => ({
                             value: opt.value,
                             label: t(opt.labelKey),

@@ -1,15 +1,16 @@
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft } from "lucide-react";
-import { GlassModal } from "@/components/ui/GlassModal";
+import type { AddGameInput } from "@/api/games.api";
+import type { IGDBSearchResult } from "@/api/types";
 import { GlassButton } from "@/components/ui/GlassButton";
-import { IGDBSearchCombobox } from "./IGDBSearchCombobox";
-import { GameForm } from "./GameForm";
+import { GlassModal } from "@/components/ui/GlassModal";
 import { useAddGame } from "@/hooks/useGames";
 import { formatCoverUrl } from "@/lib/formatters";
-import type { IGDBSearchResult } from "@/api/types";
-import type { AddGameInput } from "@/api/games.api";
 import { scaleIn } from "@/lib/motion";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft } from "lucide-react";
+import { useState } from "react";
+import { useTranslation } from "react-i18next";
+import { GameForm } from "./GameForm";
+import { IGDBSearchCombobox } from "./IGDBSearchCombobox";
 
 interface AddGameModalProps {
   open: boolean;
@@ -22,6 +23,7 @@ export function AddGameModal({
   onClose,
   onOpenSteamImport,
 }: AddGameModalProps) {
+  const { t } = useTranslation();
   const [step, setStep] = useState<1 | 2>(1);
   const [selectedIGDB, setSelectedIGDB] = useState<IGDBSearchResult | null>(
     null,
@@ -72,7 +74,7 @@ export function AddGameModal({
     <GlassModal
       open={open}
       onClose={handleClose}
-      title="Oyun Ekle"
+      title={t("translation:games.form.addTitle")}
       size="md"
       allowOverflow
     >
@@ -86,8 +88,8 @@ export function AddGameModal({
             exit="exit"
             className="flex flex-col gap-4"
           >
-            <p className="text-sm" style={{ color: "var(--theme-text-muted)" }}>
-              IGDB'de ara, Steam kütüphanenden seç veya elle gir.
+            <p className="text-sm text-text-muted">
+              {t("translation:import.igdbHint")}
             </p>
             <IGDBSearchCombobox onSelect={handleIGDBSelect} />
             {onOpenSteamImport && (
@@ -99,25 +101,22 @@ export function AddGameModal({
                 }}
                 className="w-full"
               >
-                Steam kütüphaneden ekle
+                {t("translation:import.addFromSteam")}
               </GlassButton>
             )}
             <div className="flex items-center gap-2">
-              <div className="flex-1 border-t border-white/10" />
-              <span
-                className="text-xs"
-                style={{ color: "var(--theme-text-muted)" }}
-              >
-                veya
+              <div className="flex-1 border-t border-glass-border" />
+              <span className="text-xs text-text-muted">
+                {t("translation:auth.or")}
               </span>
-              <div className="flex-1 border-t border-white/10" />
+              <div className="flex-1 border-t border-glass-border" />
             </div>
             <GlassButton
               variant="default"
               onClick={handleSkipIGDB}
               className="w-full"
             >
-              IGDB olmadan elle ekle
+              {t("translation:import.addManually")}
             </GlassButton>
           </motion.div>
         ) : (
@@ -133,7 +132,7 @@ export function AddGameModal({
               <button
                 onClick={() => setStep(1)}
                 className="glass-btn p-1.5 rounded-lg"
-                aria-label="Geri"
+                aria-label={t("translation:common.buttons.back")}
               >
                 <ChevronLeft size={15} />
               </button>
@@ -147,17 +146,11 @@ export function AddGameModal({
                     />
                   )}
                   <div>
-                    <p
-                      className="text-sm font-medium"
-                      style={{ color: "var(--theme-text-primary)" }}
-                    >
+                    <p className="text-sm font-medium text-text-primary">
                       {selectedIGDB.name}
                     </p>
-                    <p
-                      className="text-xs"
-                      style={{ color: "var(--theme-text-muted)" }}
-                    >
-                      IGDB seçildi
+                    <p className="text-xs text-text-muted">
+                      {t("translation:import.igdbSelected")}
                     </p>
                   </div>
                 </div>
@@ -167,7 +160,7 @@ export function AddGameModal({
               defaultValues={{ name: selectedIGDB?.name }}
               onSubmit={handleSubmit}
               isLoading={addGame.isPending}
-              submitLabel="Kütüphaneye Ekle"
+              submitLabel={t("translation:games.addGame")}
             />
           </motion.div>
         )}

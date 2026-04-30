@@ -58,8 +58,7 @@ export function NotificationItem({ notification, onRead }: Props) {
             {config.icon}
           </span>
           <p
-            className="text-sm leading-snug"
-            style={{ color: "var(--theme-text-primary)" }}
+            className="text-sm leading-snug text-text-primary"
           >
             <strong style={{ fontWeight: 600 }}>
               {config.title(notification)}
@@ -69,8 +68,7 @@ export function NotificationItem({ notification, onRead }: Props) {
 
         {/* Body */}
         <p
-          className="mt-0.5 text-xs line-clamp-2 pl-6"
-          style={{ color: "var(--theme-text-muted)" }}
+          className="mt-0.5 text-xs line-clamp-2 pl-6 text-text-muted"
         >
           {config.body(notification)}
         </p>
@@ -82,7 +80,7 @@ export function NotificationItem({ notification, onRead }: Props) {
               <img
                 src={notification.metadata.firstScreenshotUrl}
                 alt=""
-                className="h-14 w-auto rounded object-cover border border-white/10"
+                className="h-14 w-auto rounded object-cover border border-glass-border"
                 loading="lazy"
               />
             </div>
@@ -90,8 +88,7 @@ export function NotificationItem({ notification, onRead }: Props) {
 
         {/* Timestamp */}
         <p
-          className="mt-1 text-xs pl-6"
-          style={{ color: "var(--theme-text-muted)" }}
+          className="mt-1 text-xs pl-6 text-text-muted"
         >
           {timeAgo(notification.createdAt)}
         </p>
@@ -103,7 +100,7 @@ export function NotificationItem({ notification, onRead }: Props) {
           <img
             src={notification.game.coverUrl}
             alt={notification.game.title}
-            className="w-8 h-11 rounded object-cover border border-white/10 opacity-70"
+            className="w-8 h-11 rounded object-cover border border-glass-border opacity-70"
             loading="lazy"
           />
         </div>

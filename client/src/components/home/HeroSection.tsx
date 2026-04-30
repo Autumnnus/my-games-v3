@@ -74,10 +74,9 @@ export function HeroSection() {
               size="sm"
               className="inline-flex items-center gap-2 px-4 py-2"
             >
-              <Sparkles size={14} style={{ color: "var(--theme-accent)" }} />
+              <Sparkles size={14} className="text-accent" />
               <span
-                className="text-sm font-medium"
-                style={{ color: "var(--theme-text-secondary)" }}
+                className="text-sm font-medium text-text-secondary"
               >
                 Oyun kütüphaneni yönet
               </span>
@@ -87,7 +86,7 @@ export function HeroSection() {
           {/* Title */}
           <motion.div variants={fadeUp} className="flex flex-col gap-4">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-none">
-              <span style={{ color: "var(--theme-text-primary)" }}>Oyun</span>
+              <span className="text-text-primary">Oyun</span>
               <br />
               <span
                 style={{
@@ -100,11 +99,10 @@ export function HeroSection() {
                 Kütüphaneni
               </span>
               <br />
-              <span style={{ color: "var(--theme-text-secondary)" }}>Keşfet</span>
+              <span className="text-text-secondary">Keşfet</span>
             </h1>
             <p
-              className="text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed"
-              style={{ color: "var(--theme-text-muted)" }}
+              className="text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed text-text-muted"
             >
               Tüm oyunlarını tek bir yerde takip et. İlerleme kaydet, puan ver,
               ekran görüntüsü sakla, istatistiklerini keşfet.
@@ -143,10 +141,9 @@ export function HeroSection() {
             ].map((feat) => (
               <span
                 key={feat}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs glass-card-sm"
-                style={{ color: "var(--theme-text-muted)" }}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs glass-card-sm text-text-muted"
               >
-                <Star size={10} style={{ color: "var(--theme-accent)" }} />
+                <Star size={10} className="text-accent" />
                 {feat}
               </span>
             ))}

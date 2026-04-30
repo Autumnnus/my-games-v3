@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { wishlistApi, type WishlistItem } from "@/api/wishlist.api";
 import { useAuthStore } from "@/store/auth.store";
+import type { IGDBData } from "@my-games/shared";
 
 interface WishlistButtonProps {
   igdbId: number;
@@ -11,6 +12,9 @@ interface WishlistButtonProps {
   coverUrl?: string;
   platform?: string;
   genres?: string[];
+  releaseYear?: number;
+  developer?: string;
+  igdbData?: IGDBData;
   variant?: "card" | "detail";
   steamAppId?: number;
 }
@@ -21,6 +25,9 @@ export function WishlistButton({
   coverUrl,
   platform,
   genres,
+  releaseYear,
+  developer,
+  igdbData,
   variant = "card",
   steamAppId,
 }: WishlistButtonProps) {
@@ -59,6 +66,9 @@ export function WishlistButton({
           coverUrl,
           platform,
           genres,
+          releaseYear,
+          developer,
+          igdbData,
           steamAppId,
         });
         setInWishlist(true);

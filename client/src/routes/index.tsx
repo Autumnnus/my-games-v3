@@ -77,22 +77,21 @@ function Dashboard() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <motion.h1
-                className="text-3xl font-bold"
-                style={{ color: "var(--theme-text-primary)" }}
+                className="text-3xl font-bold text-text-primary"
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 300, damping: 28 }}
               >
-                {t("pages.dashboard.welcome", { name: user.name })} 👋
+                {t("translation:pages.dashboard.welcome", { name: user.name })}{" "}
+                👋
               </motion.h1>
               <motion.p
-                className="text-sm mt-1"
-                style={{ color: "var(--theme-text-muted)" }}
+                className="text-sm mt-1 text-text-muted"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.1 }}
               >
-                {t("pages.dashboard.continueLibrary")}
+                {t("translation:pages.dashboard.continueLibrary")}
               </motion.p>
             </div>
             <GlassButton
@@ -100,7 +99,7 @@ function Dashboard() {
               leftIcon={<Plus size={15} />}
               onClick={() => setAddOpen(true)}
             >
-              {t("pages.dashboard.addGame")}
+              {t("translation:pages.dashboard.addGame")}
             </GlassButton>
           </div>
         </PageContainer>
@@ -115,7 +114,7 @@ function Dashboard() {
           {recentGames.length > 0 && (
             <RecentGamesRow
               games={recentGames}
-              title={t("pages.dashboard.recentlyPlayed")}
+              title={t("translation:pages.dashboard.recentlyPlayed")}
             />
           )}
 
@@ -123,18 +122,15 @@ function Dashboard() {
           {favoriteGames.length > 0 && (
             <RecentGamesRow
               games={favoriteGames}
-              title={t("pages.dashboard.favorites")}
+              title={t("translation:pages.dashboard.favorites")}
             />
           )}
 
           {/* Quick links */}
           {recentGames.length === 0 && (
             <div className="text-center py-12 flex flex-col items-center gap-4">
-              <p
-                className="text-lg font-semibold"
-                style={{ color: "var(--theme-text-secondary)" }}
-              >
-                {t("pages.dashboard.emptyLibrary")}
+              <p className="text-lg font-semibold text-text-secondary">
+                {t("translation:pages.dashboard.emptyLibrary")}
               </p>
               <GlassButton
                 variant="primary"
@@ -142,7 +138,7 @@ function Dashboard() {
                 onClick={() => setAddOpen(true)}
                 size="lg"
               >
-                {t("pages.dashboard.firstGameToLibrary")}
+                {t("translation:pages.dashboard.firstGameToLibrary")}
               </GlassButton>
             </div>
           )}

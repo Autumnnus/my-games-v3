@@ -34,14 +34,12 @@ function UsersPage() {
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between gap-4">
             <h1
-              className="text-2xl font-bold"
-              style={{ color: "var(--theme-text-primary)" }}
+              className="text-2xl font-bold text-text-primary"
             >
               {t('users.title')}
             </h1>
             <span
-              className="text-sm"
-              style={{ color: "var(--theme-text-muted)" }}
+              className="text-sm text-text-muted"
             >
               {t('users.count', { count: users?.length ?? 0 })}
             </span>
@@ -50,8 +48,7 @@ function UsersPage() {
           <div className="relative max-w-sm">
             <Search
               size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2"
-              style={{ color: "var(--theme-text-muted)" }}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
             />
             <input
               type="text"
