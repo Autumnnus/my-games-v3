@@ -15,7 +15,6 @@ import {
   Bell,
   BookOpen,
   Gamepad2,
-  Heart,
   Image,
   LogOut,
   Menu,
@@ -28,7 +27,6 @@ import { useTranslation } from "react-i18next";
 
 const NAV_LINKS_AUTHED = [
   { to: "/games", labelKey: "navbar.library", icon: BookOpen },
-  { to: "/wishlist", labelKey: "navbar.wishlist", icon: Heart },
   { to: "/statistics", labelKey: "navbar.statistics", icon: BarChart3 },
   { to: "/screenshots", labelKey: "navbar.screenshots", icon: Image },
   { to: "/social", labelKey: "navbar.social", icon: Activity },

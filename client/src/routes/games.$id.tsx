@@ -13,7 +13,6 @@ import { GlassCard } from "@/components/ui/GlassCard";
 import { GlassSwitch } from "@/components/ui/GlassSwitch";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { RatingStars } from "@/components/ui/RatingStars";
-import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { useDynamicGameTheme } from "@/hooks/useDynamicGameTheme";
 import { useGame } from "@/hooks/useGames";
 import { useGameScreenshots } from "@/hooks/useScreenshots";
@@ -190,27 +189,6 @@ function GameDetailPage() {
           </Link>
           {isOwner && (
             <div className="flex items-center gap-2">
-              <WishlistButton
-                igdbId={game.igdb?.id ?? game.steamAppId ?? 0}
-                gameName={game.name}
-                coverUrl={coverUrl ?? undefined}
-                platform={game.platform}
-                genres={game.igdb?.genres?.map((g) => g.name) ?? []}
-                releaseYear={
-                  game.igdb?.first_release_date
-                    ? new Date(
-                        game.igdb.first_release_date * 1000,
-                      ).getFullYear()
-                    : undefined
-                }
-                developer={
-                  game.igdb?.involved_companies?.find((c) => c.developer)
-                    ?.company.name
-                }
-                igdbData={game.igdb}
-                variant="detail"
-                steamAppId={game.steamAppId}
-              />
               <GlassButton
                 size="sm"
                 leftIcon={<Edit2 size={13} />}

@@ -1,6 +1,5 @@
 import type { GameListItem } from "@/api/types";
 import { SyncStatusBadge } from "@/components/steam-sync/SyncStatusBadge";
-import { WishlistButton } from "@/components/wishlist/WishlistButton";
 import { formatCoverUrl } from "@/lib/formatters";
 import { fadeUp } from "@/lib/motion";
 import { Link } from "@tanstack/react-router";
@@ -82,28 +81,6 @@ export function GameCard({
             <div className="absolute top-2 right-2">
               <Star size={14} className="fill-yellow-400 text-yellow-400" />
             </div>
-          )}
-          {/* Wishlist button */}
-          {(game.igdb?.id || game.steamAppId) && (
-            <WishlistButton
-              igdbId={game.igdb?.id ?? game.steamAppId!}
-              gameName={game.name}
-              coverUrl={game.photo ?? game.igdb?.cover?.url}
-              platform={game.platform}
-              genres={game.igdb?.genres?.map((g) => g.name) ?? []}
-              releaseYear={
-                game.igdb?.first_release_date
-                  ? new Date(game.igdb.first_release_date * 1000).getFullYear()
-                  : undefined
-              }
-              developer={
-                game.igdb?.involved_companies?.find((c) => c.developer)?.company
-                  .name
-              }
-              igdbData={game.igdb}
-              steamAppId={game.steamAppId}
-              variant="card"
-            />
           )}
           {/* Status overlay on hover */}
           {hovered && !readonly && (

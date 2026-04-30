@@ -100,8 +100,7 @@
     "social": "Sosyal",
     "notifications": "Bildirimler",
     "accountSettings": "Hesap Ayarları",
-    "statistics": "İstatistikler",
-    "wishlist": "İstek Listesi"
+    "statistics": "İstatistikler"
   },
   "games": {
     "title": "Oyunlar",
@@ -565,20 +564,6 @@
     "dropped": "Bırakıldı",
     "noData": "Henüz yeterli veri yok",
     "ratingDistribution": "Puan Dağılımı"
-  },
-  "wishlist": {
-    "title": "İstek Listesi",
-    "steamImport": "Steam İçe Aktarma",
-    "addGame": "Oyun Ekle",
-    "empty": "İstek listesi boş",
-    "emptyHint": "İstek listeniz henüz boş görünüyor",
-    "steamIdPlaceholder": "Steam ID Giriniz",
-    "import": "İçe Aktar",
-    "importing": "İçe Aktarılıyor",
-    "moveToLibrary": "Kütüphaneye Taşı",
-    "addToWishlist": "İstek Listesine Eklendi",
-    "remove": "Kaldır",
-    "importResults": "{{imported}} eklendi, {{failed}} başarısız, {{exists}} zaten var"
   },
   "social": {
     "title": "Sosyal Akış",

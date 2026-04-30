@@ -20,7 +20,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as UsersIndexRouteImport } from './routes/users/index'
 import { Route as UsersIdRouteImport } from './routes/users/$id'
 import { Route as GamesIdRouteImport } from './routes/games.$id'
-import { Route as AuthenticatedWishlistRouteImport } from './routes/_authenticated/wishlist'
 import { Route as AuthenticatedStatisticsRouteImport } from './routes/_authenticated/statistics'
 import { Route as AuthenticatedSocialRouteImport } from './routes/_authenticated/social'
 import { Route as AuthenticatedScreenshotsRouteImport } from './routes/_authenticated/screenshots'
@@ -81,11 +80,6 @@ const GamesIdRoute = GamesIdRouteImport.update({
   path: '/games/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedWishlistRoute = AuthenticatedWishlistRouteImport.update({
-  id: '/wishlist',
-  path: '/wishlist',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedStatisticsRoute = AuthenticatedStatisticsRouteImport.update({
   id: '/statistics',
   path: '/statistics',
@@ -126,7 +120,6 @@ export interface FileRoutesByFullPath {
   '/screenshots': typeof AuthenticatedScreenshotsRoute
   '/social': typeof AuthenticatedSocialRoute
   '/statistics': typeof AuthenticatedStatisticsRoute
-  '/wishlist': typeof AuthenticatedWishlistRoute
   '/games/$id': typeof GamesIdRoute
   '/users/$id': typeof UsersIdRoute
   '/users/': typeof UsersIndexRoute
@@ -144,7 +137,6 @@ export interface FileRoutesByTo {
   '/screenshots': typeof AuthenticatedScreenshotsRoute
   '/social': typeof AuthenticatedSocialRoute
   '/statistics': typeof AuthenticatedStatisticsRoute
-  '/wishlist': typeof AuthenticatedWishlistRoute
   '/games/$id': typeof GamesIdRoute
   '/users/$id': typeof UsersIdRoute
   '/users': typeof UsersIndexRoute
@@ -164,7 +156,6 @@ export interface FileRoutesById {
   '/_authenticated/screenshots': typeof AuthenticatedScreenshotsRoute
   '/_authenticated/social': typeof AuthenticatedSocialRoute
   '/_authenticated/statistics': typeof AuthenticatedStatisticsRoute
-  '/_authenticated/wishlist': typeof AuthenticatedWishlistRoute
   '/games/$id': typeof GamesIdRoute
   '/users/$id': typeof UsersIdRoute
   '/users/': typeof UsersIndexRoute
@@ -184,7 +175,6 @@ export interface FileRouteTypes {
     | '/screenshots'
     | '/social'
     | '/statistics'
-    | '/wishlist'
     | '/games/$id'
     | '/users/$id'
     | '/users/'
@@ -202,7 +192,6 @@ export interface FileRouteTypes {
     | '/screenshots'
     | '/social'
     | '/statistics'
-    | '/wishlist'
     | '/games/$id'
     | '/users/$id'
     | '/users'
@@ -221,7 +210,6 @@ export interface FileRouteTypes {
     | '/_authenticated/screenshots'
     | '/_authenticated/social'
     | '/_authenticated/statistics'
-    | '/_authenticated/wishlist'
     | '/games/$id'
     | '/users/$id'
     | '/users/'
@@ -320,13 +308,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GamesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/wishlist': {
-      id: '/_authenticated/wishlist'
-      path: '/wishlist'
-      fullPath: '/wishlist'
-      preLoaderRoute: typeof AuthenticatedWishlistRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/statistics': {
       id: '/_authenticated/statistics'
       path: '/statistics'
@@ -371,7 +352,6 @@ interface AuthenticatedRouteChildren {
   AuthenticatedScreenshotsRoute: typeof AuthenticatedScreenshotsRoute
   AuthenticatedSocialRoute: typeof AuthenticatedSocialRoute
   AuthenticatedStatisticsRoute: typeof AuthenticatedStatisticsRoute
-  AuthenticatedWishlistRoute: typeof AuthenticatedWishlistRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -380,7 +360,6 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedScreenshotsRoute: AuthenticatedScreenshotsRoute,
   AuthenticatedSocialRoute: AuthenticatedSocialRoute,
   AuthenticatedStatisticsRoute: AuthenticatedStatisticsRoute,
-  AuthenticatedWishlistRoute: AuthenticatedWishlistRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

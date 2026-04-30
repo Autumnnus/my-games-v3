@@ -100,8 +100,7 @@
     "social": "Social",
     "notifications": "Notifications",
     "accountSettings": "Account Settings",
-    "statistics": "Statistics",
-    "wishlist": "Wishlist"
+    "statistics": "Statistics"
   },
   "games": {
     "title": "Games",
@@ -565,20 +564,6 @@
     "dropped": "Dropped",
     "noData": "Not enough data yet",
     "ratingDistribution": "Rating Distribution"
-  },
-  "wishlist": {
-    "title": "Wishlist",
-    "steamImport": "Steam Import",
-    "addGame": "Add Game",
-    "empty": "Wishlist is empty",
-    "emptyHint": "Your wishlist seems to be empty for now",
-    "steamIdPlaceholder": "Enter Steam ID",
-    "import": "Import",
-    "importing": "Importing",
-    "moveToLibrary": "Move to Library",
-    "addToWishlist": "Added to Wishlist",
-    "remove": "Remove",
-    "importResults": "{{imported}} added, {{failed}} failed, {{exists}} already exist"
   },
   "social": {
     "title": "Social Feed",
