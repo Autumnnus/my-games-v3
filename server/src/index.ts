@@ -11,6 +11,7 @@ import api from "./routes/index";
 import statisticsService from "./services/statistics.service";
 import { startSteamSyncCron } from "./services/steam-sync.service";
 import type { AppVariables } from "./types/context";
+import { websocket, wsRoute } from "./ws/ws.handler";
 
 const app = new Hono<{ Variables: AppVariables }>();
 const port = env.PORT;
@@ -47,6 +48,7 @@ app.get(
 );
 
 app.route("/api", api);
+app.get("/ws", wsRoute);
 
 app.onError((err, c) => {
   if (err instanceof AppError) {
@@ -80,7 +82,7 @@ const dailyStatsJob = new CronJob(
 connectDatabase().then(() => {
   dailyStatsJob.start();
   startSteamSyncCron();
-  Bun.serve({ fetch: app.fetch, port });
+  Bun.serve({ fetch: app.fetch, websocket, port });
 
   console.log("----------------------------------------");
   console.log(`Environment   : ${env.NODE_ENV}`);

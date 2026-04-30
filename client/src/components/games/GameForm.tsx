@@ -150,8 +150,17 @@ export function GameForm({
   const displaySubmitLabel =
     submitLabel ?? t("translation:common.buttons.save");
 
+  function handleFormSubmit(data: FormData) {
+    const cleaned: Partial<AddGameInput> = {
+      ...data,
+      lastPlayDate: data.lastPlayDate || undefined,
+      completionDate: data.completionDate || undefined,
+    };
+    onSubmit(cleaned);
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(handleFormSubmit)} className="flex flex-col gap-4">
       {/* Game name */}
       <GlassInput
         label={t("translation:games.form.gameName")}

@@ -5,6 +5,7 @@ import { ok } from "../lib/response";
 import { authMiddleware } from "../middlewares/auth.middleware";
 import * as notificationService from "../services/notification.service";
 import type { AppVariables } from "../types/context";
+import Notification from "../models/Notification";
 
 const notifications = new Hono<{ Variables: AppVariables }>();
 
@@ -51,5 +52,41 @@ notifications.put("/read-all", authMiddleware, async (c) => {
   await notificationService.markAllAsRead(userId);
   return c.json(ok({ success: true }));
 });
+
+// ─── DEV ONLY: kendine test bildirimi gönder ─────────────────────────────────
+if (process.env.NODE_ENV !== "production") {
+  notifications.post("/test", authMiddleware, async (c) => {
+    const userId = c.get("userId");
+
+    // Kendine doğrudan bildirim oluştur (actor = recipient = self)
+    const doc = await Notification.create({
+      recipient: userId,
+      actor: userId,
+      type: "game_completed",
+      metadata: { playTimeMinutes: 6000 },
+    });
+
+    const populated = await Notification.findById(doc._id)
+      .populate("actor", "name profileImage")
+      .lean();
+
+    const unreadCount = await Notification.countDocuments({
+      recipient: userId,
+      isRead: false,
+    });
+
+    const { wsManager } = await import("../ws/ws.manager");
+    wsManager.send(userId, {
+      type: "notification:new",
+      payload: populated as any,
+    });
+    wsManager.send(userId, {
+      type: "notification:count",
+      payload: { count: unreadCount },
+    });
+
+    return c.json(ok({ sent: true }));
+  });
+}
 
 export default notifications;

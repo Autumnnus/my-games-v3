@@ -6,10 +6,11 @@ import { PageContainer } from "@/components/layout/PageContainer";
 import { GlassButton } from "@/components/ui/GlassButton";
 import { useUserGames } from "@/hooks/useGames";
 import { pageTransition } from "@/lib/motion";
+import { apiFetch } from "@/api/client";
 import { useAuthStore } from "@/store/auth.store";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Plus, Bell } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -94,13 +95,24 @@ function Dashboard() {
                 {t("translation:pages.dashboard.continueLibrary")}
               </motion.p>
             </div>
-            <GlassButton
-              variant="primary"
-              leftIcon={<Plus size={15} />}
-              onClick={() => setAddOpen(true)}
-            >
-              {t("translation:pages.dashboard.addGame")}
-            </GlassButton>
+            <div className="flex items-center gap-2">
+              {import.meta.env.DEV && (
+                <GlassButton
+                  variant="ghost"
+                  leftIcon={<Bell size={15} />}
+                  onClick={() => apiFetch("/api/notifications/test", { method: "POST" })}
+                >
+                  Test Bildirim
+                </GlassButton>
+              )}
+              <GlassButton
+                variant="primary"
+                leftIcon={<Plus size={15} />}
+                onClick={() => setAddOpen(true)}
+              >
+                {t("translation:pages.dashboard.addGame")}
+              </GlassButton>
+            </div>
           </div>
         </PageContainer>
       </div>

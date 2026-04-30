@@ -4,6 +4,7 @@ import LibraryEntry from "../models/LibraryEntry";
 import SteamSyncConflict from "../models/SteamSyncConflict";
 import User from "../models/User";
 import { fetchSteamLibrary } from "./steam.service";
+import { wsManager } from "../ws/ws.manager";
 
 export type Resolution = "take_steam" | "keep_manual" | "ignore";
 
@@ -116,6 +117,11 @@ export async function syncUserGames(userId: string): Promise<SyncResult> {
     });
     errors++;
   }
+
+  wsManager.send(userId, {
+    type: "sync:complete",
+    payload: { synced, conflicts, errors },
+  });
 
   return { synced, conflicts, errors };
 }

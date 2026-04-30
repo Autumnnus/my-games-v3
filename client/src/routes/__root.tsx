@@ -10,6 +10,7 @@ import { AnimatePresence } from "framer-motion";
 import { useAuthStore } from "@/store/auth.store";
 import { Navbar } from "@/components/layout/Navbar";
 import { setRouteThemeSeed } from "@/components/theme/ThemeProvider";
+import { useWsConnection } from "@/hooks/useWebSocket";
 
 interface RouterContext {
   auth: ReturnType<typeof useAuthStore.getState>;
@@ -21,6 +22,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
 
 function RootLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  useWsConnection();
 
   useEffect(() => {
     setRouteThemeSeed(pathname);

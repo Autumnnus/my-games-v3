@@ -4,7 +4,9 @@ import type {
   NotificationType,
   NotificationMetadata,
   NotificationListResponse,
+  Notification as NotificationDoc,
 } from "@my-games/shared";
+import { wsManager } from "../ws/ws.manager";
 
 // Bir oyunu kütüphanesinde bulunduran diğer kullanıcılar (actor hariç, max 100)
 async function getOtherUsersWithGame(
@@ -22,24 +24,50 @@ async function getOtherUsersWithGame(
 }
 
 // Tek bir bildirim oluştur (spam önleme: actor+type+game unique index ile)
+// Oluşturulan bildirimi döndürür; duplicate'te null döner.
 async function createOne(params: {
   recipientId: string;
   actorId: string;
   type: NotificationType;
   gameId?: string;
   metadata?: NotificationMetadata;
-}): Promise<void> {
+}): Promise<NotificationDoc | null> {
   const { recipientId, actorId, type, gameId, metadata = {} } = params;
   try {
-    await Notification.create({
+    const doc = await Notification.create({
       recipient: recipientId,
       actor: actorId,
       type,
       game: gameId,
       metadata,
     });
+
+    // Populate edip WS üzerinden push gönder
+    const populated = await Notification.findById(doc._id)
+      .populate("actor", "name profileImage")
+      .populate("game", "title coverUrl slug")
+      .lean();
+
+    if (populated) {
+      const unreadCount = await Notification.countDocuments({
+        recipient: recipientId,
+        isRead: false,
+      });
+
+      wsManager.send(recipientId, {
+        type: "notification:new",
+        payload: populated as unknown as NotificationDoc,
+      });
+      wsManager.send(recipientId, {
+        type: "notification:count",
+        payload: { count: unreadCount },
+      });
+    }
+
+    return populated as unknown as NotificationDoc;
   } catch {
     // Duplicate (unique index hatası) → zaten bu bildirim var, sessizce geç
+    return null;
   }
 }
 
