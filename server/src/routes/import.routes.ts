@@ -145,12 +145,16 @@ importRoutes.post("/parse", authMiddleware, async (c) => {
 
   const sampleRows = rows.slice(0, 20);
 
+  // For JSON format, return all rows so the full dataset is available for import
+  const isJsonFormat = fileFormat === "json";
+  const previewRows = isJsonFormat ? rows : sampleRows;
+
   return c.json(
     ok({
       format: fileFormat,
       columns,
       totalRows: rows.length,
-      sampleRows,
+      sampleRows: previewRows,
       presets,
       autoMapping,
     }),

@@ -75,11 +75,11 @@ function GameRow({
             className="mt-1.5 text-xs flex flex-wrap items-center gap-x-2 gap-y-1 text-text-muted"
           >
             <span>
-              Mevcut: {formatPlayTime(item.existingPlaytimeMinutes ?? 0)}
+              {t("steamImport.current")}: {formatPlayTime(item.existingPlaytimeMinutes ?? 0)}
             </span>
-            <span>Steam: {formatPlayTime(item.playtimeMinutes)}</span>
+            <span>{t("steamImport.steam")}: {formatPlayTime(item.playtimeMinutes)}</span>
             <span style={{ color: "rgba(251,146,60,0.92)" }}>
-              Fark: {formatPlayTime(diffMinutes)}
+              {t("steamImport.diff")}: {formatPlayTime(diffMinutes)}
             </span>
           </div>
         )}
@@ -100,7 +100,7 @@ function GameRow({
               color: "rgba(251,146,60,0.9)",
             }}
           >
-            Çakışma
+            {t("steamImport.conflict")}
           </span>
         )}
         {item.existingPlaytimeMinutes !== undefined && !hasConflict && (
@@ -234,11 +234,11 @@ export function SteamImportModal({ open, onClose }: Props) {
         conflictResolution,
       });
       toast.info(
-        `${selected.size} oyun için tarama başlatıldı, arka planda devam ediyor...`,
+        t("steamImport.syncStarted", { count: selected.size }),
       );
       onClose();
     } catch (err) {
-      toast.error(isApiError(err) ? err.message : "Senkronizasyon başarısız");
+      toast.error(isApiError(err) ? err.message : t("steamImport.syncFailed"));
     }
   }
 
@@ -252,7 +252,7 @@ export function SteamImportModal({ open, onClose }: Props) {
     <GlassModal
       open={open}
       onClose={onClose}
-      title="Steam Kütüphanesini İçe Aktar"
+      title={t("steamImport.title")}
       size="xl"
     >
       {isLoading ? (
@@ -264,10 +264,10 @@ export function SteamImportModal({ open, onClose }: Props) {
           <p className="text-sm" style={{ color: "rgba(239,68,68,0.85)" }}>
             {isApiError(error)
               ? error.message
-              : "Steam kütüphanesi yüklenemedi"}
+              : t("steamImport.loadFailed")}
           </p>
           <GlassButton size="sm" onClick={() => refetch()}>
-            Tekrar Dene
+            {t("steamImport.retry")}
           </GlassButton>
         </div>
       ) : (
@@ -290,16 +290,16 @@ export function SteamImportModal({ open, onClose }: Props) {
           <div
             className="flex items-center gap-3 text-sm shrink-0 text-text-muted"
           >
-            <span>{library?.length ?? 0} oyun</span>
+            <span>{t("steamImport.totalGames", { count: library?.length ?? 0 })}</span>
             <span>·</span>
-            <span className="text-accent">{selected.size} seçili</span>
+            <span className="text-accent">{t("steamImport.selected", { count: selected.size })}</span>
             <span>·</span>
-            <span>{notAddedCount} eklenmemiş</span>
+            <span>{t("steamImport.notAdded", { count: notAddedCount })}</span>
             {conflictCount > 0 && (
               <>
                 <span>·</span>
                 <span style={{ color: "rgba(251,146,60,0.9)" }}>
-                  {conflictCount} çakışma var
+                  {t("steamImport.hasConflicts", { count: conflictCount })}
                 </span>
               </>
             )}
@@ -315,16 +315,16 @@ export function SteamImportModal({ open, onClose }: Props) {
                 <span
                   className="text-xs mb-0.5 text-text-muted"
                 >
-                  Görünüm filtreleri
+                  {t("steamImport.viewFilters")}
                 </span>
                 <span className="text-text-secondary">
-                  {showNotAdded ? "Eklenmemişler" : ""}
+                  {showNotAdded ? t("steamImport.notAddedGames") : ""}
                   {showNotAdded && showConflicts ? " + " : ""}
-                  {showConflicts ? "Çakışanlar" : ""}
+                  {showConflicts ? t("steamImport.conflictingGames") : ""}
                   {(showNotAdded || showConflicts) && showAlreadyAdded
                     ? " + "
                     : ""}
-                  {showAlreadyAdded ? "Ekli olanlar" : ""}
+                  {showAlreadyAdded ? t("steamImport.alreadyAddedGames") : ""}
                 </span>
               </div>
               <ChevronDown
@@ -358,7 +358,7 @@ export function SteamImportModal({ open, onClose }: Props) {
                         : "var(--theme-text-secondary)",
                     }}
                   >
-                    Eklenmemişler
+                    t("steamImport.notAddedGames")
                   </span>
                   <span
                     className="text-xs font-medium"
@@ -391,7 +391,7 @@ export function SteamImportModal({ open, onClose }: Props) {
                         : "var(--theme-text-secondary)",
                     }}
                   >
-                    Çakışanlar
+                    t("steamImport.conflictingGames")
                   </span>
                   <span
                     className="text-xs font-medium"
@@ -424,7 +424,7 @@ export function SteamImportModal({ open, onClose }: Props) {
                         : "var(--theme-text-secondary)",
                     }}
                   >
-                    Ekli olanlar (gizle/göster)
+                    t("steamImport.alreadyAddedToggle")
                   </span>
                   <span
                     className="text-xs font-medium"
@@ -452,7 +452,7 @@ export function SteamImportModal({ open, onClose }: Props) {
                   <span
                     className="text-xs mb-0.5 text-text-muted"
                   >
-                    Çakışma çözümü
+                    {t("steamImport.conflictResolution")}
                   </span>
                   <span className="text-text-secondary">
                     {selectedConflictOption.label}
@@ -529,7 +529,7 @@ export function SteamImportModal({ open, onClose }: Props) {
               <p
                 className="text-center py-8 text-sm text-text-muted"
               >
-                Oyun bulunamadı
+                {t("steamImport.noGamesFound")}
               </p>
             )}
           </div>
@@ -537,7 +537,7 @@ export function SteamImportModal({ open, onClose }: Props) {
           {/* Footer */}
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-glass-border shrink-0">
             <GlassButton variant="ghost" size="sm" onClick={onClose}>
-              İptal
+              {t("common.buttons.cancel")}
             </GlassButton>
             <GlassButton
               variant="primary"
@@ -546,7 +546,7 @@ export function SteamImportModal({ open, onClose }: Props) {
               loading={syncMutation.isPending}
               onClick={handleImport}
             >
-              {selected.size} Oyunu İçe Aktar
+              {t("steamImport.importN", { count: selected.size })}
             </GlassButton>
           </div>
         </div>

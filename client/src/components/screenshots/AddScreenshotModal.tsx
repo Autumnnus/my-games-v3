@@ -192,10 +192,10 @@ export function AddScreenshotModal({
               <Upload size={28} className="text-text-muted" />
               <div className="text-center">
                 <p className="text-sm font-medium text-text-secondary">
-                  Dosya sürükle veya tıkla
+                  {t("translation:screenshots.dragOrClick")}
                 </p>
                 <p className="text-xs mt-1 text-text-muted">
-                  PNG, JPG, GIF, WebP — maks 10MB
+                  {t("translation:screenshots.fileTypes")}
                 </p>
               </div>
               <input
@@ -220,7 +220,7 @@ export function AddScreenshotModal({
             >
               <Upload size={18} className="text-text-muted" />
               <p className="text-xs text-text-muted">
-                Daha fazla eklemek için sürükle veya tıkla
+                {t("translation:screenshots.addMore")}
               </p>
               <input
                 ref={fileRef}
@@ -268,7 +268,7 @@ export function AddScreenshotModal({
             onClick={handleFilesSubmit}
             className="w-full"
           >
-            Hepsini Gönder ({files.length})
+            {t("translation:screenshots.submitAll", { count: files.length })}
           </GlassButton>
         </div>
       ) : tab === "text" ? (
@@ -328,7 +328,7 @@ export function AddScreenshotModal({
             onClick={addUrlItem}
             className="w-full"
           >
-            Listeye Ekle
+            {t("translation:screenshots.addToList")}
           </GlassButton>
           <GlassButton
             variant="primary"
@@ -337,7 +337,7 @@ export function AddScreenshotModal({
             onClick={handleUrlsSubmit}
             className="w-full"
           >
-            Hepsini Gönder ({urlItems.length})
+            {t("translation:screenshots.submitAll", { count: urlItems.length })}
           </GlassButton>
         </div>
       ) : steamAppId ? (

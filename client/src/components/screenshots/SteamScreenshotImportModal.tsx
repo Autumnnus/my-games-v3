@@ -44,7 +44,7 @@ function ScreenshotThumb({
         />
       ) : (
         <div className="w-full h-full flex items-center justify-center text-xs bg-surface-subtle text-text-muted">
-          Önizleme yok
+          {t("screenshots.noPreview")}
         </div>
       )}
 

@@ -463,9 +463,9 @@ export function ImportExportModal({
                 loading={isImportLoading || runImportMutation.isPending}
               >
                 {importStep === 4
-                  ? t("translation:export.startImport")
+                  ? t("translation:import.startImport")
                   : importStep === 3
-                    ? t("translation:export.checkConflicts")
+                    ? t("translation:import.checkConflicts")
                     : t("translation:import.continue")}
               </GlassButton>
             </div>

@@ -124,6 +124,19 @@ export function detectPreset(rows: Record<string, unknown>[]): PresetType[] {
     cols.has("achieve_count");
   if (hasRA) presets.push("retroachievements");
 
+  // message.json format (gameName, gameStatus, gameScore, etc.)
+  const hasGamePrefix =
+    cols.has("gamename") ||
+    cols.has("gamestatus") ||
+    cols.has("gamescore") ||
+    cols.has("gameplatform") ||
+    cols.has("gametotaltime") ||
+    cols.has("gamephoto") ||
+    cols.has("gamereview") ||
+    cols.has("gamegenres") ||
+    cols.has("gametags");
+  if (hasGamePrefix) presets.push("manual");
+
   presets.push("manual");
   return presets;
 }
@@ -166,7 +179,20 @@ export function getPresetMapping(
         achieve_count: "notes",
       };
     default:
-      return {};
+      // message.json format (gameName, gameStatus, gameScore, etc.)
+      return {
+        gamename: "name",
+        gamestatus: "status",
+        gamescore: "rating",
+        gametotaltime: "playTime",
+        gameplatform: "platforms",
+        gamephoto: "coverImage",
+        gamereview: "notes",
+        gamegenres: "genres",
+        gametags: "tags",
+        gamescreenshot: "screenshots",
+        gamescreenshots: "screenshots",
+      };
   }
 }
 
@@ -251,6 +277,13 @@ const STATUS_MAP: Record<string, GameStatus> = {
   // PSN progress-based
   "100%": "completed",
   complete: "completed",
+  // Turkish status values (from message.json format)
+  bitirildi: "completed",
+  oynaniyor: "activePlaying",
+  plandegistirildi: "toBeCompleted",
+  beklemede: "toBeCompleted",
+  tamamlanan: "completed",
+  aktif: "activePlaying",
 };
 
 function parseStatus(value: string): GameStatus | undefined {
@@ -529,13 +562,20 @@ async function findOrCreateGame(data: {
     sourceIds: data.steamAppId ? { steamAppId: data.steamAppId } : undefined,
   });
 
-  // Check for slug collision
-  const existingSlug = await Game.findOne({ slug: game.slug });
-  if (existingSlug) {
-    game.slug = `${game.slug}-${Date.now()}`;
+  try {
+    return await game.save();
+  } catch (err) {
+    // Handle duplicate slug error - append a unique suffix and retry
+    if (
+      err instanceof Error &&
+      err.message.includes("duplicate key") &&
+      err.message.includes("slug")
+    ) {
+      game.slug = `${game.slug}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      return await game.save();
+    }
+    throw err;
   }
-
-  return await game.save();
 }
 
 // ---------------------------------------------------------------------------

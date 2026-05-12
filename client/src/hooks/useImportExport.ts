@@ -74,7 +74,43 @@ export function useImportExport() {
 
       for (const col of data.columns) {
         const lower = col.toLowerCase();
-        if (preset === "steam") {
+        // message.json format (gameName, gameStatus, gameScore, etc.)
+        if (lower === "gamename" || lower === "game")
+          mapping[col] = "name";
+        else if (lower === "gamestatus")
+          mapping[col] = "status";
+        else if (lower === "gamescore")
+          mapping[col] = "rating";
+        else if (
+          lower === "gametotaltime" ||
+          lower === "hours" ||
+          lower === "playtime" ||
+          lower === "play_time"
+        )
+          mapping[col] = "playTime";
+        else if (lower === "gameplatform")
+          mapping[col] = "platforms";
+        else if (
+          lower === "gamephoto" ||
+          lower === "cover" ||
+          lower === "coverimage" ||
+          lower === "cover_image"
+        )
+          mapping[col] = "coverImage";
+        else if (lower === "gamereview")
+          mapping[col] = "notes";
+        else if (lower === "gamegenres")
+          mapping[col] = "genres";
+        else if (lower === "gametags")
+          mapping[col] = "tags";
+        else if (
+          lower === "gamescreenshot" ||
+          lower === "gamescreenshots" ||
+          lower === "screenshots" ||
+          lower === "screenshot"
+        )
+          mapping[col] = "screenshots";
+        else if (preset === "steam") {
           if (lower === "appid" || lower === "steam_app_id")
             mapping[col] = "steamAppId";
           else if (
