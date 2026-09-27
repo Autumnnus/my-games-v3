@@ -5,6 +5,7 @@ import { localToday } from "./config";
 import { type DbOrTx, db, type Tx } from "./db";
 import { AppError, forbidden, notFound } from "./errors";
 import { emit } from "./events";
+import { entryPlaytime } from "./playtime";
 
 const { libraryEntries, games, entryHistory, user, screenshots } = schema;
 
@@ -19,6 +20,8 @@ export const ENTRY_FIELDS = [
   "store",
   "playtimeManualMin",
   "playtimeSteamMin",
+  "playtimePsnMin",
+  "playtimeXboxMin",
   "startedAt",
   "finishedAt",
   "lastPlayedAt",
@@ -36,6 +39,8 @@ export type EntryFields = {
   store?: Store | null;
   playtimeManualMin?: number;
   playtimeSteamMin?: number | null;
+  playtimePsnMin?: number | null;
+  playtimeXboxMin?: number | null;
   startedAt?: string | null;
   finishedAt?: string | null;
   lastPlayedAt?: Date | null;
@@ -310,7 +315,7 @@ export const librarySorts = [
 ] as const;
 export type LibrarySort = (typeof librarySorts)[number];
 
-const playtimeSql = sql<number>`(${libraryEntries.playtimeManualMin} + coalesce(${libraryEntries.playtimeSteamMin}, 0))`;
+const playtimeSql = entryPlaytime;
 
 const entryColumns = {
   id: libraryEntries.id,
@@ -322,6 +327,8 @@ const entryColumns = {
   store: libraryEntries.store,
   playtimeManualMin: libraryEntries.playtimeManualMin,
   playtimeSteamMin: libraryEntries.playtimeSteamMin,
+  playtimePsnMin: libraryEntries.playtimePsnMin,
+  playtimeXboxMin: libraryEntries.playtimeXboxMin,
   playtimeMin: sql<number>`${playtimeSql}::int`,
   startedAt: libraryEntries.startedAt,
   finishedAt: libraryEntries.finishedAt,

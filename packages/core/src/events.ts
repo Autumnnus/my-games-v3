@@ -57,9 +57,21 @@ export type DomainEvent =
       type: "reaction.created";
       payload: { userId: string; targetType: SocialTarget; targetId: string };
     }
+  | {
+      type: "achievements.unlocked";
+      payload: {
+        userId: string;
+        entryId: string;
+        gameId: string;
+        provider: string;
+        gameKey: string;
+        apiNames: string[];
+      };
+    }
   | { type: "proposals.created"; payload: { userId: string; count: number } }
   | { type: "notification.push"; payload: { notificationId: string } }
   | { type: "steam.sync_requested"; payload: { userId: string } }
+  | { type: "platform.sync_requested"; payload: { userId: string; provider: "psn" | "xbox" } }
   | { type: "igdb.match_requested"; payload: { gameId: string } }
   /** Silinen kayıtların depodaki dosyaları (kayıt silinince R2'de sahipsiz kalmasın). */
   | { type: "storage.objects_orphaned"; payload: { keys: string[] } };

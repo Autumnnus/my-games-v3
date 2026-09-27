@@ -119,6 +119,21 @@ export const steamQuery = queryOptions({
   queryFn: () => unwrap(api.steam.$get()),
 });
 
+export const platformsQuery = queryOptions({
+  queryKey: ["platforms"],
+  queryFn: () => unwrap(api.platforms.$get()),
+});
+
+export const entryAchievementsQuery = (id: string) =>
+  queryOptions({
+    queryKey: ["achievements", id],
+    queryFn: () => unwrap(api.library[":id"].achievements.$get({ param: { id } })),
+  });
+
+export type AchievementSet = Awaited<
+  ReturnType<NonNullable<ReturnType<typeof entryAchievementsQuery>["queryFn"]>>
+>["sets"][number];
+
 export type FeedScope =
   | { kind: "global" }
   | { kind: "user"; username: string }

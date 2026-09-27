@@ -293,6 +293,28 @@ Kaynak: `my-games-old/old_db_data/kadir_games.json` (98 oyun, kullanıcı `vecto
   - MinIO (S3) üzerinden imzalı yükleme çalışıyor; imzada olmayan tür veya boyut reddediliyor.
 - R2'nin imzalı Content-Length'i zorladığını ilk deploy'da bir kez kontrol et.
 
+**Platform genişletmesi (2026-09-27):**
+
+- **Ortak sync motoru** (`packages/core/src/platforms/engine.ts`): Steam, PlayStation ve Xbox aynı mantığı
+  kullanır: süre, çakışma, oturum, durum önerisi, yeni oyun ve başarımlar. Platforma özel kısım yalnızca başlık
+  listesi, kayıt eşleştirme ve başarım ayrıntısıdır. Son gözlem `platform_snapshots`'ta tutulur, oyunun platform
+  kimlikleri `game_external_ids`'te.
+- **Başarımlar:** tanımlar oyun başına ortak (`achievement_sets` + `achievements`; TR/EN adlar, ikon adresi,
+  nadirlik, PSN kupa derecesi, Xbox gamerscore). Kullanıcı başına yalnızca açılanlar tutulur
+  (`user_achievements`). İlk içe aktarım sessizdir; sonra açılanlar akışa "X başarım açtı" olarak düşer (en
+  nadirler önde). Görseller platform CDN'inden gelir, depo kullanılmaz.
+- **Steam ekran görüntüleri:** herkese açık paylaşılanlar (`GetUserFiles`) ilgili kayda eklenir. Kural
+  `steam:screenshots`: otomatik / onayla / yok say. Reddedilenler bir daha önerilmez.
+- **PlayStation:** kullanıcının NPSSO koduyla bağlanır (resmî değil; `psn-api`). Kod saklanmaz, yenileme
+  token'ı AES-256-GCM ile şifrelenir. PS4/PS5 süreleri, PS3/Vita dahil kupalar alınır. Token'ın süresi
+  dolunca hesap "yeniden bağla" durumuna düşer.
+- **Xbox:** Microsoft OAuth + XSTS (Azure uygulaması gerekir). Oyun geçmişi, MinutesPlayed ve Xbox One/Series/PC
+  başarımları alınır.
+- **Doğrulama:** Hepsi sahte yanıtlarla test edildi (toplam 65 test) ve tarayıcıda denendi. Gerçek anahtarla her biri
+  bir kez uçtan uca denenmeli: Steam başarım/ekran görüntüsü, PSN NPSSO akışı, Azure uygulaması.
+- **Masaüstü (Tauri):** web öncelikli olduğu için ertelendi. GOG/Epic/EA/Ubisoft kütüphaneleri ve Steam'in
+  paylaşılmamış ekran görüntüleri yalnızca yerel istemciyle alınabilir.
+
 **Plandan kalanlar:** listeler/etiketler, alt puanlar, wishlist fiyat alarmı, SteamGridDB görselleri, e-posta özeti.
 
 ## 14. Eski sistemden kapanan sorunlar

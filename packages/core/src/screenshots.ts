@@ -1,6 +1,6 @@
 import { schema } from "@my-games/db";
 import { and, desc, eq, sql } from "drizzle-orm";
-import { db } from "./db";
+import { db, type Tx } from "./db";
 import { AppError, forbidden, notFound } from "./errors";
 import { emit } from "./events";
 import {
@@ -163,6 +163,66 @@ export async function addExternalScreenshot(
   return present(row);
 }
 
+export type PlatformScreenshot = {
+  externalId: string;
+  url: string;
+  thumbUrl: string | null;
+  caption: string | null;
+  width: number | null;
+  height: number | null;
+  takenAt: string | null;
+};
+
+/**
+ * Platformdan (Steam) gelen ekran görüntülerini kayda ekler; daha önce eklenenler atlanır. `announce`:
+ * akışa "ekran görüntüsü ekledi" düşsün mü (ilk toplu içe aktarımda düşmez).
+ */
+export async function insertPlatformScreenshots(
+  tx: Tx,
+  input: {
+    userId: string;
+    entryId: string;
+    gameId: string | null;
+    items: PlatformScreenshot[];
+    announce: boolean;
+  },
+) {
+  if (input.items.length === 0) return [];
+  const [entry] = await tx
+    .select({ gameId: libraryEntries.gameId, userId: libraryEntries.userId })
+    .from(libraryEntries)
+    .where(eq(libraryEntries.id, input.entryId));
+  if (!entry || entry.userId !== input.userId) return [];
+  const rows = await tx
+    .insert(screenshots)
+    .values(
+      input.items.map((item) => ({
+        entryId: input.entryId,
+        userId: input.userId,
+        gameId: entry.gameId,
+        kind: "steam" as const,
+        url: item.url,
+        thumbUrl: item.thumbUrl,
+        externalId: item.externalId,
+        width: item.width,
+        height: item.height,
+        caption: item.caption,
+        takenAt: item.takenAt ? new Date(item.takenAt) : null,
+      })),
+    )
+    .onConflictDoNothing()
+    .returning({ id: screenshots.id });
+  if (input.announce && rows.length > 0) {
+    await emit(tx, "screenshots.added", {
+      userId: input.userId,
+      gameId: entry.gameId,
+      entryId: input.entryId,
+      screenshotIds: rows.map((row) => row.id),
+    });
+  }
+  return rows;
+}
+
 /**
  * Hesap silinirken kullanıcının yüklediği dosyaları (screenshot'lar + avatar) silinmek üzere kuyruğa atar.
  * Satırlar cascade ile silinir; dosyalar worker'da `storage.delete` işiyle kaldırılır.
@@ -204,7 +264,8 @@ type ScreenshotRow = typeof screenshots.$inferSelect;
 
 function present(row: ScreenshotRow) {
   const url = row.kind === "upload" && row.storageKey ? publicUrl(row.storageKey) : row.url;
-  const thumbUrl = row.kind === "upload" && row.thumbKey ? publicUrl(row.thumbKey) : row.url;
+  const thumbUrl =
+    row.kind === "upload" && row.thumbKey ? publicUrl(row.thumbKey) : (row.thumbUrl ?? row.url);
   return {
     id: row.id,
     entryId: row.entryId,
@@ -216,6 +277,7 @@ function present(row: ScreenshotRow) {
     width: row.width,
     height: row.height,
     caption: row.caption,
+    takenAt: row.takenAt,
     createdAt: row.createdAt,
   };
 }
@@ -236,7 +298,7 @@ export async function listScreenshots(
     .from(screenshots)
     .innerJoin(user, eq(user.id, screenshots.userId))
     .where(and(...conditions))
-    .orderBy(desc(screenshots.createdAt))
+    .orderBy(desc(sql`coalesce(${screenshots.takenAt}, ${screenshots.createdAt})`))
     .limit(Math.min(limit, 200));
   return rows.map((row) => ({ ...present(row.screenshot), author: row.author }));
 }

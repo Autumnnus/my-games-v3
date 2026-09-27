@@ -1,10 +1,13 @@
 import { refreshStaleGames } from "@my-games/core/catalog";
 import { matchUnlinkedGames } from "@my-games/core/matching";
 import { pruneOutbox } from "@my-games/core/outbox";
+import { platformAccountsDueForSync } from "@my-games/core/platforms/accounts";
+import { syncPsnUser } from "@my-games/core/psn/sync";
 import { sendPushForNotification } from "@my-games/core/social/push";
 import { pollPresence } from "@my-games/core/steam/presence";
 import { syncSteamUser, usersDueForSync } from "@my-games/core/steam/sync";
 import { deleteObject } from "@my-games/core/storage";
+import { syncXboxUser } from "@my-games/core/xbox/sync";
 import type { PgBoss } from "pg-boss";
 
 type JobDefinition = {
@@ -35,6 +38,18 @@ export const jobs: JobDefinition[] = [
     name: "steam.sync-user",
     run: (data) => syncSteamUser(String(data.userId)),
     concurrency: 2,
+    policy: "stately",
+  },
+  {
+    name: "psn.sync-user",
+    run: (data) => syncPsnUser(String(data.userId)),
+    concurrency: 1,
+    policy: "stately",
+  },
+  {
+    name: "xbox.sync-user",
+    run: (data) => syncXboxUser(String(data.userId)),
+    concurrency: 1,
     policy: "stately",
   },
   {
@@ -76,6 +91,18 @@ export async function registerJobs(boss: PgBoss) {
         return { queued: userIds.length };
       },
     },
+    {
+      // PSN/Xbox hesaplarını 6 saatte bir kuyruğa atar.
+      name: "platforms.sync-all",
+      cron: "45 */6 * * *",
+      run: async () => {
+        const accounts = await platformAccountsDueForSync(6);
+        for (const account of accounts) {
+          await enqueuePlatformSync(boss, account.userId, account.provider as "psn" | "xbox");
+        }
+        return { queued: accounts.length };
+      },
+    },
   ];
   for (const job of [...jobs, ...withBoss]) {
     const policy = job.policy ?? "standard";
@@ -109,4 +136,8 @@ export type { JobDefinition };
 /** Kullanıcı için senkronizasyon ister; zaten bekleyen varsa yenisi eklenmez. */
 export function enqueueSteamSync(boss: PgBoss, userId: string) {
   return boss.send("steam.sync-user", { userId }, { singletonKey: userId });
+}
+
+export function enqueuePlatformSync(boss: PgBoss, userId: string, provider: "psn" | "xbox") {
+  return boss.send(`${provider}.sync-user`, { userId }, { singletonKey: userId });
 }

@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import * as z from "zod/mini";
 import { FormField } from "@/components/auth-card";
 import { NotificationSettings } from "@/components/notification-settings";
+import { PsnCard, XboxCard } from "@/components/platform-cards";
 import { SteamCard } from "@/components/steam-card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -21,7 +22,7 @@ import { useRefreshSession } from "@/lib/session";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/_authed/settings")({
-  validateSearch: z.object({ error: z.optional(z.string()) }),
+  validateSearch: z.object({ error: z.optional(z.string()), linked: z.optional(z.string()) }),
   head: () => ({ meta: [{ title: `${m.settings_title()} · ${m.app_name()}` }] }),
   component: SettingsPage,
 });
@@ -156,6 +157,8 @@ function SettingsPage() {
       </Card>
 
       <SteamCard error={search.error} />
+      <PsnCard />
+      <XboxCard error={search.error} linked={search.linked} />
 
       <NotificationSettings />
 

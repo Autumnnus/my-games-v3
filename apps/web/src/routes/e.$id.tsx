@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PencilIcon, StarIcon, Trash2Icon } from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
+import { EntryAchievements } from "@/components/achievements";
 import { CommentThread } from "@/components/comments";
 import { EntryForm } from "@/components/entry-form";
 import { GameCover } from "@/components/game-cover";
@@ -22,13 +23,19 @@ import {
   platformLabel,
   storeLabel,
 } from "@/lib/format";
-import { entryQuery, entryScreenshotsQuery, reactionsQuery } from "@/lib/queries";
+import {
+  entryAchievementsQuery,
+  entryQuery,
+  entryScreenshotsQuery,
+  reactionsQuery,
+} from "@/lib/queries";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/e/$id")({
   loader: async ({ context, params }) => {
     const data = await orNotFound(context.queryClient.ensureQueryData(entryQuery(params.id)));
     void context.queryClient.prefetchQuery(entryScreenshotsQuery(params.id));
+    void context.queryClient.prefetchQuery(entryAchievementsQuery(params.id));
     return data;
   },
   head: ({ loaderData }) => ({
@@ -150,7 +157,7 @@ function EntryPage() {
             <Detail label={m.field_finished_at()} value={formatDate(entry.finishedAt)} />
             {entry.achievementsTotal ? (
               <Detail
-                label="Achievements"
+                label={m.achievements_title()}
                 value={`${entry.achievementsUnlocked ?? 0} / ${entry.achievementsTotal}`}
               />
             ) : null}
@@ -196,6 +203,8 @@ function EntryPage() {
           {user && !isOwner && entry.review && <ReportButton targetType="entry" targetId={id} />}
         </div>
       </section>
+
+      <EntryAchievements entryId={id} />
 
       <section className="grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">

@@ -55,6 +55,16 @@
   `communityvisibilitystate` (1 gizli, 3 public), public profilde `gameid` + `gameextrainfo` (şu an oynanan).
 - `ISteamUserStats/GetPlayerAchievements/v1?steamid&appid&l=` → `playerstats.achievements[]` (`achieved` 0/1,
   `unlocktime`); başarım yoksa/gizliyse `success:false` (400/403, doğrulanmadı).
+- `ISteamUserStats/GetSchemaForGame/v2?appid&l=english|turkish` → `game.availableGameStats.achievements[]`
+  (`name` = apiname, `displayName`, `description`, `hidden` 0/1, `icon`, `icongray` tam URL). Şema oyun başına
+  ortaktır; 30 günde bir ya da başarım sayısı değişince yeniden çekilir (`achievement_sets`).
+- `ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2?gameid` → `achievementpercentages.achievements[]`
+  (`name`, `percent` — string ya da sayı gelebilir).
+- `IPublishedFileService/GetUserFiles/v1?steamid&filetype=4&page&numperpage&return_previews=1` → kullanıcının
+  **herkese açık** ekran görüntüleri (`k_PFI_MatchingFileType_Screenshots = 4`). `publishedfiledetails[]`:
+  `publishedfileid`, `consumer_appid`, `file_url`, `preview_url`, `title`, `time_created`, `image_width/height`.
+  Normal Web API anahtarıyla çalışır (belgeye göre; gerçek anahtarla doğrulanmadı). Gizli/arkadaşlara açık
+  görüntüler gelmez. Görseller Steam'in adresinden gösterilir, R2'ye kopyalanmaz.
 - `ISteamUser/ResolveVanityURL/v1?vanityurl=` → `{response:{success:1, steamid}}` / `success:42` (doğrulanmadı).
 - CDN: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/{appid}/library_600x900.jpg`
   (`header.jpg`, `library_hero.jpg` de var). `shared.cloudflare.steamstatic.com` artık 301 veriyor, kullanma.
@@ -74,3 +84,47 @@
   `internalAdapter.findAccountOwnerByKey({providerId, accountId})`, `createUser(user, source)`,
   `createAccount`, `linkAccount`, `createSession`, `reserveVerificationValue`. E-posta zorunlu →
   `${steamId}@steam.placeholder.invalid`; bu adreslere e-posta gönderilmemeli.
+
+## PlayStation Network (`psn-api@2`, resmî değil)
+
+- Kimlik: kullanıcı playstation.com'a girip `https://ca.account.sony.com/api/v1/ssocookie` sayfasındaki `npsso`
+  değerini (64 karakter) yapıştırır → `exchangeNpssoForAccessCode` → `exchangeAccessCodeForAuthTokens`. Erişim
+  token'ı ~1 sa, yenileme token'ı ~2 ay (`refresh_token_expires_in`). NPSSO saklanmaz.
+- **Dikkat:** `exchangeRefreshTokenForAuthTokens` hata durumunda fırlatmaz, alanları `undefined` döner; yanıtı
+  doğrula. API çağrıları hata gövdesinde `error` varsa fırlatır.
+- Hesap kimliği: `getProfileFromAccountId(auth, "me")` → `onlineId`; `getProfileFromUserName(auth, onlineId)` →
+  `profile.accountId`.
+- Oynanan oyunlar (yalnızca PS4/PS5, PS Portal/PC dahil): `getUserPlayedGames(auth, "me", {limit, offset})` →
+  `titles[]`: `titleId`, `concept.id` (PS4/PS5 sürümleri aynı konsept), `name`, `imageUrl`, `playDuration`
+  (ISO 8601, `PT228H56M33S`), `lastPlayedDateTime`.
+- Kupalar: `getUserTitles(auth, "me", {limit: 800})` → `trophyTitles[]` (`npCommunicationId`, `npServiceName`
+  trophy/trophy2, `definedTrophies`, `earnedTrophies`). Ayrıntı: `getTitleTrophies(npId, "all")` (ad, açıklama,
+  ikon; `Accept-Language` ile dil) + `getUserTrophiesEarnedForTitle(me, npId, "all")` (`earned`,
+  `earnedDateTime`, `trophyEarnedRate`). PS3/PS4/Vita için `npServiceName: "trophy"` şart.
+- Oynanan oyun ↔ kupa seti eşleşmesi ad benzerliğiyle yapılır; yalnızca kupa listesinde olanlar (PS3/Vita)
+  süresiz başlık olarak gelir (`np:<npCommunicationId>`).
+
+## Xbox Live (Microsoft hesabı OAuth + XSTS)
+
+- Azure'da **yalnızca kişisel Microsoft hesapları** için uygulama; redirect `{APP_URL}/api/v1/platforms/xbox/callback`
+  (Web), bir client secret. `XBOX_CLIENT_ID` / `XBOX_CLIENT_SECRET`.
+- OAuth: `https://login.live.com/oauth20_authorize.srf?client_id&response_type=code&scope=Xboxlive.signin
+  Xboxlive.offline_access&redirect_uri&state`; token `POST https://login.live.com/oauth20_token.srf`
+  (form-encoded; `grant_type=authorization_code|refresh_token`, `scope`, `client_id`, `client_secret`).
+- Kullanıcı token'ı: `POST https://user.auth.xboxlive.com/user/authenticate` (`x-xbl-contract-version: 1`)
+  `{RelyingParty:"http://auth.xboxlive.com", TokenType:"JWT", Properties:{AuthMethod:"RPS",
+  SiteName:"user.auth.xboxlive.com", RpsTicket:"d=<access_token>"}}` → `Token`.
+- XSTS: `POST https://xsts.auth.xboxlive.com/xsts/authorize` `{RelyingParty:"http://xboxlive.com",
+  TokenType:"JWT", Properties:{UserTokens:[token], SandboxId:"RETAIL"}}` → `Token`, `NotAfter`,
+  `DisplayClaims.xui[0]` (`uhs`, `xid` = XUID, `gtg` = gamertag). Xbox profili olmayan hesapta hata.
+- Başlık: `Authorization: XBL3.0 x=<uhs>;<xsts>`.
+- Oyun geçmişi: `GET https://titlehub.xboxlive.com/users/xuid({xuid})/titles/titlehistory/decoration/achievement,image?maxItems=1000`
+  (`x-xbl-contract-version: 2`) → `titles[]`: `titleId`, `name`, `type` (Game/App), `devices`, `displayImage`,
+  `achievement.{currentAchievements,totalAchievements}`, `titleHistory.lastTimePlayed`.
+- Süre: `POST https://userstats.xboxlive.com/batch` (contract 2) `{arrangebyfield:"xuid", xuids:[xuid],
+  stats:[{name:"MinutesPlayed", titleid}]}` → `statlistscollection[0].stats[].value` (dakika, string).
+- Başarımlar (Xbox One/Series/PC): `GET https://achievements.xboxlive.com/users/xuid({xuid})/achievements?titleId=&maxItems=1000`
+  (contract 2) → `achievements[]`: `id`, `name`, `progressState` ("Achieved"), `progression.timeUnlocked`
+  (bilinmiyorsa `0001-01-01`), `mediaAssets[type=Icon]`, `isSecret`, `rarity.currentPercentage`,
+  `rewards[type=Gamerscore]`. Xbox 360 başarımları farklı API'de; yalnızca sayılar alınır.
+- Kaynak: OpenXbox `xbox-webapi-python` (authentication/manager.py, api/provider/*).

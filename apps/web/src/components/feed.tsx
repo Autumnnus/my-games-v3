@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { formatPlaytime, formatRating } from "@/lib/format";
 import { type FeedItem, type FeedScope, feedQuery, nowPlayingQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
+import { getLocale } from "@/paraglide/runtime";
 
 const statusPhrases: Record<EntryStatus, () => string> = {
   playing: m.activity_status_playing,
@@ -42,11 +43,51 @@ function phrase(item: FeedItem) {
       return m.activity_milestone({ time: formatPlaytime(Number(data.minutes ?? 0)) });
     case "achievements_completed":
       return m.activity_achievements();
+    case "achievements_unlocked":
+      return Number(data.count ?? 1) > 1
+        ? m.activity_achievements_unlocked({ count: Number(data.count) })
+        : m.activity_achievement_unlocked();
     case "screenshots_added":
       return m.activity_screenshots({ count: Number(data.count ?? 1) });
     default:
       return "";
   }
+}
+
+type AchievementItem = {
+  apiName: string;
+  name: string;
+  localized: Record<string, { name: string }> | null;
+  iconUrl: string | null;
+  rarity: number | null;
+};
+
+/** Akış kartında açılan başarımlar (en nadirler önce, platformun ikonlarıyla). */
+function AchievementStrip({ items }: { items: AchievementItem[] }) {
+  const locale = getLocale();
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {items.map((achievement) => {
+        const name = achievement.localized?.[locale]?.name ?? achievement.name;
+        const rarity =
+          achievement.rarity !== null
+            ? ` · ${m.achievements_rarity({ percent: achievement.rarity < 10 ? achievement.rarity.toFixed(1) : Math.round(achievement.rarity) })}`
+            : "";
+        return (
+          <li
+            key={achievement.apiName}
+            title={`${name}${rarity}`}
+            className="flex items-center gap-1.5 text-xs"
+          >
+            {achievement.iconUrl && (
+              <img src={achievement.iconUrl} alt="" loading="lazy" className="size-7 rounded" />
+            )}
+            <span className="max-w-40 truncate">{name}</span>
+          </li>
+        );
+      })}
+    </ul>
+  );
 }
 
 export function ActivityCard({ item }: { item: FeedItem }) {
@@ -88,6 +129,9 @@ export function ActivityCard({ item }: { item: FeedItem }) {
             )}
             {item.verb === "reviewed" && typeof data.excerpt === "string" && (
               <p className="text-muted-foreground line-clamp-3 text-sm">{data.excerpt}</p>
+            )}
+            {item.verb === "achievements_unlocked" && Array.isArray(data.items) && (
+              <AchievementStrip items={data.items as AchievementItem[]} />
             )}
           </div>
         </Link>

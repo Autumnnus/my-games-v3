@@ -1,6 +1,7 @@
 import { schema } from "@my-games/db";
 import { type ActivityVerb, gameCoverUrl, playtimeMilestones } from "@my-games/shared";
 import { and, desc, eq, type SQL, sql } from "drizzle-orm";
+import { achievementSummaries } from "../achievements";
 import { localToday } from "../config";
 import { db, type Tx } from "../db";
 import type { EventPayload } from "../events";
@@ -175,6 +176,34 @@ export async function onScreenshotsAdded(payload: EventPayload<"screenshots.adde
         ...((previous.screenshotIds as string[]) ?? []),
       ].slice(0, 8),
       count: Number(previous.count ?? 0) + payload.screenshotIds.length,
+    }),
+  });
+}
+
+type AchievementItem = Awaited<ReturnType<typeof achievementSummaries>>[number];
+const MAX_ACHIEVEMENT_ITEMS = 6;
+
+/** Aynı oyunda aynı gün açılan başarımlar tek aktivitede toplanır; en nadirler öne çıkar. */
+export async function onAchievementsUnlocked(
+  payload: EventPayload<"achievements.unlocked">,
+  tx: Tx,
+) {
+  const items = await achievementSummaries(tx, payload);
+  const pick = (list: AchievementItem[]) =>
+    [...new Map(list.map((item) => [item.apiName, item])).values()]
+      .sort((a, b) => (a.rarity ?? 101) - (b.rarity ?? 101))
+      .slice(0, MAX_ACHIEVEMENT_ITEMS);
+  await upsertActivity(tx, {
+    actorId: payload.userId,
+    verb: "achievements_unlocked",
+    groupKey: `achievements:${payload.entryId}:${today()}`,
+    gameId: payload.gameId,
+    entryId: payload.entryId,
+    data: { provider: payload.provider, count: payload.apiNames.length, items: pick(items) },
+    merge: (previous) => ({
+      provider: payload.provider,
+      count: Number(previous.count ?? 0) + payload.apiNames.length,
+      items: pick([...items, ...((previous.items as AchievementItem[]) ?? [])]),
     }),
   });
 }

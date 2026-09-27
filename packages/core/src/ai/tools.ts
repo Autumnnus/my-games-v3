@@ -5,6 +5,7 @@ import { and, asc, desc, eq, ilike, inArray, isNotNull, sql } from "drizzle-orm"
 import { z } from "zod";
 import { db } from "../db";
 import { listLibrary } from "../library";
+import { entryPlaytime } from "../playtime";
 import { compareUsers, userStats } from "../stats";
 import { findUserByUsername } from "../users";
 
@@ -113,7 +114,7 @@ export function createTools(currentUserId: string) {
           .select({
             status: e.status,
             rating: e.rating,
-            playtimeMin: sql<number>`${e.playtimeManualMin} + coalesce(${e.playtimeSteamMin}, 0)`,
+            playtimeMin: entryPlaytime,
           })
           .from(e)
           .where(and(eq(e.gameId, game.id), eq(e.userId, currentUserId)));

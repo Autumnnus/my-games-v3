@@ -20,6 +20,8 @@ export const Route = createFileRoute("/_authed/history")({
 const sourceLabels: Record<string, () => string> = {
   manual: m.history_source_manual,
   steam: m.history_source_steam,
+  psn: m.history_source_psn,
+  xbox: m.history_source_xbox,
   migration: m.history_source_migration,
   ai: m.history_source_ai,
   revert: m.history_source_revert,

@@ -15,7 +15,7 @@ import { user } from "./auth";
 import { games } from "./catalog";
 import { entryStatusEnum, platformEnum, screenshotKindEnum, storeEnum } from "./enums";
 
-/** Kullanıcı × oyun. Görünen toplam süre = manuel + Steam. */
+/** Kullanıcı × oyun. Görünen toplam süre = manuel + Steam + PSN + Xbox. */
 export const libraryEntries = pgTable(
   "library_entries",
   {
@@ -33,8 +33,10 @@ export const libraryEntries = pgTable(
     platform: platformEnum(),
     store: storeEnum(),
     playtimeManualMin: integer().notNull().default(0),
-    /** Steam'in bildirdiği toplam süre; Steam bağlı değilse null. */
+    /** Platformların bildirdiği toplam süreler; o platformdan gelmiyorsa null. */
     playtimeSteamMin: integer(),
+    playtimePsnMin: integer(),
+    playtimeXboxMin: integer(),
     startedAt: date({ mode: "string" }),
     finishedAt: date({ mode: "string" }),
     lastPlayedAt: tstz(),
@@ -70,6 +72,12 @@ export const screenshots = pgTable(
     kind: screenshotKindEnum().notNull(),
     /** `external`/`steam` için tam URL. */
     url: text(),
+    /** Platformun verdiği küçük önizleme (Steam). */
+    thumbUrl: text(),
+    /** Platformdaki kimlik (Steam published file id); tekrar içe aktarmayı önler. */
+    externalId: text(),
+    /** Görüntünün çekildiği/yüklendiği an (platformdan gelenler için). */
+    takenAt: tstz(),
     /** `upload` için R2 anahtarları. */
     storageKey: text(),
     thumbKey: text(),
@@ -79,5 +87,10 @@ export const screenshots = pgTable(
     caption: text(),
     createdAt: createdAt(),
   },
-  (t) => [index().on(t.entryId, t.createdAt), index().on(t.gameId), index().on(t.userId)],
+  (t) => [
+    index().on(t.entryId, t.createdAt),
+    index().on(t.gameId),
+    index().on(t.userId),
+    uniqueIndex().on(t.userId, t.externalId).where(sql`${t.externalId} is not null`),
+  ],
 );

@@ -73,7 +73,8 @@ GitHub token ekle (ya da paketleri public yap).
 
 - New Resource → Docker Image → `ghcr.io/<github-kullanıcı>/<repo>-worker:latest`
 - Domain/port yok. Önerilen memory limit: 256 MB.
-- Zamanlanmış işler (UTC): Steam presence her 2 dk, Steam sync 6 saatte bir, IGDB eşleştirme 04:00,
+- Zamanlanmış işler (UTC): Steam presence her 2 dk, Steam sync 6 saatte bir (ekran görüntüleri dahil),
+  PSN/Xbox sync 6 saatte bir, IGDB eşleştirme 04:00,
   metadata yenileme pazartesi 05:00, outbox temizliği 03:30.
 
 ## 5. Ortam değişkenleri
@@ -93,7 +94,10 @@ Opsiyonel olanlar boşsa ilgili özellik kapalı olur (UI `/api/v1/meta` ile ö�
 | `S3_*` | ✓ | | R2 (bkz. 2. bölüm) |
 | `UPLOAD_MAX_BYTES` | opsiyonel | | Varsayılan 15 MB |
 | `IGDB_CLIENT_ID` / `_SECRET` | ✓ | ✓ | Twitch uygulaması; oyun arama ve metadata |
-| `STEAM_API_KEY` | ✓ | ✓ | https://steamcommunity.com/dev/apikey — Steam girişi ve sync |
+| `STEAM_API_KEY` | ✓ | ✓ | https://steamcommunity.com/dev/apikey — Steam girişi, sync, başarımlar, ekran görüntüleri |
+| `XBOX_CLIENT_ID` / `_SECRET` | opsiyonel | opsiyonel | Xbox bağlantısı (aşağıda "Xbox uygulaması") |
+| `PSN_DISABLED` | opsiyonel | opsiyonel | `true` ise PlayStation bağlantısı kapalı (anahtar gerekmez) |
+| `CREDENTIALS_SECRET` | opsiyonel | ✓ | PSN/Xbox token'larını şifreler; yoksa `BETTER_AUTH_SECRET` (o zaman worker'a da ver) |
 | `VAPID_PUBLIC_KEY` / `_PRIVATE_KEY` / `VAPID_SUBJECT` | ✓ | ✓ | Web Push; `npx web-push generate-vapid-keys` |
 | `GOOGLE_GENERATIVE_AI_API_KEY` | ✓ | | Gemini (asistan) |
 | `AI_MODEL` | opsiyonel | | Varsayılan `gemini-3.5-flash` |
@@ -112,6 +116,17 @@ Opsiyonel olanlar boşsa ilgili özellik kapalı olur (UI `/api/v1/meta` ile ö�
 - Google: `https://<domain>/api/auth/callback/google`
 - Discord: `https://<domain>/api/auth/callback/discord`
 - Steam: ayar gerekmez (OpenID `return_to` = `https://<domain>/api/auth/steam/callback`)
+
+### Xbox uygulaması (Azure)
+
+1. https://portal.azure.com → **App registrations → New registration**.
+2. Supported account types: **Personal Microsoft accounts only**.
+3. Redirect URI (Web): `https://<domain>/api/v1/platforms/xbox/callback`.
+4. Certificates & secrets → yeni client secret. `XBOX_CLIENT_ID` = Application (client) ID,
+   `XBOX_CLIENT_SECRET` = secret değeri (süresi dolmadan yenile).
+
+PlayStation için bir şey kurulmaz: kullanıcı ayarlarda kendi NPSSO kodunu yapıştırır. Bu, Sony'nin mobil
+uygulama API'sini kullanır (resmî değil); Sony değiştirirse kırılabilir.
 
 ## 8. İlk kurulum sonrası
 

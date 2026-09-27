@@ -1,7 +1,7 @@
 import type { OutboxHandlers } from "@my-games/core/outbox";
 import { socialHandlers } from "@my-games/core/social/handlers";
 import type { PgBoss } from "pg-boss";
-import { enqueueSteamSync } from "./jobs";
+import { enqueuePlatformSync, enqueueSteamSync } from "./jobs";
 
 /**
  * Outbox olaylarının tüketicileri. Veritabanı yan etkileri (akış, bildirim kayıtları) olayın
@@ -15,6 +15,9 @@ export function createHandlers(boss: PgBoss): OutboxHandlers {
     },
     "steam.sync_requested": async ({ userId }) => {
       await enqueueSteamSync(boss, userId);
+    },
+    "platform.sync_requested": async ({ userId, provider }) => {
+      await enqueuePlatformSync(boss, userId, provider);
     },
     "igdb.match_requested": async () => {
       await boss.send("catalog.match-unlinked", {}, { singletonKey: "match-unlinked" });

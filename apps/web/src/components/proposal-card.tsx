@@ -13,7 +13,19 @@ import { m } from "@/paraglide/messages";
 
 type Payload =
   | { op: "update"; changes: Array<{ field: string; from: unknown; to: unknown }> }
-  | { op: "create"; game: { name: string }; fields: { playtimeSteamMin?: number | null } }
+  | {
+      op: "create";
+      game: { name: string; provider?: string };
+      fields: {
+        playtimeSteamMin?: number | null;
+        playtimePsnMin?: number | null;
+        playtimeXboxMin?: number | null;
+      };
+    }
+  | {
+      op: "screenshots";
+      items: Array<{ externalId: string; thumbUrl: string | null; url: string }>;
+    }
   | {
       op: "match";
       gameName: string;
@@ -25,11 +37,16 @@ type Payload =
         score: number;
       }>;
     }
-  | { op: "conflict"; manualMin: number; steamMin: number };
+  | {
+      op: "conflict";
+      manualMin: number;
+      provider?: string;
+      platformMin?: number;
+      steamMin?: number;
+    };
 
 export const kindLabels: Record<string, () => string> = {
   playtime: m.proposal_kind_playtime,
-  last_played: m.proposal_kind_last_played,
   achievements: m.proposal_kind_achievements,
   status: m.proposal_kind_status,
   new_game: m.proposal_kind_new_game,
@@ -37,10 +54,31 @@ export const kindLabels: Record<string, () => string> = {
   match: m.proposal_kind_match,
   entry_update: m.proposal_kind_entry_update,
   entry_create: m.proposal_kind_entry_create,
+  screenshots: m.proposal_kind_screenshots,
 };
+
+const platformNames: Record<string, () => string> = {
+  steam: m.provider_steam,
+  psn: m.provider_psn,
+  xbox: m.provider_xbox,
+};
+
+function platformName(source: string | undefined) {
+  return (platformNames[source ?? "steam"] ?? m.provider_steam)();
+}
+
+/** Öneri türünün adı; "yeni oyun" kaynağa göre söylenir (Steam / PlayStation / Xbox). */
+export function proposalKindLabel(source: string, kind: string) {
+  if (kind === "new_game" && source !== "steam") {
+    return m.proposal_kind_new_game_platform({ platform: platformName(source) });
+  }
+  return (kindLabels[kind] ?? (() => kind))();
+}
 
 export const sourceLabels: Record<string, () => string> = {
   steam: m.proposal_source_steam,
+  psn: m.proposal_source_psn,
+  xbox: m.proposal_source_xbox,
   igdb: m.proposal_source_igdb,
   migration: m.proposal_source_migration,
   ai: m.proposal_source_ai,
@@ -57,6 +95,27 @@ const resolvedLabels: Record<string, () => string> = {
 export function isBulkable(proposal: Proposal) {
   const op = (proposal.payload as Payload).op;
   return op === "update" || op === "create";
+}
+
+function NewGameHint({
+  payload,
+  source,
+}: {
+  payload: Extract<Payload, { op: "create" }>;
+  source: string;
+}) {
+  const minutes =
+    payload.fields.playtimeSteamMin ??
+    payload.fields.playtimePsnMin ??
+    payload.fields.playtimeXboxMin;
+  const platform = platformName(payload.game.provider ?? source);
+  return (
+    <p className="text-muted-foreground text-sm">
+      {minutes
+        ? m.proposal_new_game_platform_hint({ time: formatPlaytime(minutes), platform })
+        : m.proposal_new_game_no_time({ platform })}
+    </p>
+  );
 }
 
 export function ProposalCard(props: {
@@ -115,7 +174,7 @@ export function ProposalCard(props: {
               </Link>
             )
           ) : null}
-          <Badge variant="outline">{(kindLabels[proposal.kind] ?? (() => proposal.kind))()}</Badge>
+          <Badge variant="outline">{proposalKindLabel(proposal.source, proposal.kind)}</Badge>
           <Badge variant="secondary">
             {(sourceLabels[proposal.source] ?? m.proposal_source_system)()}
           </Badge>
@@ -129,20 +188,33 @@ export function ProposalCard(props: {
             ))}
           </ul>
         )}
-        {payload.op === "create" && (
+        {payload.op === "create" && <NewGameHint payload={payload} source={proposal.source} />}
+        {payload.op === "conflict" && (
           <p className="text-muted-foreground text-sm">
-            {m.proposal_new_game_hint({
-              time: formatPlaytime(payload.fields.playtimeSteamMin ?? 0),
+            {m.proposal_conflict_platform_hint({
+              manual: formatPlaytime(payload.manualMin),
+              platform: platformName(payload.provider),
+              time: formatPlaytime(payload.platformMin ?? payload.steamMin ?? 0),
             })}
           </p>
         )}
-        {payload.op === "conflict" && (
-          <p className="text-muted-foreground text-sm">
-            {m.proposal_conflict_hint({
-              manual: formatPlaytime(payload.manualMin),
-              steam: formatPlaytime(payload.steamMin),
-            })}
-          </p>
+        {payload.op === "screenshots" && (
+          <div className="grid gap-2">
+            <p className="text-muted-foreground text-sm">
+              {m.proposal_screenshots_hint({ count: payload.items.length })}
+            </p>
+            <div className="flex flex-wrap gap-1">
+              {payload.items.slice(0, 8).map((item) => (
+                <img
+                  key={item.externalId}
+                  src={item.thumbUrl ?? item.url}
+                  alt=""
+                  loading="lazy"
+                  className="h-14 rounded object-cover"
+                />
+              ))}
+            </div>
+          </div>
         )}
         {payload.op === "match" && !resolved && (
           <div className="grid gap-2">
@@ -186,9 +258,9 @@ export function ProposalCard(props: {
                 <Button
                   size="sm"
                   disabled={props.pending}
-                  onClick={() => props.onResolve?.("approve", { choice: "use_steam" })}
+                  onClick={() => props.onResolve?.("approve", { choice: "use_platform" })}
                 >
-                  {m.proposal_conflict_use_steam()}
+                  {m.proposal_conflict_use_platform({ platform: platformName(payload.provider) })}
                 </Button>
                 <Button
                   size="sm"

@@ -1,5 +1,6 @@
 import type { OutboxHandlers } from "../outbox";
 import {
+  onAchievementsUnlocked,
   onEntryCreated,
   onEntryUpdated,
   onPlaytimeRecorded,
@@ -13,6 +14,7 @@ export const socialHandlers: OutboxHandlers = {
   "entry.updated": onEntryUpdated,
   "playtime.recorded": onPlaytimeRecorded,
   "screenshots.added": onScreenshotsAdded,
+  "achievements.unlocked": onAchievementsUnlocked,
   "reaction.created": onReactionCreated,
   "comment.created": onCommentCreated,
   "proposals.created": onProposalsCreated,

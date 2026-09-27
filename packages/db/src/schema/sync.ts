@@ -128,6 +128,8 @@ export const steamAccounts = pgTable(
     currentAppId: integer(),
     currentGameName: text(),
     currentSince: tstz(),
+    /** Steam ekran görüntülerinin son içe aktarılma zamanı (ilk aktarım akışa düşmez). */
+    screenshotsSyncedAt: tstz(),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
@@ -171,19 +173,111 @@ export const syncRuns = pgTable(
 );
 
 /**
- * Steam'den en son gözlenen süre (uygulama başına). Oturum farkları kütüphane kaydından değil buradan
- * hesaplanır; böylece öneri onay beklerken aynı süre iki kez oturum olarak yazılmaz.
+ * Platformdan en son gözlenen süre ve başarım sayısı (başlık başına). Oturum farkları kütüphane kaydından
+ * değil buradan hesaplanır; böylece öneri onay beklerken aynı süre iki kez oturum olarak yazılmaz.
  */
-export const steamSnapshots = pgTable(
-  "steam_snapshots",
+export const platformSnapshots = pgTable(
+  "platform_snapshots",
   {
     userId: text()
       .notNull()
       .references(() => user.id, { onDelete: "cascade" }),
-    appId: integer().notNull(),
-    playtimeMin: integer().notNull(),
+    provider: text().notNull(),
+    /** Steam app id, PSN `concept:<id>` / `np:<id>`, Xbox titleId. */
+    externalId: text().notNull(),
+    playtimeMin: integer(),
+    /** Başlık listesinin bildirdiği açılan başarım sayısı; değişince ayrıntı çekilir. */
+    achievementsUnlocked: integer(),
     achievementsCheckedAt: tstz(),
     updatedAt: updatedAt(),
   },
-  (t) => [primaryKey({ columns: [t.userId, t.appId] })],
+  (t) => [primaryKey({ columns: [t.userId, t.provider, t.externalId] })],
+);
+
+/**
+ * Steam dışındaki bağlı platform hesapları (PSN, Xbox). Kimlik bilgileri (yenileme token'ı) şifreli
+ * saklanır; süresi dolarsa `needsReauth` açılır ve kullanıcıdan yeniden bağlaması istenir.
+ */
+export const platformAccounts = pgTable(
+  "platform_accounts",
+  {
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    provider: text().notNull(),
+    /** PSN accountId, Xbox XUID. */
+    externalId: text().notNull(),
+    displayName: text(),
+    avatarUrl: text(),
+    /** AES-256-GCM ile şifrelenmiş JSON (token'lar). */
+    credentials: text().notNull(),
+    credentialsExpireAt: tstz(),
+    needsReauth: boolean().notNull().default(false),
+    syncEnabled: boolean().notNull().default(true),
+    lastSyncedAt: tstz(),
+    lastSyncError: text(),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.provider] }),
+    uniqueIndex().on(t.provider, t.externalId),
+  ],
+);
+
+/** Bir platform oyununun başarım seti (herkes için ortak; kütüphanelerde olan oyunlar için tutulur). */
+export const achievementSets = pgTable(
+  "achievement_sets",
+  {
+    provider: text().notNull(),
+    /** Steam app id, PSN npCommunicationId, Xbox titleId. */
+    gameKey: text().notNull(),
+    /** Setin bağlı olduğu katalog oyunu (oyun sayfası başarımları buradan bulur). */
+    gameId: uuid().references(() => games.id, { onDelete: "set null" }),
+    total: integer().notNull(),
+    fetchedAt: tstz().notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.provider, t.gameKey] }), index().on(t.gameId)],
+);
+
+export const achievements = pgTable(
+  "achievements",
+  {
+    provider: text().notNull(),
+    gameKey: text().notNull(),
+    /** Platformdaki kimlik (Steam apiname, PSN trophyId, Xbox id). */
+    apiName: text().notNull(),
+    position: integer().notNull().default(0),
+    name: text().notNull(),
+    description: text(),
+    /** Diğer dillerdeki ad/açıklama: `{ tr: { name, description } }`. */
+    localized: jsonb().$type<Record<string, { name: string; description: string | null }>>(),
+    iconUrl: text(),
+    iconLockedUrl: text(),
+    hidden: boolean().notNull().default(false),
+    /** Oyuncuların yüzde kaçı açtı (0–100). */
+    rarity: real(),
+    /** PSN: bronze/silver/gold/platinum; Xbox: gamerscore. */
+    grade: text(),
+  },
+  (t) => [primaryKey({ columns: [t.provider, t.gameKey, t.apiName] })],
+);
+
+/** Kullanıcının açtığı başarımlar (yalnızca açılanlar saklanır). */
+export const userAchievements = pgTable(
+  "user_achievements",
+  {
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    provider: text().notNull(),
+    gameKey: text().notNull(),
+    apiName: text().notNull(),
+    unlockedAt: tstz(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.provider, t.gameKey, t.apiName] }),
+    index().on(t.userId, t.unlockedAt),
+  ],
 );

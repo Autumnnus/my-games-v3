@@ -1,11 +1,16 @@
 import { schema } from "@my-games/db";
 import { and, eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { gameAchievements } from "../src/achievements";
 import { db } from "../src/db";
 import { addEntry } from "../src/library";
+import { processOutbox } from "../src/outbox";
 import { listProposals, resolveProposal, setRule } from "../src/proposals";
+import { listScreenshots } from "../src/screenshots";
+import { socialHandlers } from "../src/social/handlers";
 import { linkSteamAccount } from "../src/steam/accounts";
 import { pollPresence } from "../src/steam/presence";
+import { syncSteamScreenshots } from "../src/steam/screenshots";
 import { syncSteamUser } from "../src/steam/sync";
 import { createGame, createUser, json, mockFetch } from "./factories";
 
@@ -17,10 +22,25 @@ type Owned = {
   playtime_forever: number;
   playtime_2weeks?: number;
   rtime_last_played?: number;
+  has_community_visible_stats?: boolean;
 };
 
 let owned: Owned[] = [];
 let privateProfile = false;
+type SchemaRow = {
+  name: string;
+  displayName: string;
+  description?: string;
+  hidden: number;
+  icon?: string;
+};
+let playerAchievements: Record<
+  number,
+  Array<{ apiname: string; achieved: number; unlocktime: number }>
+> = {};
+let achievementSchema: Record<number, Record<string, SchemaRow[]>> = {};
+let achievementPercent: Record<number, Array<{ name: string; percent: string }>> = {};
+let userFiles: Array<Record<string, unknown>> = [];
 let playing: { gameid?: string; gameextrainfo?: string } = {};
 let fetchMock: ReturnType<typeof mockFetch>;
 
@@ -29,7 +49,43 @@ beforeEach(() => {
   owned = [];
   privateProfile = false;
   playing = {};
+  playerAchievements = {};
+  achievementSchema = {};
+  achievementPercent = {};
+  userFiles = [];
+  const appOf = (url: string) =>
+    Number(new URL(url).searchParams.get("appid") ?? new URL(url).searchParams.get("gameid"));
   fetchMock = mockFetch([
+    {
+      match: (url) => url.includes("ISteamUserStats/GetPlayerAchievements"),
+      respond: (url) => {
+        const list = playerAchievements[appOf(url)];
+        return json(
+          list
+            ? { playerstats: { success: true, achievements: list } }
+            : { playerstats: { success: false } },
+          list ? 200 : 400,
+        );
+      },
+    },
+    {
+      match: (url) => url.includes("ISteamUserStats/GetSchemaForGame"),
+      respond: (url) => {
+        const language = new URL(url).searchParams.get("l") ?? "english";
+        const rows = achievementSchema[appOf(url)]?.[language] ?? [];
+        return json({ game: { availableGameStats: { achievements: rows } } });
+      },
+    },
+    {
+      match: (url) => url.includes("GetGlobalAchievementPercentagesForApp"),
+      respond: (url) =>
+        json({ achievementpercentages: { achievements: achievementPercent[appOf(url)] ?? [] } }),
+    },
+    {
+      match: (url) => url.includes("IPublishedFileService/GetUserFiles"),
+      respond: () =>
+        json({ response: { total: userFiles.length, publishedfiledetails: userFiles } }),
+    },
     {
       match: (url) => url.includes("IPlayerService/GetOwnedGames"),
       respond: () =>
@@ -213,6 +269,176 @@ describe("steam sync", () => {
     const second = await createUser();
     await linkSteamAccount(first.id, STEAM_ID);
     await expect(linkSteamAccount(second.id, STEAM_ID)).rejects.toMatchObject({ code: "conflict" });
+  });
+});
+
+describe("steam achievements", () => {
+  it("stores achievement definitions once, records unlocks and announces only new ones", async () => {
+    const owner = await createUser();
+    const game = await createGame({ steamAppId: 620, name: "Portal 2" });
+    await addEntry(owner.id, { gameId: game.id, status: "playing", playtimeSteamMin: 100 });
+    await linkSteamAccount(owner.id, STEAM_ID);
+
+    achievementSchema[620] = {
+      english: [
+        {
+          name: "WAKE_UP",
+          displayName: "Wake Up Call",
+          description: "Survive",
+          hidden: 0,
+          icon: "https://cdn/a.jpg",
+        },
+        {
+          name: "SECRET",
+          displayName: "Secret Ending",
+          description: "Spoiler",
+          hidden: 1,
+          icon: "https://cdn/b.jpg",
+        },
+      ],
+      turkish: [
+        { name: "WAKE_UP", displayName: "Uyanma Vakti", description: "Hayatta kal", hidden: 0 },
+        { name: "SECRET", displayName: "Gizli Son", description: "Spoiler", hidden: 1 },
+      ],
+    };
+    achievementPercent[620] = [
+      { name: "WAKE_UP", percent: "71.2" },
+      { name: "SECRET", percent: "2.5" },
+    ];
+    playerAchievements[620] = [
+      { apiname: "WAKE_UP", achieved: 1, unlocktime: 1_700_000_000 },
+      { apiname: "SECRET", achieved: 0, unlocktime: 0 },
+    ];
+    owned = [
+      {
+        appid: 620,
+        name: "Portal 2",
+        playtime_forever: 100,
+        has_community_visible_stats: true,
+      } as Owned,
+    ];
+    await db.delete(schema.outbox);
+    const first = await syncSteamUser(owner.id);
+    expect(first).toMatchObject({ stats: { achievements: 1, achievementsUnlocked: 0 } });
+
+    const [entry] = (await entries(owner.id)).map((row) => row.entry);
+    expect(entry).toMatchObject({ achievementsUnlocked: 1, achievementsTotal: 2 });
+    const [set] = await gameAchievements({
+      gameId: game.id,
+      userId: owner.id,
+      locale: "tr",
+      providers: ["steam"],
+    });
+    expect(set).toMatchObject({ provider: "steam", total: 2, unlocked: 1 });
+    expect(set?.items[0]).toMatchObject({ name: "Uyanma Vakti", unlocked: true, rarity: 71.2 });
+    // Açılmamış gizli başarımın adı gösterilmez.
+    expect(set?.items[1]).toMatchObject({ name: "", hidden: true, unlocked: false });
+    // İlk içe aktarım akışa düşmez.
+    expect(
+      await db.select().from(schema.outbox).where(eq(schema.outbox.type, "achievements.unlocked")),
+    ).toHaveLength(0);
+
+    // Oynayıp gizli başarımı açınca yeni açılan akışa düşer; şema tekrar çekilmez.
+    const schemaCalls = () =>
+      fetchMock.calls.filter((call) => call.url.includes("GetSchemaForGame")).length;
+    const before = schemaCalls();
+    owned = [{ ...owned[0], playtime_forever: 160 } as Owned];
+    playerAchievements[620] = [
+      { apiname: "WAKE_UP", achieved: 1, unlocktime: 1_700_000_000 },
+      { apiname: "SECRET", achieved: 1, unlocktime: 1_800_000_000 },
+    ];
+    const second = await syncSteamUser(owner.id);
+    expect(second).toMatchObject({ stats: { achievementsUnlocked: 1 } });
+    expect(schemaCalls()).toBe(before);
+
+    await processOutbox(socialHandlers, 100);
+    const [activity] = await db
+      .select()
+      .from(schema.activities)
+      .where(
+        and(
+          eq(schema.activities.actorId, owner.id),
+          eq(schema.activities.verb, "achievements_unlocked"),
+        ),
+      );
+    expect(activity?.data).toMatchObject({
+      count: 1,
+      items: [{ apiName: "SECRET", name: "Secret Ending", rarity: 2.5 }],
+    });
+  });
+});
+
+describe("steam screenshots", () => {
+  const file = (id: string, appId: number, created: number) => ({
+    publishedfileid: id,
+    consumer_appid: appId,
+    file_url: `https://images.steamusercontent.com/ugc/${id}/full.jpg`,
+    preview_url: `https://images.steamusercontent.com/ugc/${id}/preview.jpg`,
+    title: id === "1" ? "Boss fight" : "",
+    time_created: created,
+    image_width: 1920,
+    image_height: 1080,
+  });
+
+  it("imports public screenshots into library entries, announcing only later ones", async () => {
+    const owner = await createUser();
+    const game = await createGame({ steamAppId: 620, name: "Portal 2" });
+    await addEntry(owner.id, { gameId: game.id, status: "playing" });
+    await linkSteamAccount(owner.id, STEAM_ID);
+    await db.delete(schema.outbox);
+
+    // İki Portal 2 görüntüsü + kütüphanede olmayan bir oyunun görüntüsü.
+    userFiles = [
+      file("1", 620, 1_700_000_000),
+      file("2", 620, 1_700_000_100),
+      file("3", 999, 1_700_000_200),
+    ];
+    const first = await syncSteamScreenshots(owner.id);
+    expect(first).toMatchObject({ imported: 2 });
+    const shots = await listScreenshots({ userId: owner.id });
+    expect(shots).toHaveLength(2);
+    expect(shots.find((shot) => shot.caption === "Boss fight")).toMatchObject({
+      kind: "steam",
+      thumbUrl: "https://images.steamusercontent.com/ugc/1/preview.jpg",
+    });
+    expect(
+      await db.select().from(schema.outbox).where(eq(schema.outbox.type, "screenshots.added")),
+    ).toHaveLength(0);
+
+    userFiles = [file("4", 620, 1_700_000_300), ...userFiles];
+    expect(await syncSteamScreenshots(owner.id)).toMatchObject({ imported: 1 });
+    expect(
+      await db.select().from(schema.outbox).where(eq(schema.outbox.type, "screenshots.added")),
+    ).toHaveLength(1);
+    // Aynı dosyalar tekrar gelse de eklenmez.
+    expect(await syncSteamScreenshots(owner.id)).toMatchObject({ imported: 0 });
+  });
+
+  it("asks before importing when the rule says so and never re-proposes rejected ones", async () => {
+    const owner = await createUser();
+    const game = await createGame({ steamAppId: 620, name: "Portal 2" });
+    await addEntry(owner.id, { gameId: game.id, status: "playing" });
+    await linkSteamAccount(owner.id, STEAM_ID);
+    await setRule(owner.id, "steam", "screenshots", "ask");
+
+    userFiles = [file("10", 620, 1_700_000_000)];
+    expect(await syncSteamScreenshots(owner.id)).toMatchObject({ imported: 0, proposed: 1 });
+    const [proposal] = (await listProposals(owner.id)).filter((row) => row.kind === "screenshots");
+    await resolveProposal(owner.id, proposal?.id ?? "", "reject");
+    expect(await syncSteamScreenshots(owner.id)).toMatchObject({ proposed: 0 });
+
+    userFiles = [file("11", 620, 1_700_000_100), ...userFiles];
+    await syncSteamScreenshots(owner.id);
+    const [next] = (await listProposals(owner.id)).filter((row) => row.kind === "screenshots");
+    await resolveProposal(owner.id, next?.id ?? "", "approve");
+    const shots = await listScreenshots({ userId: owner.id });
+    expect(shots.map((shot) => shot.url)).toEqual([
+      "https://images.steamusercontent.com/ugc/11/full.jpg",
+    ]);
+
+    await setRule(owner.id, "steam", "screenshots", "ignore");
+    userFiles = [file("12", 620, 1_700_000_200), ...userFiles];
+    expect(await syncSteamScreenshots(owner.id)).toMatchObject({ imported: 0, proposed: 0 });
   });
 });
 

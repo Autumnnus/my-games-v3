@@ -58,6 +58,28 @@ export function steamConfig() {
   return apiKey ? { apiKey } : null;
 }
 
+/**
+ * Xbox: Azure'da "yalnızca kişisel Microsoft hesapları" için kayıtlı bir uygulama. Yönlendirme adresi
+ * `{APP_URL}/api/v1/platforms/xbox/callback`.
+ */
+export function xboxConfig() {
+  const clientId = read("XBOX_CLIENT_ID");
+  const clientSecret = read("XBOX_CLIENT_SECRET");
+  return clientId && clientSecret ? { clientId, clientSecret } : null;
+}
+
+/** PSN için uygulama anahtarı gerekmez; kullanıcının kendi oturum kodu (NPSSO) kullanılır. */
+export function psnEnabled() {
+  return read("PSN_DISABLED") !== "true";
+}
+
+/** Platform token'larını şifreleyen anahtarın kaynağı (worker'da da tanımlı olmalı). */
+export function credentialsSecret() {
+  const secret = read("CREDENTIALS_SECRET") ?? read("BETTER_AUTH_SECRET");
+  if (!secret) throw new Error("CREDENTIALS_SECRET veya BETTER_AUTH_SECRET tanımlı değil");
+  return secret;
+}
+
 export function storageConfig() {
   const endpoint = read("S3_ENDPOINT");
   const bucket = read("S3_BUCKET");
@@ -111,6 +133,8 @@ export function features() {
   return {
     igdb: igdbConfig() !== null,
     steam: steamConfig() !== null,
+    psn: psnEnabled(),
+    xbox: xboxConfig() !== null,
     uploads: storageConfig() !== null,
     push: pushConfig() !== null,
     ai: aiConfig() !== null,

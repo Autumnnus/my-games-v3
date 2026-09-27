@@ -2,11 +2,12 @@ import { schema } from "@my-games/db";
 import { gameCoverUrl } from "@my-games/shared";
 import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { db } from "./db";
+import { aliasedPlaytime, entryPlaytime } from "./playtime";
 
 const { libraryEntries: e, games: g, gameTerms, terms, playSessions, screenshots, user } = schema;
 
-/** Toplam süre = elle girilen + Steam. */
-const playtime = sql<number>`(${e.playtimeManualMin} + coalesce(${e.playtimeSteamMin}, 0))`;
+/** Toplam süre = elle girilen + platformlar. */
+const playtime = entryPlaytime;
 
 type Bucket = { key: string; count: number; playtimeMin: number };
 
@@ -264,8 +265,8 @@ export async function compareUsers(aId: string, bId: string) {
   }>(sql`
     select g.id as game_id, g.name, g.slug, g.cover_image_id, g.cover_url,
       a.status as a_status, b.status as b_status, a.rating as a_rating, b.rating as b_rating,
-      (a.playtime_manual_min + coalesce(a.playtime_steam_min, 0)) as a_playtime,
-      (b.playtime_manual_min + coalesce(b.playtime_steam_min, 0)) as b_playtime
+      ${aliasedPlaytime("a")} as a_playtime,
+      ${aliasedPlaytime("b")} as b_playtime
     from ${g} g
     left join ${e} a on a.game_id = g.id and a.user_id = ${aId}
     left join ${e} b on b.game_id = g.id and b.user_id = ${bId}

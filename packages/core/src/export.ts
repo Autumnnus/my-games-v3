@@ -1,8 +1,18 @@
 import { schema } from "@my-games/db";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "./db";
 
-const { user, libraryEntries, games, entryHistory, screenshots } = schema;
+const {
+  user,
+  libraryEntries,
+  games,
+  entryHistory,
+  screenshots,
+  userAchievements,
+  achievements,
+  platformAccounts,
+  steamAccounts,
+} = schema;
 
 /** Kullanıcının tüm verisi (KVKK/GDPR dışa aktarma). */
 export async function exportUserData(userId: string) {
@@ -19,7 +29,7 @@ export async function exportUserData(userId: string) {
     .from(user)
     .where(eq(user.id, userId));
 
-  const [library, history, shots] = await Promise.all([
+  const [library, history, shots, unlocked, platforms, steam] = await Promise.all([
     db
       .select({
         entry: libraryEntries,
@@ -44,6 +54,39 @@ export async function exportUserData(userId: string) {
       .from(screenshots)
       .where(eq(screenshots.userId, userId))
       .orderBy(asc(screenshots.createdAt)),
+    db
+      .select({
+        provider: userAchievements.provider,
+        gameKey: userAchievements.gameKey,
+        apiName: userAchievements.apiName,
+        name: achievements.name,
+        unlockedAt: userAchievements.unlockedAt,
+      })
+      .from(userAchievements)
+      .leftJoin(
+        achievements,
+        and(
+          eq(achievements.provider, userAchievements.provider),
+          eq(achievements.gameKey, userAchievements.gameKey),
+          eq(achievements.apiName, userAchievements.apiName),
+        ),
+      )
+      .where(eq(userAchievements.userId, userId))
+      .orderBy(asc(userAchievements.unlockedAt)),
+    // Bağlı hesaplar; token'lar asla dışa aktarılmaz.
+    db
+      .select({
+        provider: platformAccounts.provider,
+        externalId: platformAccounts.externalId,
+        displayName: platformAccounts.displayName,
+        lastSyncedAt: platformAccounts.lastSyncedAt,
+      })
+      .from(platformAccounts)
+      .where(eq(platformAccounts.userId, userId)),
+    db
+      .select({ steamId: steamAccounts.steamId, personaName: steamAccounts.personaName })
+      .from(steamAccounts)
+      .where(eq(steamAccounts.userId, userId)),
   ]);
 
   return {
@@ -52,5 +95,14 @@ export async function exportUserData(userId: string) {
     library: library.map(({ entry, game }) => ({ ...entry, game })),
     history,
     screenshots: shots,
+    achievements: unlocked,
+    linkedAccounts: [
+      ...steam.map((row) => ({
+        provider: "steam",
+        externalId: row.steamId,
+        displayName: row.personaName,
+      })),
+      ...platforms,
+    ],
   };
 }

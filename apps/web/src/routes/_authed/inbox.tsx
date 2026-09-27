@@ -4,7 +4,12 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
-import { isBulkable, kindLabels, ProposalCard, sourceLabels } from "@/components/proposal-card";
+import {
+  isBulkable,
+  ProposalCard,
+  proposalKindLabel,
+  sourceLabels,
+} from "@/components/proposal-card";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -162,9 +167,8 @@ function ProposalList({ status }: { status: "pending" | "resolved" }) {
 }
 
 /** Yok sayma anahtarı `<tür>:<hedef>` biçimindedir (ör. `new_game:620`). */
-function ignoreKindLabel(key: string) {
-  const kind = key.split(":")[0] ?? "";
-  return (kindLabels[kind] ?? (() => kind))();
+function ignoreKindLabel(source: string, key: string) {
+  return proposalKindLabel(source, key.split(":")[0] ?? "");
 }
 
 const actionLabels = {
@@ -213,7 +217,7 @@ function Rules() {
                   {(sourceLabels[rule.source] ?? (() => rule.source))()}
                 </span>
                 {" · "}
-                {(kindLabels[rule.kind] ?? (() => rule.kind))()}
+                {proposalKindLabel(rule.source, rule.kind)}
               </div>
               <Select
                 value={rule.action}
@@ -253,7 +257,7 @@ function Rules() {
                     {" · "}
                     {(sourceLabels[item.source] ?? (() => item.source))()}
                     {" · "}
-                    {ignoreKindLabel(item.externalId)}
+                    {ignoreKindLabel(item.source, item.externalId)}
                   </span>
                 </span>
                 <Button size="sm" variant="ghost" onClick={() => removeIgnore.mutate(item)}>

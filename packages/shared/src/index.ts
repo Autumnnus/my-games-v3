@@ -31,14 +31,22 @@ export const stores = [
 ] as const;
 export type Store = (typeof stores)[number];
 
-export const gameSources = ["igdb", "steam", "custom", "legacy"] as const;
+export const gameSources = ["igdb", "steam", "custom", "legacy", "psn", "xbox"] as const;
 export type GameSource = (typeof gameSources)[number];
 
 export const termKinds = ["genre", "theme", "game_mode", "player_perspective", "company"] as const;
 export type TermKind = (typeof termKinds)[number];
 
 /** Onay sistemine öneri üreten kaynaklar. */
-export const proposalSources = ["steam", "igdb", "migration", "ai", "system"] as const;
+export const proposalSources = [
+  "steam",
+  "psn",
+  "xbox",
+  "igdb",
+  "migration",
+  "ai",
+  "system",
+] as const;
 export type ProposalSource = (typeof proposalSources)[number];
 
 export const proposalStatuses = [
@@ -54,10 +62,21 @@ export type ProposalStatus = (typeof proposalStatuses)[number];
 export const syncActions = ["auto", "ask", "ignore"] as const;
 export type SyncAction = (typeof syncActions)[number];
 
-export const playSessionSources = ["steam_delta", "steam_presence", "desktop", "manual"] as const;
+export const playSessionSources = [
+  "steam_delta",
+  "steam_presence",
+  "psn_delta",
+  "xbox_delta",
+  "desktop",
+  "manual",
+] as const;
 export type PlaySessionSource = (typeof playSessionSources)[number];
 
 export const screenshotKinds = ["upload", "external", "steam"] as const;
+
+/** Kütüphane ve başarımları senkronize edilen platformlar. */
+export const syncProviders = ["steam", "psn", "xbox"] as const;
+export type SyncProvider = (typeof syncProviders)[number];
 export type ScreenshotKind = (typeof screenshotKinds)[number];
 
 /** Beğeni ve yorum yapılabilen içerikler. */
@@ -82,6 +101,7 @@ export const activityVerbs = [
   "played",
   "playtime_milestone",
   "achievements_completed",
+  "achievements_unlocked",
   "screenshots_added",
 ] as const;
 export type ActivityVerb = (typeof activityVerbs)[number];

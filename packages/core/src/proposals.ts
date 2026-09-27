@@ -12,7 +12,8 @@ const { changeProposals, syncRules, syncIgnores, games, libraryEntries } = schem
 
 /**
  * Öneri türleri (`kind`) ve varsayılan davranışları. Kullanıcı `sync_rules` ile değiştirebilir.
- * - playtime / last_played / achievements: Steam'in bildirdiği sayısal değişiklikler.
+ * - playtime / achievements: platformun bildirdiği sayısal değişiklikler (son oynama süreyle birlikte gelir).
+ * - screenshots: Steam'de herkese açık paylaşılan ekran görüntüleri.
  * - status: durum önerisi ("2 haftadır oynuyorsun → oynanıyor").
  * - new_game: Steam kütüphanesinde, bizim kütüphanede olmayan oyun.
  * - playtime_conflict: elle girilmiş süre ile Steam süresi ilk bağlantıda çakışıyor.
@@ -20,11 +21,21 @@ const { changeProposals, syncRules, syncIgnores, games, libraryEntries } = schem
  */
 export const DEFAULT_RULES: Record<string, SyncAction> = {
   "steam:playtime": "auto",
-  "steam:last_played": "auto",
   "steam:achievements": "auto",
   "steam:status": "ask",
   "steam:new_game": "ask",
   "steam:playtime_conflict": "ask",
+  "steam:screenshots": "auto",
+  "psn:playtime": "auto",
+  "psn:achievements": "auto",
+  "psn:status": "ask",
+  "psn:new_game": "ask",
+  "psn:playtime_conflict": "ask",
+  "xbox:playtime": "auto",
+  "xbox:achievements": "auto",
+  "xbox:status": "ask",
+  "xbox:new_game": "ask",
+  "xbox:playtime_conflict": "ask",
   "migration:match": "ask",
   "igdb:match": "ask",
   "ai:entry_update": "ask",
@@ -42,11 +53,37 @@ export type ProposalPayload =
     }
   | {
       op: "create";
-      game: { gameId?: string; steamAppId?: number; igdbId?: number; name: string };
+      game: {
+        gameId?: string;
+        steamAppId?: number;
+        igdbId?: number;
+        name: string;
+        provider?: string;
+        externalId?: string;
+      };
       fields: EntryFields;
     }
   | { op: "match"; gameName: string; candidates: MatchCandidate[] }
-  | { op: "conflict"; manualMin: number; steamMin: number };
+  | {
+      op: "conflict";
+      manualMin: number;
+      /** Çakışan platform (eski öneriler yalnızca Steam içindi: `steamMin`). */
+      provider?: "steam" | "psn" | "xbox";
+      platformMin?: number;
+      steamMin?: number;
+    }
+  | {
+      op: "screenshots";
+      items: Array<{
+        externalId: string;
+        url: string;
+        thumbUrl: string | null;
+        caption: string | null;
+        width: number | null;
+        height: number | null;
+        takenAt: string | null;
+      }>;
+    };
 
 export type ProposalInput = {
   userId: string;
@@ -211,23 +248,41 @@ async function applyInTx(tx: Tx, proposal: ProposalRow, choice?: string) {
     }
     case "conflict": {
       if (!proposal.entryId) throw new AppError("conflict", "Önerinin kaydı yok");
-      // "use_steam": elle girilen süre Steam süresinin içinde kabul edilir ve sıfırlanır.
-      // "keep_both": elle girilen süre başka bir platformdaki oynamadır; ikisi toplanır.
-      const useSteam = (choice ?? "use_steam") === "use_steam";
+      // "use_platform" (eski adı "use_steam"): elle girilen süre platform süresinin içinde kabul edilir
+      // ve sıfırlanır. "keep_both": elle girilen süre başka bir yerdeki oynamadır; ikisi toplanır.
+      const field = PLAYTIME_FIELDS[payload.provider ?? "steam"];
+      const minutes = payload.platformMin ?? payload.steamMin ?? 0;
+      const usePlatform = (choice ?? "use_platform") !== "keep_both";
       await updateEntry(
         proposal.userId,
         proposal.entryId,
-        useSteam
-          ? { playtimeManualMin: 0, playtimeSteamMin: payload.steamMin }
-          : { playtimeSteamMin: payload.steamMin },
+        usePlatform ? { playtimeManualMin: 0, [field]: minutes } : { [field]: minutes },
         options,
       );
+      return;
+    }
+    case "screenshots": {
+      if (!proposal.entryId) throw new AppError("conflict", "Önerinin kaydı yok");
+      const { insertPlatformScreenshots } = await import("./screenshots");
+      await insertPlatformScreenshots(tx, {
+        userId: proposal.userId,
+        entryId: proposal.entryId,
+        gameId: proposal.gameId,
+        items: payload.items,
+        announce: true,
+      });
       return;
     }
     case "match":
       throw new AppError("invalid", "Eşleştirme önerisi transaction dışında uygulanır");
   }
 }
+
+const PLAYTIME_FIELDS = {
+  steam: "playtimeSteamMin",
+  psn: "playtimePsnMin",
+  xbox: "playtimeXboxMin",
+} as const;
 
 function reviveValue(field: string, value: unknown) {
   if (field === "lastPlayedAt" && typeof value === "string") return new Date(value);

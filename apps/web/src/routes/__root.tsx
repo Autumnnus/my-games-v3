@@ -6,6 +6,7 @@ import { AddGameProvider } from "@/components/add-game";
 import { NotFound } from "@/components/not-found";
 import { SiteHeader } from "@/components/site-header";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { metaQuery } from "@/lib/meta";
 import { proposalCountQuery, unreadQuery } from "@/lib/queries";
 import { type CurrentUser, sessionQuery } from "@/lib/session";
 import { m } from "@/paraglide/messages";
@@ -28,8 +29,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   },
   // Header sayaçları ilk SSR'da dolu gelsin (sonrası SSE ve React Query ile güncellenir).
   loader: async ({ context }) => {
-    if (!context.user) return;
+    // Açık entegrasyonlar (Steam/PSN/Xbox, yükleme…) SSR'da da bilinsin; yoksa kartlar hydration'da değişir.
+    const meta = context.queryClient.prefetchQuery(metaQuery);
+    if (!context.user) return meta;
     await Promise.all([
+      meta,
       context.queryClient.prefetchQuery(proposalCountQuery),
       context.queryClient.prefetchQuery(unreadQuery),
     ]);

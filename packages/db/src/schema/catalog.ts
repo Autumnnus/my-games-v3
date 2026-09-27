@@ -81,17 +81,18 @@ export const gameTerms = pgTable(
 );
 
 /**
- * Bir oyunun ek Steam uygulama kimlikleri (GOTY/yeniden yayın gibi aynı oyunun başka app'leri). Asıl kimlik
- * `games.steam_app_id`'dedir; sync bu tablodan da eşleştirir.
+ * Oyunun platformlardaki kimlikleri: Steam'in ek app'leri (asıl kimlik `games.steam_app_id`), PSN
+ * `concept:<id>` / `np:<npCommunicationId>`, Xbox `titleId`. Sync bir başlığı buradan oyuna bağlar.
  */
-export const steamAppAliases = pgTable(
-  "steam_app_aliases",
+export const gameExternalIds = pgTable(
+  "game_external_ids",
   {
-    appId: integer().primaryKey(),
+    provider: text().notNull(),
+    externalId: text().notNull(),
     gameId: uuid()
       .notNull()
       .references(() => games.id, { onDelete: "cascade" }),
     createdAt: createdAt(),
   },
-  (t) => [index().on(t.gameId)],
+  (t) => [primaryKey({ columns: [t.provider, t.externalId] }), index().on(t.gameId)],
 );

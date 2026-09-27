@@ -2,6 +2,7 @@ import { schema } from "@my-games/db";
 import { eq, sql } from "drizzle-orm";
 import { db } from "./db";
 import { AppError, notFound } from "./errors";
+import { entryPlaytime } from "./playtime";
 import {
   type AllowedImageType,
   isAllowedImageType,
@@ -33,7 +34,7 @@ export async function getProfile(username: string) {
         completed: sql<number>`count(*) filter (where ${libraryEntries.status} = 'completed')::int`,
         playing: sql<number>`count(*) filter (where ${libraryEntries.status} = 'playing')::int`,
         backlog: sql<number>`count(*) filter (where ${libraryEntries.status} = 'backlog')::int`,
-        playtimeMin: sql<number>`coalesce(sum(${libraryEntries.playtimeManualMin} + coalesce(${libraryEntries.playtimeSteamMin}, 0)), 0)::int`,
+        playtimeMin: sql<number>`coalesce(sum(${entryPlaytime}), 0)::int`,
         averageRating: sql<number | null>`round(avg(${libraryEntries.rating}))::int`,
       })
       .from(libraryEntries)

@@ -11,8 +11,9 @@ import {
   mapIgdbGame,
   searchIgdbGames,
 } from "./igdb/games";
+import { entryPlaytime } from "./playtime";
 
-const { games, terms, gameTerms, libraryEntries, user, steamAppAliases } = schema;
+const { games, terms, gameTerms, libraryEntries, user, gameExternalIds } = schema;
 
 export type Game = typeof games.$inferSelect;
 
@@ -187,7 +188,7 @@ export async function ensureSteamGame(appId: number, name: string): Promise<Game
         if (updated) return updated;
       }
       // Oyunun asıl Steam kimliği başka (ör. GOTY sürümü): bu app ek kimlik olarak bağlanır.
-      await db.insert(steamAppAliases).values({ appId, gameId: game.id }).onConflictDoNothing();
+      await linkExternalId(db, "steam", String(appId), game.id);
       return (await findGameBySteamApp(db, appId)) ?? game;
     }
   }
@@ -216,17 +217,74 @@ export async function ensureSteamGame(appId: number, name: string): Promise<Game
   });
 }
 
-/** Steam uygulamasının katalogdaki oyunu: asıl kimlik ya da ek kimlik (`steam_app_aliases`). */
+/** Steam uygulamasının katalogdaki oyunu: asıl kimlik ya da ek kimlik (`game_external_ids`). */
 export async function findGameBySteamApp(tx: DbOrTx, appId: number): Promise<Game | null> {
   const [direct] = await tx.select().from(games).where(eq(games.steamAppId, appId)).limit(1);
   if (direct) return direct;
-  const [alias] = await tx
+  return findGameByExternalId(tx, "steam", String(appId));
+}
+
+/** Platform kimliğiyle (PSN `concept:<id>`, Xbox titleId, Steam ek app'i) eşlenmiş oyun. */
+export async function findGameByExternalId(
+  tx: DbOrTx,
+  provider: string,
+  externalId: string,
+): Promise<Game | null> {
+  const [row] = await tx
     .select({ game: games })
-    .from(steamAppAliases)
-    .innerJoin(games, eq(games.id, steamAppAliases.gameId))
-    .where(eq(steamAppAliases.appId, appId))
+    .from(gameExternalIds)
+    .innerJoin(games, eq(games.id, gameExternalIds.gameId))
+    .where(and(eq(gameExternalIds.provider, provider), eq(gameExternalIds.externalId, externalId)))
     .limit(1);
-  return alias?.game ?? null;
+  return row?.game ?? null;
+}
+
+/** Platform kimliğini oyuna bağlar; kimlik zaten başka oyuna bağlıysa dokunmaz. */
+export async function linkExternalId(
+  tx: DbOrTx,
+  provider: string,
+  externalId: string,
+  gameId: string,
+) {
+  await tx.insert(gameExternalIds).values({ provider, externalId, gameId }).onConflictDoNothing();
+}
+
+/**
+ * Steam dışı platform başlığını (PSN, Xbox) katalogda bulur ya da oluşturur. Sıra: platform kimliği →
+ * IGDB'de yüksek güvenli ad eşleşmesi → platformun adı ve görseliyle geçici oyun (gece IGDB eşleştirmesi
+ * sonra zenginleştirir). Bulunan oyun platform kimliğine bağlanır.
+ */
+export async function ensurePlatformGame(
+  provider: "psn" | "xbox",
+  externalId: string,
+  name: string,
+  imageUrl?: string | null,
+): Promise<Game> {
+  const known = await findGameByExternalId(db, provider, externalId);
+  if (known) return known;
+
+  if (igdbConfig()) {
+    const { findIgdbCandidates, pickAutoMatch } = await import("./matching");
+    const best = pickAutoMatch(await findIgdbCandidates(name).catch(() => []));
+    if (best) {
+      const game = await importIgdbGame(best.igdbId);
+      await linkExternalId(db, provider, externalId, game.id);
+      return (await findGameByExternalId(db, provider, externalId)) ?? game;
+    }
+  }
+
+  return db.transaction(async (tx) => {
+    const slug = await uniqueSlug(tx, name, null);
+    const [row] = await tx
+      .insert(games)
+      .values({ source: provider, name, slug, coverUrl: imageUrl ?? null })
+      .returning();
+    if (!row) throw new AppError("conflict");
+    await linkExternalId(tx, provider, externalId, row.id);
+    // Eşzamanlı başka bir sync aynı başlığı bağladıysa onunki kullanılır (bizimki sahipsiz kalır, gece
+    // eşleştirmesi IGDB'ye birleştirir).
+    return (await findGameByExternalId(tx, provider, externalId)) ?? row;
+  });
 }
 
 // --- Arama ---
@@ -342,7 +400,7 @@ export async function getGameBySlug(slug: string) {
         playing: sql<number>`count(*) filter (where ${libraryEntries.status} = 'playing')::int`,
         averageRating: sql<number | null>`round(avg(${libraryEntries.rating}))::int`,
         ratingCount: sql<number>`count(${libraryEntries.rating})::int`,
-        totalPlaytimeMin: sql<number>`coalesce(sum(${libraryEntries.playtimeManualMin} + coalesce(${libraryEntries.playtimeSteamMin}, 0)), 0)::int`,
+        totalPlaytimeMin: sql<number>`coalesce(sum(${entryPlaytime}), 0)::int`,
       })
       .from(libraryEntries)
       .where(eq(libraryEntries.gameId, game.id)),
@@ -352,7 +410,7 @@ export async function getGameBySlug(slug: string) {
         review: libraryEntries.review,
         rating: libraryEntries.rating,
         status: libraryEntries.status,
-        playtimeMin: sql<number>`${libraryEntries.playtimeManualMin} + coalesce(${libraryEntries.playtimeSteamMin}, 0)`,
+        playtimeMin: entryPlaytime,
         updatedAt: libraryEntries.updatedAt,
         user: {
           id: user.id,

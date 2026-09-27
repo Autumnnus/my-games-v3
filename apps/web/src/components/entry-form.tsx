@@ -35,11 +35,23 @@ export type EntryFormValues = {
   review: string | null;
 };
 
+/** Platformların bildirdiği süre; elle girilen değer bunun üstüne eklenir. */
+function platformHint(initial: EntryFormInitial) {
+  const steam = initial.playtimeSteamMin ?? 0;
+  const others = (initial.playtimePsnMin ?? 0) + (initial.playtimeXboxMin ?? 0);
+  if (!steam && !others) return undefined;
+  return others
+    ? m.field_playtime_platforms({ time: formatPlaytime(steam + others) })
+    : m.field_playtime_steam({ time: formatPlaytime(steam) });
+}
+
 export type EntryFormInitial = Partial<{
   status: EntryStatus;
   rating: number | null;
   playtimeManualMin: number;
   playtimeSteamMin: number | null;
+  playtimePsnMin: number | null;
+  playtimeXboxMin: number | null;
   platform: Platform | null;
   store: Store | null;
   startedAt: string | null;
@@ -123,14 +135,7 @@ export function EntryForm(props: {
             }
           />
         </FormField>
-        <FormField
-          label={m.field_playtime_hours()}
-          hint={
-            initial.playtimeSteamMin
-              ? m.field_playtime_steam({ time: formatPlaytime(initial.playtimeSteamMin) })
-              : undefined
-          }
-        >
+        <FormField label={m.field_playtime_hours()} hint={platformHint(initial)}>
           <Input
             name="playtime"
             type="number"

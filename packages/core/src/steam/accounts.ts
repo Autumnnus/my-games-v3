@@ -5,7 +5,7 @@ import { AppError } from "../errors";
 import { emit } from "../events";
 import type { PlayerSummary } from "./api";
 
-const { steamAccounts, steamSnapshots } = schema;
+const { steamAccounts, platformSnapshots } = schema;
 
 /**
  * Doğrulanmış (OpenID) Steam hesabını kullanıcıya bağlar ve ilk senkronizasyonu tetikler. Aynı Steam
@@ -28,7 +28,9 @@ export async function linkSteamAccount(
       .from(steamAccounts)
       .where(eq(steamAccounts.userId, userId));
     if (previous && previous.steamId !== steamId) {
-      await tx.delete(steamSnapshots).where(eq(steamSnapshots.userId, userId));
+      await tx
+        .delete(platformSnapshots)
+        .where(and(eq(platformSnapshots.userId, userId), eq(platformSnapshots.provider, "steam")));
     }
     const values = {
       steamId,
@@ -53,7 +55,9 @@ export async function linkSteamAccount(
 export async function unlinkSteamAccount(userId: string) {
   await db.transaction(async (tx) => {
     await tx.delete(steamAccounts).where(eq(steamAccounts.userId, userId));
-    await tx.delete(steamSnapshots).where(eq(steamSnapshots.userId, userId));
+    await tx
+      .delete(platformSnapshots)
+      .where(and(eq(platformSnapshots.userId, userId), eq(platformSnapshots.provider, "steam")));
     const accounts = await tx
       .select({ id: schema.account.id, providerId: schema.account.providerId })
       .from(schema.account)

@@ -13,20 +13,21 @@
     "migrate:legacy": "tsx --env-file-if-exists=../../.env scripts/migrate-legacy.ts"
   },
   "dependencies": {
+    "@ai-sdk/google": "^4.0.82",
     "@my-games/db": "workspace:*",
     "@my-games/shared": "workspace:*",
+    "ai": "^7.0.118",
+    "aws4fetch": "^1.0.20",
     "drizzle-orm": "catalog:",
     "pg": "catalog:",
-    "zod": "catalog:",
-    "aws4fetch": "^1.0.20",
+    "psn-api": "^2.18.1",
     "web-push": "^3.6.7",
-    "ai": "^7.0.118",
-    "@ai-sdk/google": "^4.0.82"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@types/pg": "catalog:",
-    "vitest": "^5.0.2",
+    "@types/web-push": "^3.6.4",
     "tsx": "catalog:",
-    "@types/web-push": "^3.6.4"
+    "vitest": "^5.0.2"
   }
 }

@@ -76,15 +76,77 @@ export async function getPlayerSummaries(steamIds: string[]) {
   return body.response?.players ?? [];
 }
 
-/** Başarım sayıları; oyunun başarımı yoksa ya da gizliyse `null`. */
-export async function getAchievementProgress(steamId: string, appId: number) {
+export type PlayerAchievement = { apiname: string; achieved: number; unlocktime: number };
+
+/** Kullanıcının bir oyundaki başarım durumu; oyunun başarımı yoksa ya da gizliyse `null`. */
+export async function getPlayerAchievements(steamId: string, appId: number) {
   const { status, body } = await call<{
-    playerstats?: { success?: boolean; achievements?: Array<{ achieved: number }> };
+    playerstats?: { success?: boolean; achievements?: PlayerAchievement[] };
   }>("ISteamUserStats/GetPlayerAchievements/v1/", { steamid: steamId, appid: appId });
   const achievements = body.playerstats?.achievements;
   if (status !== 200 || !body.playerstats?.success || !achievements?.length) return null;
+  return achievements;
+}
+
+export type SchemaAchievement = {
+  name: string;
+  displayName: string;
+  description?: string;
+  hidden: number;
+  icon?: string;
+  icongray?: string;
+};
+
+/** Oyunun başarım tanımları (`language`: `english`, `turkish`…). */
+export async function getSchemaForGame(appId: number, language: string) {
+  const { status, body } = await call<{
+    game?: { availableGameStats?: { achievements?: SchemaAchievement[] } };
+  }>("ISteamUserStats/GetSchemaForGame/v2/", { appid: appId, l: language });
+  if (status !== 200) return null;
+  return body.game?.availableGameStats?.achievements ?? [];
+}
+
+/** Başarımların oyuncular arasında açılma yüzdeleri (0–100). */
+export async function getGlobalAchievementPercentages(appId: number) {
+  const { status, body } = await call<{
+    achievementpercentages?: { achievements?: Array<{ name: string; percent: number | string }> };
+  }>("ISteamUserStats/GetGlobalAchievementPercentagesForApp/v2/", { gameid: appId });
+  if (status !== 200) return new Map<string, number>();
+  return new Map(
+    (body.achievementpercentages?.achievements ?? []).map((row) => [row.name, Number(row.percent)]),
+  );
+}
+
+export type SteamPublishedFile = {
+  publishedfileid: string;
+  consumer_appid?: number;
+  file_url?: string;
+  preview_url?: string;
+  title?: string;
+  file_description?: string;
+  time_created?: number;
+  image_width?: number;
+  image_height?: number;
+  visibility?: number;
+};
+
+/**
+ * Kullanıcının Steam'de herkese açık paylaştığı ekran görüntüleri (bir sayfa). `filetype=4`:
+ * `k_PFI_MatchingFileType_Screenshots`. Gizli/arkadaşlara açık olanlar gelmez.
+ */
+export async function getUserScreenshots(steamId: string, page: number, perPage = 100) {
+  const { status, body } = await call<{
+    response?: { total?: number; publishedfiledetails?: SteamPublishedFile[] };
+  }>("IPublishedFileService/GetUserFiles/v1/", {
+    steamid: steamId,
+    filetype: 4,
+    page,
+    numperpage: perPage,
+    return_previews: true,
+  });
+  if (status !== 200) return { total: 0, files: [] };
   return {
-    unlocked: achievements.filter((achievement) => achievement.achieved === 1).length,
-    total: achievements.length,
+    total: body.response?.total ?? 0,
+    files: body.response?.publishedfiledetails ?? [],
   };
 }

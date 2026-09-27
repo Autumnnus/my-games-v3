@@ -54,7 +54,8 @@ export async function mergeGameInto(
     entryHistory,
     changeProposals,
     games,
-    steamAppAliases,
+    gameExternalIds,
+    achievementSets,
   } = schema;
 
   await tx.execute(sql`
@@ -104,9 +105,13 @@ export async function mergeGameInto(
 
   await moveReferences();
   await tx
-    .update(steamAppAliases)
+    .update(gameExternalIds)
     .set({ gameId: toGameId })
-    .where(eq(steamAppAliases.gameId, fromGameId));
+    .where(eq(gameExternalIds.gameId, fromGameId));
+  await tx
+    .update(achievementSets)
+    .set({ gameId: toGameId })
+    .where(eq(achievementSets.gameId, fromGameId));
   const [source] = await tx
     .select({ steamAppId: games.steamAppId })
     .from(games)
@@ -122,8 +127,8 @@ export async function mergeGameInto(
       .returning({ id: games.id });
     if (!moved) {
       await tx
-        .insert(steamAppAliases)
-        .values({ appId: source.steamAppId, gameId: toGameId })
+        .insert(gameExternalIds)
+        .values({ provider: "steam", externalId: String(source.steamAppId), gameId: toGameId })
         .onConflictDoNothing();
     }
   }
@@ -152,7 +157,7 @@ export async function matchUnlinkedGames(limit = 25) {
     .select({ id: games.id, name: games.name })
     .from(games)
     .where(
-      sql`${games.igdbId} is null and ${games.source} in ('legacy', 'custom', 'steam')
+      sql`${games.igdbId} is null and ${games.source} in ('legacy', 'custom', 'steam', 'psn', 'xbox')
           and (${games.metadataSyncedAt} is null or ${games.metadataSyncedAt} < now() - interval '7 days')`,
     )
     .limit(limit);

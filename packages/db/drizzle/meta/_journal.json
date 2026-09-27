@@ -47,8 +47,22 @@
     {
       "idx": 6,
       "version": "7",
-      "when": 1790512140905,
-      "tag": "0006_steam_aliases_ignore_label",
+      "when": 1790515537994,
+      "tag": "0006_ignore_label",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790515584918,
+      "tag": "0007_platforms_achievements",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790515668652,
+      "tag": "0008_achievement_set_game",
       "breakpoints": true
     }
   ]
