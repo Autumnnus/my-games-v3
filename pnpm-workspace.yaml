@@ -1,0 +1,25 @@
+packages:
+  - apps/*
+  - packages/*
+
+allowBuilds:
+  esbuild: true
+  lightningcss: true
+
+catalog:
+  "@biomejs/biome": 2.5.14
+  "@types/node": ^24.19.0
+  "@types/pg": ^8.23.1
+  drizzle-orm: ^0.45.3
+  hono: ^4.13.9
+  pg: ^8.23.0
+  tsdown: ^0.23.0
+  tsx: ^4.23.15
+  typescript: ^6.0.3
+  zod: ^4.6.5
+
+minimumReleaseAgeExclude:
+  - pg-boss@12.35.0
+  - '@ai-sdk/gateway@4.0.96'
+  - '@ai-sdk/react@4.0.121'
+  - ai@7.0.118

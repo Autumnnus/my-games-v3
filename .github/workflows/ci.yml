@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg18
+        env:
+          POSTGRES_USER: mygames
+          POSTGRES_PASSWORD: mygames
+          POSTGRES_DB: mygames
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U mygames"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      TEST_DATABASE_URL: postgresql://mygames:mygames@localhost:5432/mygames_test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+      # Build, typecheck'in ihtiyaç duyduğu Paraglide çıktısını da üretir.
+      - run: pnpm build
+      - run: pnpm typecheck
+      # MinIO ve eski veri dump'ı CI'da yok; o testler kendiliğinden atlanır.
+      - run: pnpm test
+
+  images:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        target: [app, worker]
+    steps:
+      - uses: actions/checkout@v7
+      - name: İmaj adını belirle (GHCR küçük harf ister)
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY,,}-${{ matrix.target }}" >> "$GITHUB_ENV"
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: ${{ matrix.target }}
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=gha,scope=${{ matrix.target }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.target }}
+
+  deploy:
+    needs: images
+    runs-on: ubuntu-latest
+    steps:
+      # Coolify'da her kaynağın "Webhooks" sekmesindeki deploy URL'i ve bir API token'ı secret olarak eklenir.
+      # Secret'lar yoksa adım atlanır (Coolify'da otomatik deploy da kullanılabilir).
+      - name: Coolify deploy tetikle
+        env:
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+          COOLIFY_DEPLOY_APP_URL: ${{ secrets.COOLIFY_DEPLOY_APP_URL }}
+          COOLIFY_DEPLOY_WORKER_URL: ${{ secrets.COOLIFY_DEPLOY_WORKER_URL }}
+        run: |
+          if [ -z "$COOLIFY_TOKEN" ]; then
+            echo "COOLIFY_TOKEN tanımlı değil, deploy atlandı."
+            exit 0
+          fi
+          for url in "$COOLIFY_DEPLOY_APP_URL" "$COOLIFY_DEPLOY_WORKER_URL"; do
+            if [ -n "$url" ]; then
+              curl -fsS -H "Authorization: Bearer $COOLIFY_TOKEN" "$url"
+            fi
+          done

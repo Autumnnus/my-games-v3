@@ -1,0 +1,13 @@
+HTTP/1.1 200 OK
+Server: nginx
+Content-Type: application/json; charset=utf-8
+X-Frame-Options: DENY
+Cache-Control: public,max-age=3600
+Expires: Sun, 27 Sep 2026 11:34:04 GMT
+Last-Modified: Sun, 27 Sep 2026 10:00:00 GMT
+Strict-Transport-Security: max-age=63072000
+Vary: origin
+Date: Sun, 27 Sep 2026 11:00:50 GMT
+Content-Length: 28446
+Connection: keep-alive
+

@@ -1,0 +1,29 @@
+{
+  "name": "my-games",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.4.2",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "scripts": {
+    "dev": "pnpm -r --parallel --filter @my-games/web --filter @my-games/worker run dev",
+    "build": "pnpm -r run build",
+    "typecheck": "pnpm -r run typecheck",
+    "check": "biome check .",
+    "fix": "biome check --write .",
+    "db:up": "docker compose up -d --wait postgres",
+    "db:down": "docker compose down",
+    "db:generate": "pnpm --filter @my-games/db run generate",
+    "db:migrate": "pnpm --filter @my-games/db run migrate",
+    "db:studio": "pnpm --filter @my-games/db run studio",
+    "auth:schema": "pnpm --filter @my-games/api run auth:schema",
+    "test": "pnpm --filter @my-games/core run test",
+    "migrate:legacy": "pnpm --filter @my-games/core run migrate:legacy --"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

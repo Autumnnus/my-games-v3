@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/.output
+**/.nitro
+**/.tanstack
+apps/web/src/paraglide
+.git
+.github
+.env
+.env.*
+!.env.example
+docs
+**/*.log
+.DS_Store

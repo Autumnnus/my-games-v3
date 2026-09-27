@@ -1,0 +1,54 @@
+# Sadece yerel geliştirme için. Production'da Postgres Coolify'da, dosyalar Cloudflare R2'de durur.
+services:
+  postgres:
+    image: pgvector/pgvector:pg18
+    environment:
+      POSTGRES_USER: mygames
+      POSTGRES_PASSWORD: mygames
+      POSTGRES_DB: mygames
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c max_connections=30
+      -c work_mem=8MB
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mygames -d mygames"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  # R2 yerine S3 uyumlu MinIO (presigned upload'ı yerelde gerçekten test etmek için).
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9100:9000"
+      - "9101:9001"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      sh -c "mc alias set local http://minio:9000 minioadmin minioadmin &&
+             mc mb -p local/my-games &&
+             mc anonymous set download local/my-games"
+
+volumes:
+  pgdata:
+  miniodata:

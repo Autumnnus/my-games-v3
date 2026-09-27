@@ -1,0 +1,20 @@
+node_modules/
+dist/
+.output/
+.nitro/
+.tanstack/
+.vinxi/
+*.tsbuildinfo
+
+# paraglide derleme çıktısı
+apps/web/src/paraglide/
+
+.env
+.env.*
+!.env.example
+
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log

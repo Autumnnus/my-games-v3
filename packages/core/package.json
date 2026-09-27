@@ -1,0 +1,32 @@
+{
+  "name": "@my-games/core",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "migrate:legacy": "tsx --env-file-if-exists=../../.env scripts/migrate-legacy.ts"
+  },
+  "dependencies": {
+    "@my-games/db": "workspace:*",
+    "@my-games/shared": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "pg": "catalog:",
+    "zod": "catalog:",
+    "aws4fetch": "^1.0.20",
+    "web-push": "^3.6.7",
+    "ai": "^7.0.118",
+    "@ai-sdk/google": "^4.0.82"
+  },
+  "devDependencies": {
+    "@types/pg": "catalog:",
+    "vitest": "^5.0.2",
+    "tsx": "catalog:",
+    "@types/web-push": "^3.6.4"
+  }
+}

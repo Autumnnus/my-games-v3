@@ -1,0 +1,30 @@
+{
+  "name": "@my-games/api",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc",
+    "auth:schema": "node scripts/auth-schema.mjs"
+  },
+  "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.7.6",
+    "@my-games/db": "workspace:*",
+    "better-auth": "^1.7.6",
+    "drizzle-orm": "catalog:",
+    "hono": "catalog:",
+    "zod": "catalog:",
+    "@my-games/core": "workspace:*",
+    "@my-games/shared": "workspace:*",
+    "@hono/standard-validator": "^0.4.0",
+    "pg": "catalog:",
+    "ai": "^7.0.118"
+  },
+  "devDependencies": {
+    "auth": "^1.7.6",
+    "@types/pg": "catalog:"
+  }
+}
