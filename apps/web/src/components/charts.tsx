@@ -5,14 +5,14 @@ import { getLocale } from "@/paraglide/runtime";
  * Hafif grafikler (kütüphane yok). Tek seri → tek renk; renkler koyu zemin (#0a0a0a) için doğrulandı:
  * çubuk `#3987e5` (≥3:1), ısı haritası 5 adımlı mavi skala (monoton, açık uç ≥2:1).
  */
-const BAR = "#3987e5";
+const BAR = "#7ea7e6";
 const HEAT = ["#184f95", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4"];
 
 export function StatTile({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="rounded-lg border p-3">
-      <div className="text-2xl font-semibold tabular-nums">{value}</div>
-      <div className="text-muted-foreground text-xs">{label}</div>
+    <div className="bg-card grid gap-1 rounded-[20px] border p-4">
+      <div className="font-display text-[26px] leading-tight font-medium tabular-nums">{value}</div>
+      <div className="text-muted-foreground text-[13px]">{label}</div>
     </div>
   );
 }
@@ -27,9 +27,9 @@ export function ChartCard({
   hint?: string;
 }) {
   return (
-    <section className="grid content-start gap-3 rounded-lg border p-4">
-      <div>
-        <h3 className="text-sm font-semibold">{title}</h3>
+    <section className="bg-card grid content-start gap-4 rounded-[22px] border p-5">
+      <div className="grid gap-0.5">
+        <h3 className="text-[15px] font-bold">{title}</h3>
         {hint && <p className="text-muted-foreground text-xs">{hint}</p>}
       </div>
       {children}

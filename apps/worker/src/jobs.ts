@@ -1,4 +1,4 @@
-import { refreshStaleGames, refreshSteamCovers } from "@my-games/core/catalog";
+import { refreshGameArt, refreshStaleGames, refreshSteamCovers } from "@my-games/core/catalog";
 import { matchUnlinkedGames } from "@my-games/core/matching";
 import { pruneOutbox } from "@my-games/core/outbox";
 import { platformAccountsDueForSync } from "@my-games/core/platforms/accounts";
@@ -32,6 +32,12 @@ export const jobs: JobDefinition[] = [
     name: "catalog.steam-covers",
     cron: "20 4 * * *",
     run: () => refreshSteamCovers(),
+  },
+  {
+    // Sahne görseli, logo ve kapak rengi. Yeni oyunlar en geç bir saat içinde dolar; eskiler ayda bir tazelenir.
+    name: "catalog.game-art",
+    cron: "40 * * * *",
+    run: () => refreshGameArt(60),
   },
   {
     name: "catalog.refresh-metadata",

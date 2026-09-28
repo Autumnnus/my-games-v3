@@ -48,13 +48,15 @@ function HistoryPage() {
   });
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 pt-4">
       <div>
-        <h1 className="text-2xl font-semibold">{m.history_title()}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          {m.history_title()}
+        </h1>
         <p className="text-muted-foreground text-sm">{m.history_description()}</p>
       </div>
       {data.history.length === 0 && <p className="text-muted-foreground">{m.history_empty()}</p>}
-      <ul className="divide-y rounded-lg border">
+      <ul className="bg-card divide-y overflow-hidden rounded-[22px] border">
         {data.history.map((item) => (
           <li key={item.id} className="flex flex-wrap items-start gap-3 p-3">
             <div className="grid min-w-0 flex-1 gap-1">

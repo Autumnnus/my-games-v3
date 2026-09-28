@@ -14,6 +14,8 @@ export function getRouter() {
     scrollRestoration: true,
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
+    // Tarayıcı destekliyorsa sayfalar arası yumuşak geçiş; kapaklar `view-transition-name` ile yerinde uçar.
+    defaultViewTransition: true,
   });
 
   setupRouterSsrQueryIntegration({ router, queryClient });

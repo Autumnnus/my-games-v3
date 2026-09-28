@@ -97,9 +97,11 @@ function ComparePage() {
     : ["", ""];
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-6 pt-4">
       <div>
-        <h1 className="text-2xl font-semibold">{m.compare_title()}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          {m.compare_title()}
+        </h1>
         <p className="text-muted-foreground text-sm">{m.compare_description()}</p>
       </div>
       <form className="flex flex-wrap gap-2" onSubmit={onSubmit}>
@@ -148,19 +150,19 @@ function ComparePage() {
           <div className="grid gap-6 lg:grid-cols-2">
             {data.agreements.length > 0 && (
               <section className="grid gap-2">
-                <h2 className="font-semibold">{m.compare_agreements()}</h2>
+                <h2 className="text-lg font-bold">{m.compare_agreements()}</h2>
                 <GameRows rows={data.agreements} names={names} />
               </section>
             )}
             {data.disagreements.length > 0 && (
               <section className="grid gap-2">
-                <h2 className="font-semibold">{m.compare_disagreements()}</h2>
+                <h2 className="text-lg font-bold">{m.compare_disagreements()}</h2>
                 <GameRows rows={data.disagreements} names={names} />
               </section>
             )}
           </div>
           <section className="grid gap-2">
-            <h2 className="font-semibold">{m.compare_all_shared()}</h2>
+            <h2 className="text-lg font-bold">{m.compare_all_shared()}</h2>
             <GameRows rows={data.shared} names={names} />
           </section>
         </>

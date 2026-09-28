@@ -28,9 +28,11 @@ function GlobalStatsPage() {
     }));
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-6 pt-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">{m.stats_global_title()}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          {m.stats_global_title()}
+        </h1>
         <Button asChild variant="outline" size="sm">
           <Link to="/compare">
             <UsersIcon />

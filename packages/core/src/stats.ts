@@ -347,6 +347,9 @@ export async function wrapped(userId: string, year: number) {
         slug: g.slug,
         coverImageId: g.coverImageId,
         coverUrl: g.coverUrl,
+        heroUrl: g.heroUrl,
+        logoUrl: g.logoUrl,
+        accentColor: g.accentColor,
         rating: e.rating,
         finishedAt: e.finishedAt,
         playtimeMin: sql<number>`${playtime}::int`,
@@ -378,6 +381,9 @@ export async function wrapped(userId: string, year: number) {
         slug: g.slug,
         coverImageId: g.coverImageId,
         coverUrl: g.coverUrl,
+        heroUrl: g.heroUrl,
+        logoUrl: g.logoUrl,
+        accentColor: g.accentColor,
         minutes: sql<number>`sum(${playSessions.durationMin})::int`,
       })
       .from(playSessions)

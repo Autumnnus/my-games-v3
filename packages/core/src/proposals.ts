@@ -417,6 +417,8 @@ export async function listProposals(
         slug: games.slug,
         coverImageId: games.coverImageId,
         coverUrl: games.coverUrl,
+        heroUrl: games.heroUrl,
+        accentColor: games.accentColor,
       },
       entry: {
         status: libraryEntries.status,

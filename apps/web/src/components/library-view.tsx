@@ -11,35 +11,61 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatPlaytime, formatRating, platformLabel } from "@/lib/format";
+import { formatPlaytime, formatRating, platformLabel, statusLabel } from "@/lib/format";
 import type { LibraryItem } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
 
+const liveStatuses = new Set(["playing", "paused", "backlog", "wishlist", "dropped"]);
+const statusDot: Record<string, string> = {
+  playing: "bg-live",
+  paused: "bg-amber-300",
+  backlog: "bg-sky-300",
+  wishlist: "bg-violet-300",
+  dropped: "bg-destructive",
+};
+
 export function LibraryGrid({ items }: { items: LibraryItem[] }) {
   return (
-    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-      {items.map((item) => (
-        <Link key={item.id} to="/e/$id" params={{ id: item.id }} className="group grid gap-2">
-          <div className="relative">
+    <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-4 sm:gap-x-5 md:grid-cols-5 lg:grid-cols-7">
+      {items.map((item, index) => (
+        <Link
+          key={item.id}
+          to="/e/$id"
+          params={{ id: item.id }}
+          className="group animate-rise grid content-start gap-2.5"
+          style={{
+            animationDelay: `${Math.min(index, 21) * 22}ms`,
+            ["--glow" as string]: item.game.accentColor ?? "rgba(0,0,0,0.6)",
+          }}
+        >
+          <div className="relative transition-transform duration-400 ease-(--ease-salon) group-hover:-translate-y-1.5 group-hover:scale-[1.02]">
             <GameCover
               url={item.game.coverUrl}
               name={item.game.name}
-              className="transition-transform group-hover:-translate-y-0.5"
+              color={item.game.accentColor}
+              transitionName={`cover-${item.id}`}
+              className="transition-shadow duration-400 group-hover:shadow-[0_26px_50px_-16px_var(--glow)] group-hover:ring-white/15"
             />
+            {liveStatuses.has(item.status) && (
+              <span className="absolute top-2 left-2 flex h-6 items-center gap-1.5 rounded-full bg-black/70 px-2 text-[11px] font-bold backdrop-blur">
+                <span className={`size-1.5 rounded-full ${statusDot[item.status] ?? ""}`} />
+                <span className="hidden sm:inline">{statusLabel(item.status)}</span>
+              </span>
+            )}
             {item.isFavorite && (
-              <StarIcon className="absolute top-2 right-2 size-4 fill-yellow-400 text-yellow-400 drop-shadow" />
+              <StarIcon className="absolute top-2.5 right-2.5 size-4 fill-yellow-400 text-yellow-400 drop-shadow" />
             )}
             {item.rating !== null && (
-              <span className="bg-background/85 absolute bottom-2 left-2 rounded px-1.5 py-0.5 text-xs font-semibold">
+              <span className="font-display absolute right-2 bottom-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-black/70 px-2 text-[11px] font-semibold backdrop-blur">
                 {formatRating(item.rating)}
               </span>
             )}
           </div>
-          <div className="grid gap-1">
-            <div className="line-clamp-2 text-sm leading-tight font-medium">{item.game.name}</div>
-            <div className="text-muted-foreground flex items-center gap-2 text-xs">
-              <StatusBadge status={item.status} />
-              {item.playtimeMin > 0 && <span>{formatPlaytime(item.playtimeMin)}</span>}
+          <div className="grid min-w-0 gap-0.5">
+            <div className="truncate text-sm font-bold">{item.game.name}</div>
+            <div className="text-muted-foreground truncate text-xs">
+              {statusLabel(item.status)}
+              {item.playtimeMin > 0 && ` · ${formatPlaytime(item.playtimeMin)}`}
             </div>
           </div>
         </Link>

@@ -1,15 +1,18 @@
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PencilIcon, StarIcon, Trash2Icon } from "lucide-react";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { EntryAchievements } from "@/components/achievements";
 import { CommentThread } from "@/components/comments";
 import { EntryForm } from "@/components/entry-form";
 import { GameCover } from "@/components/game-cover";
+import { GameLogo } from "@/components/game-logo";
 import { LikeButton } from "@/components/like-button";
+import { CompletedStamp, RollingText } from "@/components/motion";
 import { ReportButton } from "@/components/report-dialog";
 import { ScreenshotGrid, ScreenshotUploader } from "@/components/screenshots";
+import { Stage } from "@/components/stage";
 import { StatusBadge } from "@/components/status-badge";
 import { DateText } from "@/components/time";
 import { Button } from "@/components/ui/button";
@@ -62,9 +65,9 @@ export const Route = createFileRoute("/e/$id")({
 
 function Detail({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div>
-      <dt className="text-muted-foreground text-xs">{label}</dt>
-      <dd className="text-sm">{value ?? m.unknown()}</dd>
+    <div className="grid gap-0.5">
+      <dt className="text-foreground/60 text-xs">{label}</dt>
+      <dd className="text-[15px] font-bold">{value ?? m.unknown()}</dd>
     </div>
   );
 }
@@ -78,6 +81,9 @@ function EntryPage() {
   const entry = data.entry;
   const isOwner = user?.id === entry.userId;
   const [editing, setEditing] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [stamp, setStamp] = useState(0);
+  const failLogo = useCallback(() => setLogoFailed(true), []);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
@@ -93,9 +99,11 @@ function EntryPage() {
   const update = useMutation({
     mutationFn: (values: Parameters<(typeof api.library)[":id"]["$patch"]>[0]["json"]) =>
       unwrap(api.library[":id"].$patch({ param: { id }, json: values })),
-    onSuccess: async () => {
+    onSuccess: async (_, values) => {
       setEditing(false);
-      toast.success(m.saved());
+      // "Bitirdim" anı: kayıt yeni bitirildiyse damga vurulur, yoksa sade bir bildirim yeter.
+      if (values.status === "completed" && entry.status !== "completed") setStamp((n) => n + 1);
+      else toast.success(m.saved());
       await invalidate();
     },
     onError: (error) => toast.error(errorMessage(error)),
@@ -112,49 +120,98 @@ function EntryPage() {
   });
 
   return (
-    <div className="grid gap-8">
-      <section className="grid gap-6 sm:grid-cols-[180px_1fr]">
-        <GameCover url={entry.game.coverUrl} name={entry.game.name} className="w-40 sm:w-full" />
-        <div className="grid content-start gap-4">
-          <div className="grid gap-1">
-            <Link
-              to="/g/$slug"
-              params={{ slug: entry.game.slug }}
-              className="text-2xl font-semibold hover:underline"
-            >
-              {entry.game.name}
+    <div className="grid gap-10">
+      <Stage
+        items={[
+          {
+            key: entry.id,
+            hero: entry.game.heroUrl,
+            cover: entry.game.coverUrl,
+            color: entry.game.accentColor,
+          },
+        ]}
+      />
+      <section className="grid items-end gap-8 pt-10 lg:grid-cols-[minmax(0,1fr)_400px] lg:pt-40">
+        <div className="animate-rise flex items-end gap-6">
+          <GameCover
+            url={entry.game.coverUrl}
+            name={entry.game.name}
+            color={entry.game.accentColor}
+            transitionName={`cover-${entry.id}`}
+            className="w-28 shrink-0 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.8)] sm:w-40"
+          />
+          <div className="grid min-w-0 gap-4">
+            <Link to="/g/$slug" params={{ slug: entry.game.slug }} className="block">
+              {entry.game.logoUrl && !logoFailed ? (
+                <h1 className="m-0 flex h-24 items-end sm:h-28">
+                  <GameLogo
+                    src={entry.game.logoUrl}
+                    alt={entry.game.name}
+                    onFail={failLogo}
+                    className="max-h-full max-w-full object-contain object-left-bottom"
+                  />
+                </h1>
+              ) : (
+                <h1 className="font-display m-0 text-3xl leading-tight font-semibold tracking-tight hover:underline sm:text-5xl">
+                  {entry.game.name}
+                </h1>
+              )}
             </Link>
             <Link
               to="/u/$username"
               params={{ username: entry.user.username ?? "" }}
-              className="text-muted-foreground text-sm hover:underline"
+              className="text-foreground/75 w-fit text-sm hover:underline"
             >
               {m.entry_by({ name: entry.user.name })}
             </Link>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            <StatusBadge status={entry.status} />
-            {entry.rating !== null && (
-              <span className="text-lg font-semibold">{formatRating(entry.rating)}</span>
-            )}
-            {entry.isFavorite && <StarIcon className="size-4 fill-yellow-400 text-yellow-400" />}
+        </div>
+
+        <aside
+          className="glass animate-rise grid gap-5 rounded-[26px] border border-white/12 p-6"
+          style={{ animationDelay: "120ms" }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-foreground/70 text-xs font-bold tracking-[0.16em]">
+              {isOwner ? m.salon_your_entry() : m.salon_entry_of({ name: entry.user.name })}
+            </span>
+            <div className="flex items-center gap-2">
+              {entry.isFavorite && <StarIcon className="size-4 fill-yellow-400 text-yellow-400" />}
+              <StatusBadge status={entry.status} />
+            </div>
           </div>
-          <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {entry.rating !== null && (
+            <div className="flex items-baseline gap-2">
+              <span className="font-display text-7xl leading-none font-semibold tracking-tight">
+                {formatRating(entry.rating)}
+              </span>
+              <span className="text-foreground/60 text-lg">/10</span>
+            </div>
+          )}
+          <dl className="grid grid-cols-2 gap-x-4 gap-y-3.5 border-y border-white/10 py-4">
             <Detail
               label={m.entry_playtime()}
-              value={entry.playtimeMin ? formatPlaytime(entry.playtimeMin) : null}
+              value={
+                entry.playtimeMin ? <RollingText value={formatPlaytime(entry.playtimeMin)} /> : null
+              }
             />
             <Detail
               label={m.field_platform()}
-              value={entry.platform ? platformLabel(entry.platform) : null}
+              value={
+                [
+                  entry.store ? storeLabel(entry.store) : null,
+                  entry.platform ? platformLabel(entry.platform) : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || null
+              }
             />
-            <Detail label={m.field_store()} value={entry.store ? storeLabel(entry.store) : null} />
             <Detail
               label={m.field_last_played()}
               value={entry.lastPlayedAt ? <DateText value={entry.lastPlayedAt} /> : null}
             />
-            <Detail label={m.field_started_at()} value={formatDate(entry.startedAt)} />
             <Detail label={m.field_finished_at()} value={formatDate(entry.finishedAt)} />
+            <Detail label={m.field_started_at()} value={formatDate(entry.startedAt)} />
             {entry.achievementsTotal ? (
               <Detail
                 label={m.achievements_title()}
@@ -164,30 +221,32 @@ function EntryPage() {
           </dl>
           {isOwner && (
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+              <Button className="flex-1" onClick={() => setEditing(true)}>
                 <PencilIcon />
                 {m.action_edit()}
               </Button>
               <Button
-                size="sm"
-                variant="ghost"
+                variant="glass"
+                size="icon"
+                aria-label={m.action_delete()}
                 disabled={remove.isPending}
                 onClick={() => {
                   if (window.confirm(m.confirm_delete_entry())) remove.mutate();
                 }}
               >
                 <Trash2Icon />
-                {m.action_delete()}
               </Button>
             </div>
           )}
-        </div>
+        </aside>
       </section>
 
-      <section className="grid gap-2">
-        <h2 className="font-semibold">{m.field_review()}</h2>
+      <section className="grid gap-3">
+        <h2 className="text-lg font-bold">{m.field_review()}</h2>
         {entry.review ? (
-          <p className="max-w-3xl leading-relaxed whitespace-pre-line">{entry.review}</p>
+          <p className="text-foreground/90 max-w-3xl text-lg leading-relaxed whitespace-pre-line">
+            {entry.review}
+          </p>
         ) : (
           <p className="text-muted-foreground text-sm">{m.entry_no_review()}</p>
         )}
@@ -208,7 +267,7 @@ function EntryPage() {
 
       <section className="grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-semibold">{m.game_screenshots()}</h2>
+          <h2 className="text-lg font-bold">{m.game_screenshots()}</h2>
           {isOwner && <ScreenshotUploader entryId={id} />}
         </div>
         <ScreenshotGrid
@@ -221,6 +280,7 @@ function EntryPage() {
         <CommentThread targetType="entry" targetId={id} showTitle />
       </section>
 
+      <CompletedStamp trigger={stamp} />
       <Dialog open={editing} onOpenChange={setEditing}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>

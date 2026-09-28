@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Stage } from "@/components/stage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function AuthCard(props: {
@@ -8,10 +9,11 @@ export function AuthCard(props: {
   footer?: ReactNode;
 }) {
   return (
-    <div className="mx-auto w-full max-w-sm">
-      <Card>
+    <div className="mx-auto w-full max-w-sm pt-8 sm:pt-16">
+      <Stage items={[]} className="h-[640px]" />
+      <Card className="glass animate-rise border-white/12">
         <CardHeader>
-          <CardTitle className="text-xl">{props.title}</CardTitle>
+          <CardTitle className="font-display text-2xl font-semibold">{props.title}</CardTitle>
           {props.description && <CardDescription>{props.description}</CardDescription>}
         </CardHeader>
         <CardContent className="grid gap-4">{props.children}</CardContent>

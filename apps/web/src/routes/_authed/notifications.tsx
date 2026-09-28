@@ -59,9 +59,11 @@ function NotificationsPage() {
   }, []);
 
   return (
-    <div className="grid max-w-2xl gap-4">
+    <div className="grid max-w-2xl gap-4 pt-4">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-semibold">{m.notifications_title()}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          {m.notifications_title()}
+        </h1>
         {hasUnread && (
           <Button variant="ghost" size="sm" onClick={() => markAll.mutate()}>
             {m.notifications_mark_all()}
@@ -71,7 +73,7 @@ function NotificationsPage() {
       {data.notifications.length === 0 ? (
         <p className="text-muted-foreground py-12 text-center">{m.notifications_empty()}</p>
       ) : (
-        <ul className="divide-y rounded-lg border">
+        <ul className="bg-card divide-y overflow-hidden rounded-[22px] border">
           {data.notifications.map((item) => (
             <li key={item.id}>
               <Link

@@ -16,6 +16,10 @@ export function GameCover(props: {
   url: string | null | undefined;
   name: string;
   className?: string;
+  /** `view-transition-name`: aynı adı taşıyan kapak sayfa geçişinde yerinde uçar. */
+  transitionName?: string;
+  /** Görsel yüklenene kadar görünen zemin (kapak rengi). */
+  color?: string | null;
 }) {
   // 0: asıl görsel, 1: yedek görsel, 2: yer tutucu. Adres değişirse (ör. IGDB eşleşmesi) baştan denenir.
   const [state, setState] = useState({ url: props.url, attempt: 0 });
@@ -36,9 +40,13 @@ export function GameCover(props: {
   return (
     <div
       className={cn(
-        "bg-muted relative aspect-[3/4] w-full overflow-hidden rounded-md border",
+        "bg-muted relative aspect-[2/3] w-full overflow-hidden rounded-xl ring-1 ring-white/6",
         props.className,
       )}
+      style={{
+        viewTransitionName: props.transitionName,
+        backgroundColor: props.color ?? undefined,
+      }}
     >
       {src ? (
         <img

@@ -90,8 +90,8 @@ function LibraryPage() {
   const view = search.view ?? "grid";
 
   return (
-    <div className="grid gap-4">
-      <div className="flex flex-wrap gap-1">
+    <div className="grid gap-6">
+      <div className="glass flex gap-1 overflow-x-auto rounded-2xl border border-white/8 p-1.5 [scrollbar-width:none]">
         <StatusChip
           active={!search.status}
           label={`${m.status_all()} ${total}`}
@@ -111,7 +111,7 @@ function LibraryPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         <Input
-          className="max-w-xs"
+          className="h-11 max-w-xs rounded-xl bg-white/5"
           placeholder={m.library_search_placeholder()}
           value={q}
           onChange={(event) => setQ(event.target.value)}
@@ -124,7 +124,7 @@ function LibraryPage() {
             })
           }
         >
-          <SelectTrigger className="w-44" aria-label={m.sort_label()}>
+          <SelectTrigger className="h-11! w-48 rounded-xl bg-white/5" aria-label={m.sort_label()}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -137,6 +137,7 @@ function LibraryPage() {
         </Select>
         <Toggle
           variant="outline"
+          className="h-11 rounded-xl px-4"
           pressed={!!search.fav}
           onPressedChange={(pressed) =>
             navigate({ search: (previous) => ({ ...previous, fav: pressed || undefined }) })
@@ -182,11 +183,10 @@ function StatusChip(props: { active: boolean; label: string; onClick: () => void
   return (
     <button
       type="button"
+      aria-pressed={props.active}
       onClick={props.onClick}
-      className={`rounded-full border px-3 py-1 text-sm ${
-        props.active
-          ? "bg-foreground text-background"
-          : "text-muted-foreground hover:text-foreground"
+      className={`h-10 shrink-0 rounded-xl px-4 text-sm font-bold transition-colors ${
+        props.active ? "bg-foreground text-background" : "text-foreground/85 hover:bg-white/10"
       }`}
     >
       {props.label}

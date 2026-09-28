@@ -5,6 +5,7 @@ import { achievementSummaries } from "../achievements";
 import { localToday } from "../config";
 import { db, type Tx } from "../db";
 import type { EventPayload } from "../events";
+import { screenshotThumbs } from "../screenshots";
 
 const { activities, games, user, reactions, comments, libraryEntries } = schema;
 
@@ -275,6 +276,8 @@ export async function listFeed(options: {
         slug: games.slug,
         coverImageId: games.coverImageId,
         coverUrl: games.coverUrl,
+        heroUrl: games.heroUrl,
+        accentColor: games.accentColor,
       },
       reactionCount: sql<number>`(select count(*)::int from ${reactions} r where r.target_type = 'activity' and r.target_id = ${activities.id})`,
       commentCount: sql<number>`(select count(*)::int from ${comments} c where c.target_type = 'activity' and c.target_id = ${activities.id} and c.deleted_at is null)`,
@@ -291,10 +294,22 @@ export async function listFeed(options: {
 
   const page = rows.slice(0, limit);
   const last = page.at(-1);
+  // Ekran görüntüsü olaylarında kartta ilk dört görüntünün önizlemesi gösterilir.
+  const previewIds = (row: { verb: string; data: unknown }) => {
+    const ids = (row.data as { screenshotIds?: unknown } | null)?.screenshotIds;
+    return row.verb === "screenshots_added" && Array.isArray(ids)
+      ? (ids.slice(0, 4) as string[])
+      : [];
+  };
+  const thumbs = await screenshotThumbs(page.flatMap(previewIds));
   return {
     items: page.map(({ cursorAt: _cursorAt, ...row }) => ({
       ...row,
       game: row.game?.id ? { ...row.game, coverUrl: gameCoverUrl(row.game, "cover_small") } : null,
+      previews: previewIds(row).flatMap((id) => {
+        const url = thumbs.get(id);
+        return url ? [url] : [];
+      }),
     })),
     nextCursor:
       rows.length > limit && last ? encodeCursor({ updatedAt: last.cursorAt, id: last.id }) : null,

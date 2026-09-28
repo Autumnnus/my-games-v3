@@ -1,6 +1,7 @@
 import { schema } from "@my-games/db";
 import { gameCoverUrl, slugify, steamCapsuleUrl, type TermKind } from "@my-games/shared";
-import { and, desc, eq, inArray, isNotNull, isNull, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, isNull, lt, or, sql } from "drizzle-orm";
+import { accentFromImage, imageExists } from "./art";
 import { igdbConfig } from "./config";
 import { type DbOrTx, db } from "./db";
 import { AppError, notFound } from "./errors";
@@ -12,7 +13,7 @@ import {
   searchIgdbGames,
 } from "./igdb/games";
 import { entryPlaytime } from "./playtime";
-import { getStoreCovers } from "./steam/api";
+import { getStoreArt, getStoreCovers } from "./steam/api";
 
 const { games, terms, gameTerms, libraryEntries, user, gameExternalIds } = schema;
 
@@ -190,6 +191,50 @@ export async function refreshSteamCovers(limit = 500) {
     if (!cover || cover === row.coverUrl) continue;
     await db.update(games).set({ coverUrl: cover }).where(eq(games.id, row.id));
     updated++;
+  }
+  return { checked: rows.length, updated };
+}
+
+/** Görseller bu kadar günde bir yeniden taranır (Steam adresleri değişebiliyor). */
+const ART_REFRESH_DAYS = 30;
+
+/**
+ * Oyunların sahne görselini, logosunu ve kapak rengini doldurur. Hiç taranmamışlar önce gelir; her oyun için
+ * kapak bir kez indirilip rengi hesaplanır, istemciye ek yük düşmez.
+ */
+export async function refreshGameArt(limit = 100) {
+  const stale = sql`now() - make_interval(days => ${ART_REFRESH_DAYS})`;
+  const rows = await db
+    .select({
+      id: games.id,
+      steamAppId: games.steamAppId,
+      coverImageId: games.coverImageId,
+      coverUrl: games.coverUrl,
+    })
+    .from(games)
+    .where(or(isNull(games.artSyncedAt), lt(games.artSyncedAt, stale)))
+    .orderBy(sql`${games.artSyncedAt} asc nulls first`)
+    .limit(limit);
+  if (rows.length === 0) return { checked: 0, updated: 0 };
+
+  const steamIds = rows.flatMap((row) => (row.steamAppId ? [row.steamAppId] : []));
+  const art = steamIds.length ? await getStoreArt(steamIds).catch(() => new Map()) : new Map();
+  let updated = 0;
+  for (const row of rows) {
+    const store = row.steamAppId ? art.get(row.steamAppId) : undefined;
+    const logo = store && (await imageExists(store.logo)) ? store.logo : null;
+    const cover = gameCoverUrl(row, "cover_small") ?? store?.cover ?? null;
+    const accentColor = cover ? await accentFromImage(cover) : null;
+    await db
+      .update(games)
+      .set({
+        heroUrl: store?.hero ?? null,
+        logoUrl: logo,
+        accentColor,
+        artSyncedAt: new Date(),
+      })
+      .where(eq(games.id, row.id));
+    if (store?.hero || accentColor) updated++;
   }
   return { checked: rows.length, updated };
 }

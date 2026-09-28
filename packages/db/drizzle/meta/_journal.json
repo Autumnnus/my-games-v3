@@ -78,6 +78,13 @@
       "when": 1790543150992,
       "tag": "0010_proposal_initial",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790577370714,
+      "tag": "0011_game_art",
+      "breakpoints": true
     }
   ]
 }

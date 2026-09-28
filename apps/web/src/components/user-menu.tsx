@@ -50,20 +50,20 @@ export function UserMenu({ user }: { user: CurrentUser }) {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {user.displayUsername && (
-          <DropdownMenuItem asChild className="sm:hidden">
+          <DropdownMenuItem asChild className="md:hidden">
             <Link to="/u/$username" params={{ username: user.displayUsername }}>
               <LibraryIcon />
               {m.nav_library()}
             </Link>
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem asChild className="sm:hidden">
+        <DropdownMenuItem asChild className="md:hidden">
           <Link to="/inbox">
             <InboxIcon />
             {m.nav_inbox()}
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild className="sm:hidden">
+        <DropdownMenuItem asChild>
           <Link to="/history">
             <HistoryIcon />
             {m.nav_history()}

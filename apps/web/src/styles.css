@@ -1,62 +1,72 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "@fontsource-variable/manrope";
+@import "@fontsource-variable/unbounded";
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * Salon teması: koyu zemin, oyunun kendi görselleri ve kapaktan gelen ortam rengi.
+ * Uygulama her zaman koyu açılır (<html class="dark">); açık tokenlar yalnızca yedek.
+ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --radius: 0.9rem;
+  --background: #f6f6f8;
+  --foreground: #0b0c10;
+  --card: #ffffff;
+  --card-foreground: #0b0c10;
+  --popover: #ffffff;
+  --popover-foreground: #0b0c10;
+  --primary: #0b0c10;
+  --primary-foreground: #f4f5f7;
+  --secondary: #ececf0;
+  --secondary-foreground: #0b0c10;
+  --muted: #ececf0;
+  --muted-foreground: #5b5e66;
+  --accent: #e6e7ec;
+  --accent-foreground: #0b0c10;
+  --destructive: #c8452a;
+  --border: #dcdde3;
+  --input: #dcdde3;
+  --ring: #8a8d96;
+  --live: #1f9d62;
+  --chart-1: #7ea7e6;
+  --chart-2: #7ee2a8;
+  --chart-3: #e0a94a;
+  --chart-4: #c49cff;
+  --chart-5: #f0714f;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  --background: #0b0c10;
+  --foreground: #f4f5f7;
+  --card: #121319;
+  --card-foreground: #f4f5f7;
+  --popover: #16171d;
+  --popover-foreground: #f4f5f7;
+  --primary: #f4f5f7;
+  --primary-foreground: #0b0c10;
+  --secondary: #1c1d24;
+  --secondary-foreground: #f4f5f7;
+  --muted: #191a20;
+  --muted-foreground: #a5a8b0;
+  --accent: #22232b;
+  --accent-foreground: #f4f5f7;
+  --destructive: #f0714f;
+  --border: rgb(255 255 255 / 9%);
+  --input: rgb(255 255 255 / 13%);
+  --ring: rgb(244 245 247 / 45%);
+  --live: #7ee2a8;
+  --chart-1: #7ea7e6;
+  --chart-2: #7ee2a8;
+  --chart-3: #e0a94a;
+  --chart-4: #c49cff;
+  --chart-5: #f0714f;
 }
 
 @theme inline {
+  --font-sans: "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Unbounded Variable", "Manrope Variable", ui-sans-serif, system-ui, sans-serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -75,15 +85,96 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-live: var(--live);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) + 6px);
+  --ease-salon: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-rise: rise 0.7s var(--ease-salon) backwards;
+  --animate-ping-slow: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+
+  --animate-roll-in: roll-in 0.55s var(--ease-salon) both;
+  --animate-roll-out: roll-out 0.55s var(--ease-salon) both;
+  --animate-stamp: stamp 1.9s var(--ease-salon) both;
+  --animate-shock: shock 1.9s ease-out both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      translate: 0 16px;
+    }
+  }
+  /* Yıl özeti: aktif karenin ilerleme çubuğu. */
+  @keyframes story-fill {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  /* Sayaç: değişen rakam aşağıdan gelir, eskisi yukarı çıkar. */
+  @keyframes roll-in {
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+  }
+  @keyframes roll-out {
+    to {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+  }
+  /* "Bitirdim" damgası: büyükten vurur, oturur, sonra kaybolur. */
+  @keyframes stamp {
+    0% {
+      opacity: 0;
+      transform: rotate(-10deg) scale(2.4);
+    }
+    18% {
+      opacity: 1;
+      transform: rotate(-10deg) scale(0.92);
+    }
+    26%,
+    80% {
+      opacity: 1;
+      transform: rotate(-10deg) scale(1);
+    }
+    100% {
+      opacity: 0;
+      transform: rotate(-10deg) scale(1);
+    }
+  }
+  @keyframes shock {
+    0%,
+    14% {
+      opacity: 0;
+      transform: scale(0.4);
+    }
+    18% {
+      opacity: 0.8;
+      transform: scale(0.6);
+    }
+    45%,
+    100% {
+      opacity: 0;
+      transform: scale(2.6);
+    }
+  }
+}
+
+/* Cam yüzey: sahnenin üstünde duran paneller (menü, canlı durum, kartlar). */
+@utility glass {
+  background-color: rgb(18 19 25 / 58%);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+  backdrop-filter: blur(22px) saturate(1.2);
 }
 
 @layer base {
@@ -92,5 +183,40 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
+    font-feature-settings: "tnum" 0;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+}
+
+/* Sayfa geçişleri (TanStack Router `defaultViewTransition`): kısa bir kararma, kapaklar yerinde uçar. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.28s;
+}
+::view-transition-group(*) {
+  animation-duration: 0.45s;
+  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: hareket azaltma tercihi her animasyonu ezmeli */
+    animation-duration: 0.01ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: hareket azaltma tercihi her animasyonu ezmeli */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: hareket azaltma tercihi her animasyonu ezmeli */
+    transition-duration: 0.01ms !important;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    /* biome-ignore lint/complexity/noImportantStyles: hareket azaltma tercihi her animasyonu ezmeli */
+    animation: none !important;
   }
 }

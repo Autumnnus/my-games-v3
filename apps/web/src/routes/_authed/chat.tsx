@@ -2,7 +2,7 @@ import { useChat } from "@ai-sdk/react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { DefaultChatTransport, type UIMessage } from "ai";
-import { LoaderIcon, PlusIcon, SendIcon, SquareIcon, Trash2Icon } from "lucide-react";
+import { CheckIcon, LoaderIcon, PlusIcon, SendIcon, SquareIcon, Trash2Icon } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import * as z from "zod/mini";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -46,7 +46,7 @@ function ChatPage() {
   }
 
   return (
-    <div className="grid gap-6 md:grid-cols-[220px_1fr]">
+    <div className="grid gap-6 pt-4 md:grid-cols-[240px_1fr]">
       <ThreadList activeId={t} />
       <ChatWindow key={threadId} threadId={threadId} existing={!!t} />
     </div>
@@ -57,7 +57,7 @@ function ThreadList({ activeId }: { activeId?: string }) {
   const { data } = useQuery(chatThreadsQuery);
   return (
     <aside className="grid content-start gap-2">
-      <Button asChild variant="outline" size="sm" className="justify-start">
+      <Button asChild variant="glass" className="justify-start">
         <Link to="/chat" search={{}}>
           <PlusIcon />
           {m.chat_new()}
@@ -72,8 +72,8 @@ function ThreadList({ activeId }: { activeId?: string }) {
             key={thread.id}
             to="/chat"
             search={{ t: thread.id }}
-            className={`hover:bg-accent truncate rounded px-2 py-1.5 text-sm ${
-              thread.id === activeId ? "bg-accent" : "text-muted-foreground"
+            className={`truncate rounded-xl px-3 py-2 text-sm transition-colors hover:bg-white/8 ${
+              thread.id === activeId ? "bg-white/12 font-semibold" : "text-foreground/70"
             }`}
           >
             {thread.title ?? m.chat_new()}
@@ -149,9 +149,9 @@ function ChatWindow({ threadId, existing }: { threadId: string; existing: boolea
   const busy = chat.status === "submitted" || chat.status === "streaming";
 
   return (
-    <section className="flex min-h-[60dvh] flex-col gap-4">
+    <section className="flex min-h-[70dvh] flex-col gap-5">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold">{m.chat_title()}</h1>
+        <h1 className="font-display text-3xl font-semibold tracking-tight">{m.chat_title()}</h1>
         <div className="flex items-center gap-2">
           {usage.data && usage.data.limit > 0 && (
             <span className="text-muted-foreground text-xs">
@@ -176,16 +176,18 @@ function ChatWindow({ threadId, existing }: { threadId: string; existing: boolea
 
       <div className="flex flex-1 flex-col gap-4">
         {chat.messages.length === 0 && (
-          <p className="text-muted-foreground text-sm">{m.chat_empty()}</p>
+          <p className="text-foreground/70 max-w-lg py-10 text-lg">{m.chat_empty()}</p>
         )}
         {chat.messages.map((message) => (
           <div
             key={message.id}
-            className={message.role === "user" ? "flex justify-end" : "flex justify-start"}
+            className={`animate-rise flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`grid max-w-[85%] gap-2 rounded-lg px-3 py-2 text-sm ${
-                message.role === "user" ? "bg-primary text-primary-foreground" : "bg-muted"
+              className={`grid max-w-[85%] gap-2 rounded-[20px] px-4 py-3 text-[15px] ${
+                message.role === "user"
+                  ? "bg-foreground text-background rounded-br-md"
+                  : "glass rounded-bl-md border border-white/10"
               }`}
             >
               {message.parts.map((part, index) => {
@@ -206,9 +208,12 @@ function ChatWindow({ threadId, existing }: { threadId: string; existing: boolea
                       key={key}
                       className="text-muted-foreground flex items-center gap-1.5 text-xs"
                     >
-                      {!done && <LoaderIcon className="size-3 animate-spin" />}
+                      {done ? (
+                        <CheckIcon className="text-live size-3" />
+                      ) : (
+                        <LoaderIcon className="size-3 animate-spin" />
+                      )}
                       {(toolLabels[name] ?? (() => name))()}
-                      {done ? " ✓" : "…"}
                     </span>
                   );
                 }
@@ -228,13 +233,17 @@ function ChatWindow({ threadId, existing }: { threadId: string; existing: boolea
         <div ref={bottom} />
       </div>
 
-      <form className="sticky bottom-0 flex items-end gap-2 bg-background pb-2" onSubmit={onSubmit}>
+      <form
+        className="glass sticky bottom-24 flex items-end gap-2 rounded-[26px] border border-white/12 p-2 md:bottom-4"
+        onSubmit={onSubmit}
+      >
         <Textarea
           value={input}
           onChange={(event) => setInput(event.target.value)}
           placeholder={m.chat_placeholder()}
           rows={2}
           maxLength={4000}
+          className="resize-none border-0 bg-transparent shadow-none focus-visible:ring-0 dark:bg-transparent"
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();

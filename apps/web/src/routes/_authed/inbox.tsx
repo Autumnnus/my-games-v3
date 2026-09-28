@@ -10,6 +10,7 @@ import {
   proposalKindLabel,
   sourceLabels,
 } from "@/components/proposal-card";
+import { ProposalDeck } from "@/components/proposal-deck";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -25,7 +26,10 @@ import { proposalsQuery, syncIgnoresQuery, syncRulesQuery } from "@/lib/queries"
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/_authed/inbox")({
-  validateSearch: z.object({ tab: z.optional(z.enum(["pending", "resolved", "rules"])) }),
+  validateSearch: z.object({
+    tab: z.optional(z.enum(["pending", "resolved", "rules"])),
+    view: z.optional(z.enum(["deck", "list"])),
+  }),
   loaderDeps: ({ search }) => ({ tab: search.tab ?? "pending" }),
   loader: ({ context, deps }) =>
     deps.tab === "rules"
@@ -39,18 +43,42 @@ export const Route = createFileRoute("/_authed/inbox")({
 });
 
 function InboxPage() {
-  const { tab = "pending" } = Route.useSearch();
+  const { tab = "pending", view = "deck" } = Route.useSearch();
   const navigate = useNavigate({ from: Route.fullPath });
 
   return (
-    <div className="grid gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold">{m.inbox_title()}</h1>
-        <p className="text-muted-foreground text-sm">{m.inbox_description()}</p>
+    <div className="grid gap-6 pt-4">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="grid gap-1.5">
+          <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+            {m.inbox_title()}
+          </h1>
+          <p className="text-foreground/70 max-w-xl text-[15px]">{m.inbox_description()}</p>
+        </div>
+        {tab === "pending" && (
+          <fieldset className="glass flex gap-1 rounded-full border border-white/10 p-1">
+            <legend className="sr-only">{m.inbox_tab_pending()}</legend>
+            {(["deck", "list"] as const).map((option) => (
+              <button
+                key={option}
+                type="button"
+                aria-pressed={view === option}
+                onClick={() => navigate({ search: (previous) => ({ ...previous, view: option }) })}
+                className={`h-9 rounded-full px-4 text-sm font-bold transition-colors ${
+                  view === option ? "bg-foreground text-background" : "text-foreground/75"
+                }`}
+              >
+                {option === "deck" ? m.inbox_view_deck() : m.inbox_view_list()}
+              </button>
+            ))}
+          </fieldset>
+        )}
       </div>
       <Tabs
         value={tab}
-        onValueChange={(value) => navigate({ search: { tab: value as typeof tab } })}
+        onValueChange={(value) =>
+          navigate({ search: (previous) => ({ ...previous, tab: value as typeof tab }) })
+        }
       >
         <TabsList>
           <TabsTrigger value="pending">{m.inbox_tab_pending()}</TabsTrigger>
@@ -58,12 +86,16 @@ function InboxPage() {
           <TabsTrigger value="rules">{m.inbox_tab_rules()}</TabsTrigger>
         </TabsList>
       </Tabs>
-      {tab === "rules" ? <Rules /> : <ProposalList status={tab} />}
+      {tab === "rules" ? (
+        <Rules />
+      ) : (
+        <ProposalList status={tab} deck={tab === "pending" && view === "deck"} />
+      )}
     </div>
   );
 }
 
-function ProposalList({ status }: { status: "pending" | "resolved" }) {
+function ProposalList({ status, deck }: { status: "pending" | "resolved"; deck: boolean }) {
   const { data } = useQuery(proposalsQuery(status));
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -108,6 +140,17 @@ function ProposalList({ status }: { status: "pending" | "resolved" }) {
 
   const proposals = data?.proposals ?? [];
   const bulkable = proposals.filter(isBulkable);
+
+  if (deck && data) {
+    return (
+      <ProposalDeck
+        proposals={proposals}
+        onResolve={(proposal, action, options) =>
+          resolve.mutateAsync({ id: proposal.id, action, options })
+        }
+      />
+    );
+  }
 
   if (data && proposals.length === 0) {
     return <p className="text-muted-foreground py-12 text-center">{m.inbox_empty()}</p>;
@@ -204,7 +247,7 @@ function Rules() {
   return (
     <div className="grid gap-6">
       <section className="grid gap-2">
-        <h2 className="font-semibold">{m.rules_title()}</h2>
+        <h2 className="text-lg font-bold">{m.rules_title()}</h2>
         <p className="text-muted-foreground text-sm">{m.rules_description()}</p>
         <div className="divide-y rounded-lg border">
           {rules.data?.rules.map((rule) => (
@@ -246,7 +289,7 @@ function Rules() {
         </div>
       </section>
       <section className="grid gap-2">
-        <h2 className="font-semibold">{m.ignores_title()}</h2>
+        <h2 className="text-lg font-bold">{m.ignores_title()}</h2>
         {ignores.data?.ignores.length ? (
           <ul className="divide-y rounded-lg border text-sm">
             {ignores.data.ignores.map((item) => (

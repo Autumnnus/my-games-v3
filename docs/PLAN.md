@@ -13,7 +13,7 @@ Temel ilkeler:
 - **Sunucu kaynağı kıttır.** Coolify sunucusu 8 GB RAM, ~4 GB dolu. Her karar RAM/CPU maliyetiyle gerekçelendirilir.
 - **Elle yapılmayan hiçbir değişiklik doğrudan yazılmaz.** Steam, IGDB, AI ve migration değişiklikleri onaydan geçer.
 - **API-first.** Web, ileride desktop (Tauri) ve başka istemciler aynı `/api/v1`'i kullanır.
-- **UI standart kalır** (shadcn varsayılanları). UI ve AI ileride ayrıca ve detaylı ele alınacak.
+- **UI dili: Salon.** Koyu zemin, oyunun kendi görselleri (Steam hero, logo, kapak) ve kapaktan gelen ortam rengi. shadcn bileşenleri korunur, görünümleri temadan gelir.
 
 ## 2. Kararlar
 
@@ -35,7 +35,7 @@ Temel ilkeler:
 |---|---|
 | Runtime | Node 24 LTS, pnpm workspaces |
 | Web | TanStack Start 1.x (React 19, Vite 8), TanStack Router + Query, Nitro (Node sunucusu) |
-| UI | Tailwind 4 + shadcn/ui (varsayılan tema), lucide ikonlar |
+| UI | Tailwind 4 + shadcn/ui (Salon teması), lucide ikonlar, Unbounded + Manrope (fontsource, kendi sunucumuzdan) |
 | i18n | Paraglide JS 2 — strateji: `cookie → preferredLanguage → baseLocale` |
 | API | Hono 4, `/api/v1`; web process'i içinde çalışır; SSR'da ağ yerine process içi çağrı |
 | DB | Postgres 18 + pgvector (+ pg_trgm, unaccent), Drizzle ORM, drizzle-kit migration |
@@ -314,6 +314,24 @@ Kaynak: `my-games-old/old_db_data/kadir_games.json` (98 oyun, kullanıcı `vecto
   bir kez uçtan uca denenmeli: Steam başarım/ekran görüntüsü, PSN NPSSO akışı, Azure uygulaması.
 - **Masaüstü (Tauri):** web öncelikli olduğu için ertelendi. GOG/Epic/EA/Ubisoft kütüphaneleri ve Steam'in
   paylaşılmamış ekran görüntüleri yalnızca yerel istemciyle alınabilir.
+
+**Salon arayüzü (2026-09-28):**
+
+- Dört yön denendi (tasarım panosu: Raf, Dergi, Salon, Zaman); Salon seçildi.
+- `games` tablosuna `hero_url`, `logo_url`, `accent_color`, `art_synced_at` eklendi. Worker (`catalog.game-art`, saatte
+  60 oyun) Steam mağaza API'sinden hero ve logoyu alır, kapağı bir kez indirip baskın rengi hesaplar (`jpeg-js`, native
+  bağımlılık yok). İlk kurulumda hemen doldurmak için: `pnpm --filter @my-games/core art:refresh`.
+- Arayüz: sayfanın arkasında `<Stage>` (hero + ortam rengi), cam üst menü, telefonda alt sekme çubuğu, logolu ana sayfa
+  sahnesi ve kapak şeridi, cam "senin kaydın" kartı, akışta büyük kartlar ve ekran görüntüsü önizlemeleri.
+- Koyu logolar (ör. Crusader Kings III) tarayıcıda bir kez ölçülüp beyaza çevrilir. Sayfa geçişleri View Transitions
+  ile; kapak kütüphaneden kayıt sayfasına uçar. `prefers-reduced-motion` tüm animasyonları kapatır.
+- Onay kutusu varsayılan olarak deste: sağa sürükle onayla, sola reddet, "sonraya bırak"; aynı kararlar düğmelerle de
+  verilir. Eşleşme ve süre çakışmasında karar kartın içindeki seçimle. Liste görünümü (toplu onay) duruyor.
+- Oyun "Bitirildi"ye geçince kayıt sayfasında damga vurulur; süreler değişince rakamlar döner (`RollingText`).
+- Yıl özeti hikâye biçiminde (otomatik ilerleyen kareler, ok tuşları, durdur, bağlantı paylaş); grafikler altta
+  "Ayrıntılar" olarak kaldı.
+- İstatistik, karşılaştırma, ayarlar (iki sütun), sohbet, bildirimler, geçmiş, yönetim ve giriş sayfaları Salon
+  bileşenlerini kullanıyor; form alanları, diyaloglar ve açılır menüler de temaya uyarlandı.
 
 **Plandan kalanlar:** listeler/etiketler, alt puanlar, wishlist fiyat alarmı, SteamGridDB görselleri, e-posta özeti.
 

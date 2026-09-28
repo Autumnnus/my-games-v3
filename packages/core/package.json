@@ -10,7 +10,8 @@
     "typecheck": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "migrate:legacy": "tsx --env-file-if-exists=../../.env scripts/migrate-legacy.ts"
+    "migrate:legacy": "tsx --env-file-if-exists=../../.env scripts/migrate-legacy.ts",
+    "art:refresh": "tsx --env-file-if-exists=../../.env scripts/refresh-art.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.82",
@@ -19,6 +20,7 @@
     "ai": "^7.0.118",
     "aws4fetch": "^1.0.20",
     "drizzle-orm": "catalog:",
+    "jpeg-js": "^0.4.4",
     "pg": "catalog:",
     "psn-api": "^2.18.1",
     "web-push": "^3.6.7",

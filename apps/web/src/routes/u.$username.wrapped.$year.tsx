@@ -2,9 +2,10 @@ import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BarList, ChartCard, ColumnChart, StatTile } from "@/components/charts";
 import { GameCover } from "@/components/game-cover";
+import { WrappedStory } from "@/components/wrapped-story";
 import { orNotFound } from "@/lib/api";
 import { formatPlaytime, formatRating } from "@/lib/format";
-import { wrappedQuery, wrappedYearsQuery } from "@/lib/queries";
+import { profileQuery, wrappedQuery, wrappedYearsQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
 
@@ -29,19 +30,20 @@ function WrappedPage() {
   const { username, year } = Route.useParams();
   const { data } = useSuspenseQuery(wrappedQuery(username, Number(year)));
   const years = useQuery(wrappedYearsQuery(username));
+  const profile = useQuery(profileQuery(username));
   const empty = data.finishedCount === 0 && data.playedMinutes === 0 && data.addedCount === 0;
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-8">
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-2xl font-bold">{m.wrapped_title({ year })}</h2>
+        <h2 className="font-display text-2xl font-semibold">{m.wrapped_title({ year })}</h2>
         <div className="flex flex-wrap gap-1">
           {years.data?.years.map((item) => (
             <Link
               key={item}
               to="/u/$username/wrapped/$year"
               params={{ username, year: String(item) }}
-              className="text-muted-foreground data-[status=active]:bg-foreground data-[status=active]:text-background rounded-full border px-3 py-0.5 text-sm"
+              className="text-foreground/75 data-[status=active]:bg-foreground data-[status=active]:text-background rounded-full border px-3.5 py-1 text-sm font-semibold"
             >
               {item}
             </Link>
@@ -53,6 +55,8 @@ function WrappedPage() {
         <p className="text-muted-foreground py-8">{m.wrapped_empty()}</p>
       ) : (
         <>
+          <WrappedStory data={data} name={profile.data?.user.name ?? username} />
+          <h3 className="font-display pt-6 text-xl font-medium">{m.wrapped_details()}</h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <StatTile label={m.wrapped_finished()} value={data.finishedCount} />
             <StatTile

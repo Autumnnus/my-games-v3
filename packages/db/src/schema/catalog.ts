@@ -30,6 +30,14 @@ export const games = pgTable(
     coverImageId: text(),
     /** IGDB'de olmayan oyunlar için doğrudan kapak URL'i (eski veri, Steam, elle). */
     coverUrl: text(),
+    /** Geniş sahne görseli (Steam `library_hero`); arayüzde oyunun arka planı. */
+    heroUrl: text(),
+    /** Şeffaf oyun logosu (Steam `logo.png`); sahnede başlığın yerine geçer. */
+    logoUrl: text(),
+    /** Kapaktan hesaplanan baskın renk (`#rrggbb`); arayüzün ortam rengi. */
+    accentColor: text(),
+    /** Görseller ve renk en son ne zaman tarandı (boşsa hiç taranmadı). */
+    artSyncedAt: tstz(),
     releaseDate: date({ mode: "string" }),
     /** IGDB game type (main_game, dlc, remake…). */
     gameType: text(),

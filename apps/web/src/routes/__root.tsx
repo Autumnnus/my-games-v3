@@ -4,7 +4,7 @@ import { type ReactNode, useEffect } from "react";
 import { Toaster } from "sonner";
 import { AddGameProvider } from "@/components/add-game";
 import { NotFound } from "@/components/not-found";
-import { SiteHeader } from "@/components/site-header";
+import { MobileTabBar, SiteHeader } from "@/components/site-header";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { metaQuery } from "@/lib/meta";
 import { proposalCountQuery, unreadQuery } from "@/lib/queries";
@@ -42,7 +42,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { name: "theme-color", content: "#0a0a0a" },
+      { name: "theme-color", content: "#0b0c10" },
       { title: m.app_name() },
     ],
     links: [
@@ -69,11 +69,17 @@ function RootDocument({ children }: { children: ReactNode }) {
       <body className="min-h-dvh">
         <TooltipProvider>
           <AddGameProvider>
-            <SiteHeader />
-            <main className="mx-auto w-full max-w-6xl px-4 py-8">{children}</main>
+            {/* Kabuk konumlanmış: sayfaların <Stage> katmanı buraya göre tam genişlikte yerleşir. */}
+            <div className="relative isolate min-h-dvh overflow-x-clip">
+              <SiteHeader />
+              <main className="mx-auto w-full max-w-7xl px-4 pt-2 pb-32 sm:px-6 md:pb-16 lg:px-8">
+                {children}
+              </main>
+              <MobileTabBar />
+            </div>
           </AddGameProvider>
         </TooltipProvider>
-        <Toaster theme="dark" richColors position="bottom-right" />
+        <Toaster theme="dark" richColors position="top-center" />
         <Scripts />
       </body>
     </html>

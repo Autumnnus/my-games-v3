@@ -53,13 +53,15 @@ function AdminPage() {
   });
 
   return (
-    <div className="grid max-w-3xl gap-4">
-      <h1 className="text-2xl font-semibold">{m.admin_title()}</h1>
+    <div className="grid max-w-3xl gap-4 pt-4">
+      <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+        {m.admin_title()}
+      </h1>
       {data && data.reports.length === 0 && (
         <p className="text-muted-foreground">{m.admin_empty()}</p>
       )}
       {data?.reports.map((report) => (
-        <article key={report.id} className="grid gap-3 rounded-lg border p-4">
+        <article key={report.id} className="bg-card grid gap-3 rounded-[22px] border p-5">
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <Badge variant="outline">{targetLabels[report.targetType]()}</Badge>
             <span className="text-muted-foreground">

@@ -1,5 +1,5 @@
 import { schema } from "@my-games/db";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db, type Tx } from "./db";
 import { AppError, forbidden, notFound } from "./errors";
 import { emit } from "./events";
@@ -280,6 +280,18 @@ function present(row: ScreenshotRow) {
     takenAt: row.takenAt,
     createdAt: row.createdAt,
   };
+}
+
+/** Kimlikleri verilen ekran görüntülerinin küçük görsel adresleri (akış kartlarındaki önizlemeler). */
+export async function screenshotThumbs(ids: string[]) {
+  const thumbs = new Map<string, string>();
+  if (ids.length === 0) return thumbs;
+  const rows = await db.select().from(screenshots).where(inArray(screenshots.id, ids));
+  for (const row of rows) {
+    const { thumbUrl } = present(row);
+    if (thumbUrl) thumbs.set(row.id, thumbUrl);
+  }
+  return thumbs;
 }
 
 export async function listScreenshots(

@@ -92,111 +92,122 @@ function SettingsPage() {
   }
 
   return (
-    <div className="grid max-w-2xl gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>{m.settings_profile()}</CardTitle>
-          <CardDescription>{m.settings_profile_description()}</CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-6">
-          <div className="flex items-center gap-4">
-            <Avatar className="size-16">
-              {user.image && <AvatarImage src={user.image} alt="" />}
-              <AvatarFallback className="text-xl">
-                {user.name.charAt(0).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <input
-              ref={avatarInput}
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              hidden
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                event.target.value = "";
-                if (file) uploadAvatar.mutate(file);
-              }}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={!meta.data?.features.uploads || uploadAvatar.isPending}
-              onClick={() => avatarInput.current?.click()}
-            >
-              {m.field_avatar()}
-            </Button>
-          </div>
-          <form className="grid gap-4" onSubmit={onSubmit}>
-            <FormField label={m.field_name()}>
-              <Input name="name" defaultValue={user.name} required maxLength={64} />
-            </FormField>
-            <FormField label={m.field_username()} hint={m.field_username_hint()}>
+    <div className="grid gap-6 pt-4">
+      <div className="grid gap-1.5">
+        <h1 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
+          {m.nav_settings()}
+        </h1>
+        <p className="text-foreground/70 text-[15px]">{m.settings_description()}</p>
+      </div>
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>{m.settings_profile()}</CardTitle>
+              <CardDescription>{m.settings_profile_description()}</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+              <div className="flex items-center gap-4">
+                <Avatar className="size-16">
+                  {user.image && <AvatarImage src={user.image} alt="" />}
+                  <AvatarFallback className="text-xl">
+                    {user.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <input
+                  ref={avatarInput}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  hidden
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    event.target.value = "";
+                    if (file) uploadAvatar.mutate(file);
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!meta.data?.features.uploads || uploadAvatar.isPending}
+                  onClick={() => avatarInput.current?.click()}
+                >
+                  {m.field_avatar()}
+                </Button>
+              </div>
+              <form className="grid gap-4" onSubmit={onSubmit}>
+                <FormField label={m.field_name()}>
+                  <Input name="name" defaultValue={user.name} required maxLength={64} />
+                </FormField>
+                <FormField label={m.field_username()} hint={m.field_username_hint()}>
+                  <Input
+                    name="username"
+                    defaultValue={user.displayUsername ?? ""}
+                    required
+                    minLength={3}
+                    maxLength={30}
+                    pattern="[A-Za-z0-9_.]+"
+                  />
+                </FormField>
+                <FormField label={m.field_bio()}>
+                  <Textarea name="bio" rows={3} maxLength={500} defaultValue={user.bio ?? ""} />
+                </FormField>
+                <FormField label={m.field_email()}>
+                  <Input
+                    value={user.email.endsWith(".placeholder.invalid") ? "—" : user.email}
+                    disabled
+                  />
+                </FormField>
+                <Button type="submit" className="w-fit" disabled={saveProfile.isPending}>
+                  {m.action_save()}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{m.settings_export()}</CardTitle>
+              <CardDescription>{m.settings_export_description()}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button asChild variant="outline">
+                <a href="/api/v1/me/export" download>
+                  {m.settings_export()}
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="border-destructive/50">
+            <CardHeader>
+              <CardTitle>{m.settings_danger()}</CardTitle>
+              <CardDescription>{m.settings_delete_confirm()}</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
               <Input
-                name="username"
-                defaultValue={user.displayUsername ?? ""}
-                required
-                minLength={3}
-                maxLength={30}
-                pattern="[A-Za-z0-9_.]+"
+                className="max-w-xs"
+                value={confirmName}
+                onChange={(event) => setConfirmName(event.target.value)}
+                placeholder={user.displayUsername ?? ""}
               />
-            </FormField>
-            <FormField label={m.field_bio()}>
-              <Textarea name="bio" rows={3} maxLength={500} defaultValue={user.bio ?? ""} />
-            </FormField>
-            <FormField label={m.field_email()}>
-              <Input
-                value={user.email.endsWith(".placeholder.invalid") ? "—" : user.email}
-                disabled
-              />
-            </FormField>
-            <Button type="submit" className="w-fit" disabled={saveProfile.isPending}>
-              {m.action_save()}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+              <Button
+                variant="destructive"
+                disabled={confirmName !== user.displayUsername || deleteAccount.isPending}
+                onClick={() => deleteAccount.mutate()}
+              >
+                {m.settings_delete_account()}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="grid gap-6">
+          <SteamCard error={search.error} />
+          <PsnCard />
+          <XboxCard error={search.error} linked={search.linked} />
 
-      <SteamCard error={search.error} />
-      <PsnCard />
-      <XboxCard error={search.error} linked={search.linked} />
-
-      <NotificationSettings />
-
-      <Card>
-        <CardHeader>
-          <CardTitle>{m.settings_export()}</CardTitle>
-          <CardDescription>{m.settings_export_description()}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild variant="outline">
-            <a href="/api/v1/me/export" download>
-              {m.settings_export()}
-            </a>
-          </Button>
-        </CardContent>
-      </Card>
-
-      <Card className="border-destructive/50">
-        <CardHeader>
-          <CardTitle>{m.settings_danger()}</CardTitle>
-          <CardDescription>{m.settings_delete_confirm()}</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Input
-            className="max-w-xs"
-            value={confirmName}
-            onChange={(event) => setConfirmName(event.target.value)}
-            placeholder={user.displayUsername ?? ""}
-          />
-          <Button
-            variant="destructive"
-            disabled={confirmName !== user.displayUsername || deleteAccount.isPending}
-            onClick={() => deleteAccount.mutate()}
-          >
-            {m.settings_delete_account()}
-          </Button>
-        </CardContent>
-      </Card>
+          <NotificationSettings />
+        </div>
+      </div>
     </div>
   );
 }

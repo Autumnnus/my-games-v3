@@ -121,7 +121,7 @@ export function EntryAchievements({ entryId }: { entryId: string }) {
   if (sets.length === 0) return null;
   return (
     <section className="grid gap-4">
-      <h2 className="font-semibold">{m.achievements_title()}</h2>
+      <h2 className="text-lg font-bold">{m.achievements_title()}</h2>
       {sets.map((set) => (
         <AchievementList key={`${set.provider}:${set.gameKey}`} set={set} />
       ))}

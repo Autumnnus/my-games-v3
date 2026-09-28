@@ -153,17 +153,31 @@ export async function getUserScreenshots(steamId: string, page: number, perPage 
 
 type StoreItem = {
   appid?: number;
-  assets?: { asset_url_format?: string; library_capsule?: string; header?: string };
+  assets?: {
+    asset_url_format?: string;
+    library_capsule?: string;
+    header?: string;
+    library_hero?: string;
+  };
 };
 
 const STORE_ASSETS = "https://shared.akamai.steamstatic.com/store_item_assets/";
 
+export type StoreArt = {
+  /** Dikey kütüphane kapağı, yoksa yatay başlık görseli. */
+  cover: string | null;
+  /** Geniş sahne görseli (kütüphane hero'su). */
+  hero: string | null;
+  /** Şeffaf logo adayı; her oyunda olmayabilir, kullanmadan önce doğrulanmalı. */
+  logo: string;
+};
+
 /**
- * Mağaza kapaklarının gerçek adresleri (dikey kütüphane kapağı, yoksa yatay başlık görseli). Yeni oyunların
- * görselleri hash'li klasörlerde; eski sabit adres (`library_600x900.jpg`) onlarda gri boş görsel döner.
+ * Mağaza görsellerinin gerçek adresleri. Yeni oyunların görselleri hash'li klasörlerde; eski sabit adres
+ * (`library_600x900.jpg`) onlarda gri boş görsel döner.
  */
-export async function getStoreCovers(appIds: number[]) {
-  const covers = new Map<number, string>();
+export async function getStoreArt(appIds: number[]) {
+  const art = new Map<number, StoreArt>();
   for (let index = 0; index < appIds.length; index += 50) {
     const ids = appIds.slice(index, index + 50);
     const { status, body } = await call<{ response?: { store_items?: StoreItem[] } }>(
@@ -179,11 +193,26 @@ export async function getStoreCovers(appIds: number[]) {
     if (status !== 200) continue;
     for (const item of body.response?.store_items ?? []) {
       const assets = item.assets;
-      const file = assets?.library_capsule ?? assets?.header;
-      if (!item.appid || !assets?.asset_url_format || !file) continue;
+      if (!item.appid || !assets?.asset_url_format) continue;
+      const format = assets.asset_url_format;
       // biome-ignore lint/suspicious/noTemplateCurlyInString: Steam'in yer tutucusu
-      covers.set(item.appid, STORE_ASSETS + assets.asset_url_format.replace("${FILENAME}", file));
+      const url = (file: string) => STORE_ASSETS + format.replace("${FILENAME}", file);
+      const cover = assets.library_capsule ?? assets.header;
+      art.set(item.appid, {
+        cover: cover ? url(cover) : null,
+        hero: assets.library_hero ? url(assets.library_hero) : null,
+        logo: `${STORE_ASSETS}steam/apps/${item.appid}/logo.png`,
+      });
     }
+  }
+  return art;
+}
+
+/** Mağaza kapakları (dikey kütüphane kapağı, yoksa yatay başlık görseli). */
+export async function getStoreCovers(appIds: number[]) {
+  const covers = new Map<number, string>();
+  for (const [appId, art] of await getStoreArt(appIds)) {
+    if (art.cover) covers.set(appId, art.cover);
   }
   return covers;
 }

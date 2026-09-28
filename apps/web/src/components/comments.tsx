@@ -190,7 +190,7 @@ export function CommentThread(props: Target & { showTitle?: boolean }) {
 
   return (
     <div className="grid gap-3">
-      {props.showTitle && <h2 className="font-semibold">{m.comments_title()}</h2>}
+      {props.showTitle && <h2 className="text-lg font-bold">{m.comments_title()}</h2>}
       {data && roots.length === 0 && (
         <p className="text-muted-foreground text-sm">{m.comments_empty()}</p>
       )}
