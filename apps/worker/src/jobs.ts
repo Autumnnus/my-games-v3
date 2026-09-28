@@ -1,4 +1,4 @@
-import { refreshStaleGames } from "@my-games/core/catalog";
+import { refreshStaleGames, refreshSteamCovers } from "@my-games/core/catalog";
 import { matchUnlinkedGames } from "@my-games/core/matching";
 import { pruneOutbox } from "@my-games/core/outbox";
 import { platformAccountsDueForSync } from "@my-games/core/platforms/accounts";
@@ -24,8 +24,14 @@ type JobDefinition = {
 export const jobs: JobDefinition[] = [
   {
     name: "catalog.match-unlinked",
-    cron: "0 4 * * *",
+    // Saatte 25 oyun: IGDB ilk açıldığında eski kütüphane bir günde eşleşir, istek sınırı da aşılmaz.
+    cron: "10 * * * *",
     run: () => matchUnlinkedGames(25),
+  },
+  {
+    name: "catalog.steam-covers",
+    cron: "20 4 * * *",
+    run: () => refreshSteamCovers(),
   },
   {
     name: "catalog.refresh-metadata",

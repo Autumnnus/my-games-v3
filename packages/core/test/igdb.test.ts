@@ -5,6 +5,7 @@ import { importIgdbGame, searchCatalog } from "../src/catalog";
 import { db } from "../src/db";
 import { resetIgdbTokenCache, sanitizeSearch } from "../src/igdb/client";
 import { mapIgdbGame } from "../src/igdb/games";
+import { matchUnlinkedGames } from "../src/matching";
 import { createGame, json, mockFetch } from "./factories";
 
 const sekiro = {
@@ -65,6 +66,10 @@ beforeEach(() => {
     {
       match: (url) => url === "https://api.igdb.com/v4/games",
       respond: () => json([sekiro]),
+    },
+    {
+      match: (url) => url === "https://api.igdb.com/v4/external_games",
+      respond: () => json([{ game: sekiro.id }]),
     },
   ]);
 });
@@ -132,6 +137,22 @@ describe("igdb", () => {
     expect(imported.id).toBe(steamOnly.id);
     expect(imported.igdbId).toBe(113112);
     expect(imported.slug).toBe("sekiro");
+  });
+
+  it("matches unlinked Steam games by app id even when the names differ", async () => {
+    const steamOnly = await createGame({
+      source: "steam",
+      steamAppId: 814380,
+      name: "SEKIRO™ GOTY Edition",
+      slug: "sekiro-goty",
+      coverUrl: "https://example.com/library_600x900.jpg",
+    });
+    const result = await matchUnlinkedGames(10);
+    expect(result.merged).toBe(1);
+    const [game] = await db.select().from(schema.games).where(eq(schema.games.id, steamOnly.id));
+    expect(game).toMatchObject({ igdbId: 113112, coverImageId: "co2a23", steamAppId: 814380 });
+    const searches = fetchMock.calls.filter((call) => call.url === "https://api.igdb.com/v4/games");
+    expect(searches).toHaveLength(0);
   });
 
   it("refreshes the token once on 401", async () => {

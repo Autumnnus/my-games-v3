@@ -1,7 +1,7 @@
 import { schema } from "@my-games/db";
 import { and, eq, inArray, isNull, sql } from "drizzle-orm";
 import { type AchievementDef, getAchievementSet, isSetStale } from "../achievements";
-import { ensureSteamGame, findGameBySteamApp } from "../catalog";
+import { ensureSteamGame, findGameBySteamApp, steamCoverFor } from "../catalog";
 import { db } from "../db";
 import { mergeGameInto } from "../matching";
 import {
@@ -37,9 +37,14 @@ async function linkLegacyEntry(entry: EngineEntry, appId: number): Promise<Engin
     await db.transaction((tx) => mergeGameInto(tx, entry.gameId, existing.id));
     return { ...entry, gameId: existing.id, steamAppId: appId };
   }
+  const cover = await steamCoverFor(appId);
+  // Eski sistemin kapakları elle bulunmuş web adresleriydi (çoğu artık açılmıyor); Steam kapağı daha güvenilir.
   await db
     .update(games)
-    .set({ steamAppId: appId })
+    .set({
+      steamAppId: appId,
+      coverUrl: sql`case when ${games.coverUrl} is null or ${games.source} = 'legacy' then ${cover} else ${games.coverUrl} end`,
+    })
     .where(and(eq(games.id, entry.gameId), isNull(games.steamAppId)));
   return { ...entry, steamAppId: appId };
 }

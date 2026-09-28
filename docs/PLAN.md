@@ -310,7 +310,7 @@ Kaynak: `my-games-old/old_db_data/kadir_games.json` (98 oyun, kullanıcı `vecto
   dolunca hesap "yeniden bağla" durumuna düşer.
 - **Xbox:** Microsoft OAuth + XSTS (Azure uygulaması gerekir). Oyun geçmişi, MinutesPlayed ve Xbox One/Series/PC
   başarımları alınır.
-- **Doğrulama:** Hepsi sahte yanıtlarla test edildi (toplam 65 test) ve tarayıcıda denendi. Gerçek anahtarla her biri
+- **Doğrulama:** Hepsi sahte yanıtlarla test edildi (toplam 66 test) ve tarayıcıda denendi. Gerçek anahtarla her biri
   bir kez uçtan uca denenmeli: Steam başarım/ekran görüntüsü, PSN NPSSO akışı, Azure uygulaması.
 - **Masaüstü (Tauri):** web öncelikli olduğu için ertelendi. GOG/Epic/EA/Ubisoft kütüphaneleri ve Steam'in
   paylaşılmamış ekran görüntüleri yalnızca yerel istemciyle alınabilir.

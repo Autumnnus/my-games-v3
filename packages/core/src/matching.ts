@@ -4,7 +4,7 @@ import type { AnyPgColumn } from "drizzle-orm/pg-core";
 import { importIgdbGame } from "./catalog";
 import { igdbConfig } from "./config";
 import { type DbOrTx, db } from "./db";
-import { type IgdbSearchResult, searchIgdbGames } from "./igdb/games";
+import { findIgdbIdBySteamApp, type IgdbSearchResult, searchIgdbGames } from "./igdb/games";
 import { titleSimilarity } from "./text";
 
 export type MatchCandidate = IgdbSearchResult & { score: number };
@@ -23,19 +23,87 @@ export async function findIgdbCandidates(name: string, limit = 5): Promise<Match
     .slice(0, limit);
 }
 
+/**
+ * Otomatik eşleşme adayı seçer. En iyi aday eşiği geçmeli ve rakiplerinden belirgin şekilde iyi olmalı. Adı
+ * birebir aynı olan aday yalnızca benzeyenlere üstün gelir. Birden fazla birebir aynı ad varsa (IGDB'de port,
+ * remaster ya da aynı adlı eski oyun) oy sayısı açıkça öne çıkan seçilir; değilse karar kullanıcıya bırakılır.
+ */
 export function pickAutoMatch(candidates: MatchCandidate[]) {
-  const [best, second] = candidates;
+  const [best] = candidates;
   if (!best || best.score < AUTO_MATCH_SCORE) return null;
-  if (second && best.score - second.score < AUTO_MATCH_MARGIN && second.score >= AUTO_MATCH_SCORE) {
-    return null;
+  const top = candidates.filter((candidate) =>
+    best.score === 1
+      ? candidate.score === 1
+      : candidate.score >= AUTO_MATCH_SCORE && best.score - candidate.score < AUTO_MATCH_MARGIN,
+  );
+  if (top.length === 1) return best;
+  const [popular, runnerUp] = [...top].sort((a, b) => (b.ratingCount ?? 0) - (a.ratingCount ?? 0));
+  const votes = popular?.ratingCount ?? 0;
+  if (popular && votes >= 20 && votes >= 5 * (runnerUp?.ratingCount ?? 0)) return popular;
+  return null;
+}
+
+type EntryRow = typeof schema.libraryEntries.$inferSelect;
+
+const earliest = <T extends string | Date>(a: T | null, b: T | null) =>
+  a === null ? b : b === null ? a : a <= b ? a : b;
+const latest = <T extends string | Date>(a: T | null, b: T | null) =>
+  a === null ? b : b === null ? a : a >= b ? a : b;
+const larger = (a: number | null, b: number | null) =>
+  a === null ? b : b === null ? a : Math.max(a, b);
+
+/**
+ * Aynı kullanıcının aynı oyuna ait iki kaydını birleştirir: `target` kalır, boş alanları `source`tan dolar.
+ * Bitirilmişlik korunur, ilk başlama/bitirme ve son oynama tarihleri alınır, süreler büyük olandan gelir.
+ * Kayda bağlı her şey (screenshot, oturum, aktivite, geçmiş, öneri) hedefe taşınır.
+ */
+export function combineEntries(target: EntryRow, source: EntryRow) {
+  return {
+    status: source.status === "completed" ? source.status : target.status,
+    rating: target.rating ?? source.rating,
+    review: target.review ?? source.review,
+    platform: target.platform ?? source.platform,
+    store: target.store ?? source.store,
+    playtimeManualMin: Math.max(target.playtimeManualMin, source.playtimeManualMin),
+    playtimeSteamMin: larger(target.playtimeSteamMin, source.playtimeSteamMin),
+    playtimePsnMin: larger(target.playtimePsnMin, source.playtimePsnMin),
+    playtimeXboxMin: larger(target.playtimeXboxMin, source.playtimeXboxMin),
+    startedAt: earliest(target.startedAt, source.startedAt),
+    finishedAt: earliest(target.finishedAt, source.finishedAt),
+    lastPlayedAt: latest(target.lastPlayedAt, source.lastPlayedAt),
+    isFavorite: target.isFavorite || source.isFavorite,
+    achievementsUnlocked: target.achievementsUnlocked ?? source.achievementsUnlocked,
+    achievementsTotal: target.achievementsTotal ?? source.achievementsTotal,
+    legacyRef: target.legacyRef ?? source.legacyRef,
+    createdAt: earliest(target.createdAt, source.createdAt) ?? target.createdAt,
+  };
+}
+
+async function mergeEntryInto(tx: DbOrTx, sourceId: string, targetId: string) {
+  const { libraryEntries, screenshots, playSessions, activities, entryHistory, changeProposals } =
+    schema;
+  const [source] = await tx.select().from(libraryEntries).where(eq(libraryEntries.id, sourceId));
+  const [target] = await tx.select().from(libraryEntries).where(eq(libraryEntries.id, targetId));
+  if (!source || !target) return;
+  // legacy_ref tekil; hedefe geçmeden önce kaynaktan kaldırılır.
+  await tx.update(libraryEntries).set({ legacyRef: null }).where(eq(libraryEntries.id, sourceId));
+  await tx
+    .update(libraryEntries)
+    .set({ ...combineEntries(target, source), updatedAt: new Date() })
+    .where(eq(libraryEntries.id, targetId));
+  for (const table of [screenshots, playSessions, activities, entryHistory, changeProposals]) {
+    await tx
+      .update(table)
+      .set({ entryId: targetId, gameId: target.gameId })
+      .where(eq(table.entryId, sourceId));
   }
-  return best;
+  await tx.delete(libraryEntries).where(eq(libraryEntries.id, sourceId));
 }
 
 /**
  * IGDB'siz (eski/elle eklenmiş/Steam'den açılmış) bir oyunu başka bir oyunla birleştirir: kayıtlar ve ona
  * bağlı her şey (screenshot, oturum, aktivite, geçmiş, öneri) yeni oyuna taşınır. Hedefte zaten kaydı olan
- * kullanıcının eski kaydı yerinde kalır. `userId` verilirse yalnızca o kullanıcının verisi taşınır (kullanıcı
+ * kullanıcının iki kaydı birleştirilir (`combineEntries`). `userId` verilirse yalnızca o kullanıcının verisi taşınır (kullanıcı
  * onayıyla yapılan eşleştirme başkalarının kaydını değiştirmesin). Eski oyunu kimse kullanmıyorsa silinir;
  * Steam uygulama kimliği hedefe geçer ki sonraki sync aynı oyunu yeniden açmasın.
  */
@@ -58,10 +126,28 @@ export async function mergeGameInto(
     achievementSets,
   } = schema;
 
+  // Hedef oyunda zaten kaydı olan kullanıcının iki kaydı tek kayıtta birleşir (ör. eski sistemden gelen
+  // "bitirdim" kaydı ile Steam'in açtığı kayıt).
+  const duplicates = await tx
+    .select({ sourceId: libraryEntries.id, targetId: sql<string>`target.id` })
+    .from(libraryEntries)
+    .innerJoin(
+      sql`${libraryEntries} as target`,
+      sql`target.user_id = ${libraryEntries.userId} and target.game_id = ${toGameId}`,
+    )
+    .where(
+      and(
+        eq(libraryEntries.gameId, fromGameId),
+        options.userId ? eq(libraryEntries.userId, options.userId) : undefined,
+      ),
+    );
+  for (const duplicate of duplicates) {
+    await mergeEntryInto(tx, duplicate.sourceId, duplicate.targetId);
+  }
+
   await tx.execute(sql`
     update ${libraryEntries} set game_id = ${toGameId}
     where game_id = ${fromGameId}
-      and user_id not in (select user_id from ${libraryEntries} where game_id = ${toGameId})
       ${options.userId ? sql`and user_id = ${options.userId}` : sql``}
   `);
 
@@ -113,9 +199,16 @@ export async function mergeGameInto(
     .set({ gameId: toGameId })
     .where(eq(achievementSets.gameId, fromGameId));
   const [source] = await tx
-    .select({ steamAppId: games.steamAppId })
+    .select({ steamAppId: games.steamAppId, coverUrl: games.coverUrl })
     .from(games)
     .where(eq(games.id, fromGameId));
+  if (source?.coverUrl) {
+    // IGDB'de kapağı olmayan oyunlarda eski (ör. Steam) kapak korunur.
+    await tx
+      .update(games)
+      .set({ coverUrl: source.coverUrl })
+      .where(and(eq(games.id, toGameId), isNull(games.coverImageId), isNull(games.coverUrl)));
+  }
   if (source?.steamAppId) {
     // Unique index yüzünden önce kaynaktan kaldırılır. Hedefin kendi Steam kimliği varsa bu app ek kimlik
     // olur; her iki durumda da sonraki sync aynı oyunu yeniden açmaz.
@@ -148,13 +241,14 @@ export async function matchGameToIgdb(gameId: string, igdbId: number, userId?: s
 /**
  * IGDB'siz oyunlar (eski veri, elle eklenenler) için eşleşme arar. Yüksek güvenli eşleşmeler doğrudan
  * birleştirilir; belirsizler oyunu kütüphanesinde tutan her kullanıcıya öneri olarak gider. Her oyun en
- * fazla haftada bir denenir (`metadata_synced_at` deneme zamanı olarak kullanılır).
+ * fazla haftada bir denenir (`metadata_synced_at` deneme zamanı olarak kullanılır). Steam oyunları önce Steam
+ * uygulama kimliğiyle aranır.
  */
 export async function matchUnlinkedGames(limit = 25) {
   if (!igdbConfig()) return { checked: 0, merged: 0, proposed: 0 };
   const { games, libraryEntries } = schema;
   const rows = await db
-    .select({ id: games.id, name: games.name })
+    .select({ id: games.id, name: games.name, steamAppId: games.steamAppId })
     .from(games)
     .where(
       sql`${games.igdbId} is null and ${games.source} in ('legacy', 'custom', 'steam', 'psn', 'xbox')
@@ -167,6 +261,15 @@ export async function matchUnlinkedGames(limit = 25) {
   let proposed = 0;
   for (const game of rows) {
     await db.update(games).set({ metadataSyncedAt: new Date() }).where(eq(games.id, game.id));
+    // Steam uygulaması olan oyunlar IGDB'de Steam kimliğiyle birebir bulunur; isim araması gerekmez.
+    const bySteam = game.steamAppId
+      ? await findIgdbIdBySteamApp(game.steamAppId).catch(() => null)
+      : null;
+    if (bySteam) {
+      await matchGameToIgdb(game.id, bySteam);
+      merged++;
+      continue;
+    }
     const candidates = await findIgdbCandidates(game.name).catch(() => []);
     const best = pickAutoMatch(candidates);
     if (best) {

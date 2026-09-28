@@ -13,6 +13,8 @@ export type DomainEvent =
         gameId: string;
         status: EntryStatus;
         source: string;
+        /** Akışa aktivite düşmez. Eski olaylarda alan yok. */
+        silent?: boolean;
       };
     }
   | {
@@ -22,6 +24,7 @@ export type DomainEvent =
         userId: string;
         gameId: string;
         source: string;
+        silent?: boolean;
         changes: { field: string; from: unknown; to: unknown }[];
       };
     }

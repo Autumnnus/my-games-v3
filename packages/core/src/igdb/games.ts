@@ -75,7 +75,7 @@ const DETAIL_FIELDS = [
   "external_games.external_game_source",
 ].join(",");
 
-const SEARCH_FIELDS = "name,slug,cover.image_id,first_release_date,game_type";
+const SEARCH_FIELDS = "name,slug,cover.image_id,first_release_date,game_type,total_rating_count";
 
 export type IgdbSearchResult = {
   igdbId: number;
@@ -83,6 +83,8 @@ export type IgdbSearchResult = {
   coverImageId: string | null;
   releaseYear: number | null;
   gameType: string | null;
+  /** IGDB'deki oy sayısı; aynı adlı kayıtlardan asıl oyunu seçmek için kullanılır. */
+  ratingCount?: number;
 };
 
 export async function searchIgdbGames(query: string, limit = 20): Promise<IgdbSearchResult[]> {
@@ -104,6 +106,7 @@ export function toSearchResult(game: IgdbGame): IgdbSearchResult {
       ? new Date(game.first_release_date * 1000).getUTCFullYear()
       : null,
     gameType: gameTypeName(game.game_type),
+    ratingCount: game.total_rating_count ?? 0,
   };
 }
 

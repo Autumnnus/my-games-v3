@@ -1,0 +1,1 @@
+ALTER TABLE "change_proposals" ADD COLUMN "initial" boolean DEFAULT false NOT NULL;

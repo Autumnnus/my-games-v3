@@ -61,7 +61,7 @@ async function upsertActivity(
 }
 
 export async function onEntryCreated(payload: EventPayload<"entry.created">, tx: Tx) {
-  if (SILENT_SOURCES.has(payload.source)) return;
+  if (payload.silent || SILENT_SOURCES.has(payload.source)) return;
   const item = { entryId: payload.entryId, gameId: payload.gameId, status: payload.status };
   await upsertActivity(tx, {
     actorId: payload.userId,
@@ -81,7 +81,7 @@ export async function onEntryCreated(payload: EventPayload<"entry.created">, tx:
 }
 
 export async function onEntryUpdated(payload: EventPayload<"entry.updated">, tx: Tx) {
-  if (SILENT_SOURCES.has(payload.source)) return;
+  if (payload.silent || SILENT_SOURCES.has(payload.source)) return;
   const change = (field: string) => payload.changes.find((item) => item.field === field);
   const day = today();
   const base = { actorId: payload.userId, gameId: payload.gameId, entryId: payload.entryId };

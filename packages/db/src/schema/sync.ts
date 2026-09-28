@@ -43,6 +43,8 @@ export const changeProposals = pgTable(
     /** Aynı şeyi iki kez önermemek için (ör. `steam:new_game:1245620`). */
     dedupeKey: text(),
     confidence: real(),
+    /** Platformun ilk senkronunda (kurulumda) oluştu; uygulanınca akışa aktivite düşmez. */
+    initial: boolean().notNull().default(false),
     status: proposalStatusEnum().notNull().default("pending"),
     createdAt: createdAt(),
     resolvedAt: tstz(),

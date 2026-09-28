@@ -104,20 +104,27 @@ export async function syncSteamScreenshots(userId: string) {
     groups.set(entryId, [...(groups.get(entryId) ?? []), shot]);
   }
 
-  const firstImport = !account.screenshotsSyncedAt;
+  // Akışa yalnızca son kontrolden sonra çekilenler düşer. İlk içe aktarım ve kütüphaneye sonradan eklenen
+  // oyunların eski görüntüleri sessizce eklenir.
+  const since = account.screenshotsSyncedAt;
+  const isFresh = (shot: PlatformScreenshot) =>
+    since !== null && shot.takenAt !== null && new Date(shot.takenAt) > since;
   let imported = 0;
   let proposed = 0;
   await db.transaction(async (tx) => {
     for (const [entryId, items] of groups) {
       if (action === "auto") {
-        const rows = await insertPlatformScreenshots(tx, {
-          userId,
-          entryId,
-          gameId: null,
-          items,
-          announce: !firstImport,
-        });
-        imported += rows.length;
+        for (const announce of [false, true]) {
+          const batch = items.filter((shot) => isFresh(shot) === announce);
+          const rows = await insertPlatformScreenshots(tx, {
+            userId,
+            entryId,
+            gameId: null,
+            items: batch,
+            announce,
+          });
+          imported += rows.length;
+        }
         continue;
       }
       const result = await propose(tx, {
@@ -128,6 +135,7 @@ export async function syncSteamScreenshots(userId: string) {
         gameId: gameOfEntry.get(entryId) ?? null,
         dedupeKey: `steam:screenshots:${entryId}`,
         payload: { op: "screenshots", items },
+        initial: !items.some(isFresh),
       });
       if (result.created) proposed++;
     }

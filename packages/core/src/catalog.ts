@@ -12,6 +12,7 @@ import {
   searchIgdbGames,
 } from "./igdb/games";
 import { entryPlaytime } from "./playtime";
+import { getStoreCovers } from "./steam/api";
 
 const { games, terms, gameTerms, libraryEntries, user, gameExternalIds } = schema;
 
@@ -166,6 +167,33 @@ export async function createCustomGame(
   });
 }
 
+/** Steam oyununun kapak adresi; mağaza API'si yanıt vermezse sabit adrese düşer. */
+export async function steamCoverFor(appId: number) {
+  const covers = await getStoreCovers([appId]).catch(() => null);
+  return covers?.get(appId) ?? steamCapsuleUrl(appId);
+}
+
+/**
+ * IGDB kapağı olmayan Steam oyunlarının kapaklarını mağazadaki güncel adresle yeniler (Steam görsel
+ * adreslerini değiştirebiliyor; eskiler gri boş görsele düşer).
+ */
+export async function refreshSteamCovers(limit = 500) {
+  const rows = await db
+    .select({ id: games.id, steamAppId: games.steamAppId, coverUrl: games.coverUrl })
+    .from(games)
+    .where(and(isNull(games.coverImageId), isNotNull(games.steamAppId)))
+    .limit(limit);
+  const covers = await getStoreCovers(rows.map((row) => row.steamAppId as number));
+  let updated = 0;
+  for (const row of rows) {
+    const cover = covers.get(row.steamAppId as number);
+    if (!cover || cover === row.coverUrl) continue;
+    await db.update(games).set({ coverUrl: cover }).where(eq(games.id, row.id));
+    updated++;
+  }
+  return { checked: rows.length, updated };
+}
+
 /**
  * Steam uygulamasını katalogda bulur ya da oluşturur. IGDB açıksa önce IGDB eşleşmesi aranır; değilse
  * Steam adı ve kapağıyla geçici bir kayıt açılır (sonradan IGDB ile zenginleşebilir).
@@ -193,6 +221,7 @@ export async function ensureSteamGame(appId: number, name: string): Promise<Game
     }
   }
 
+  const coverUrl = await steamCoverFor(appId);
   return db.transaction(async (tx) => {
     const insert = (slug: string) =>
       tx
@@ -202,7 +231,7 @@ export async function ensureSteamGame(appId: number, name: string): Promise<Game
           steamAppId: appId,
           name,
           slug,
-          coverUrl: steamCapsuleUrl(appId),
+          coverUrl,
         })
         .onConflictDoNothing()
         .returning();

@@ -181,6 +181,8 @@ export async function applyPlatformTitles(input: {
 }) {
   const { userId, spec } = input;
   const provider = spec.provider;
+  // İlk senkron kurulumdur: öneriler uygulanınca akışa aktivite düşmez.
+  const initial = input.lastSyncedAt === null;
   const now = input.now ?? new Date();
   const field = spec.playtimeField;
   const stats: EngineStats = {
@@ -280,6 +282,7 @@ export async function applyPlatformTitles(input: {
             const result = count(
               await propose(tx, {
                 userId,
+                initial,
                 source: provider,
                 kind: "playtime_conflict",
                 entryId: entry.id,
@@ -304,6 +307,7 @@ export async function applyPlatformTitles(input: {
             count(
               await propose(tx, {
                 userId,
+                initial,
                 source: provider,
                 kind: "playtime",
                 entryId: entry.id,
@@ -330,6 +334,7 @@ export async function applyPlatformTitles(input: {
             const suggestion = count(
               await propose(tx, {
                 userId,
+                initial,
                 source: provider,
                 kind: "status",
                 entryId: entry.id,
@@ -365,6 +370,7 @@ export async function applyPlatformTitles(input: {
       const result = count(
         await propose(tx, {
           userId,
+          initial,
           source: provider,
           kind: "new_game",
           gameId: catalogGame.id,
@@ -433,6 +439,7 @@ export async function applyPlatformTitles(input: {
           count(
             await propose(tx, {
               userId,
+              initial,
               source: provider,
               kind: "achievements",
               entryId: entry.id,

@@ -376,4 +376,49 @@ describe("proposals", () => {
     expect((await findGameBySteamApp(db, 1245620))?.id).toBe(target.id);
     expect((await findGameBySteamApp(db, 1245621))?.id).toBe(target.id);
   });
+
+  it("merges a user's two entries of the same game into one", async () => {
+    const user = await createUser();
+    const legacy = await createGame({ source: "legacy", name: "Dark Souls III" });
+    const target = await createGame({ source: "igdb", igdbId: 11133, steamAppId: 374320 });
+    const old = await addEntry(user.id, {
+      gameId: legacy.id,
+      status: "completed",
+      rating: 90,
+      playtimeManualMin: 3000,
+      finishedAt: "2023-12-29",
+      legacyRef: "legacy:1",
+    });
+    const fromSteam = await addEntry(user.id, {
+      gameId: target.id,
+      status: "paused",
+      playtimeSteamMin: 4200,
+    });
+    await db.insert(schema.screenshots).values({
+      entryId: old.id,
+      userId: user.id,
+      gameId: legacy.id,
+      kind: "external",
+      url: "https://example.com/shot.jpg",
+    });
+
+    await db.transaction((tx) => mergeGameInto(tx, legacy.id, target.id));
+
+    expect(await entryOf(old.id)).toBeUndefined();
+    expect(await entryOf(fromSteam.id)).toMatchObject({
+      status: "completed",
+      rating: 90,
+      playtimeManualMin: 3000,
+      playtimeSteamMin: 4200,
+      finishedAt: "2023-12-29",
+      legacyRef: "legacy:1",
+    });
+    const shots = await db
+      .select()
+      .from(schema.screenshots)
+      .where(eq(schema.screenshots.userId, user.id));
+    expect(shots.map((shot) => [shot.entryId, shot.gameId])).toEqual([[fromSteam.id, target.id]]);
+    const [gone] = await db.select().from(schema.games).where(eq(schema.games.id, legacy.id));
+    expect(gone).toBeUndefined();
+  });
 });

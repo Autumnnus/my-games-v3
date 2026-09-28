@@ -98,6 +98,8 @@ export type ProposalInput = {
    */
   dedupeKey?: string | null;
   confidence?: number | null;
+  /** Platformun ilk senkronunda oluştu: uygulanınca akışa aktivite düşmez. */
+  initial?: boolean;
 };
 
 export type ProposalResult = {
@@ -162,6 +164,7 @@ export async function propose(tx: Tx, input: ProposalInput): Promise<ProposalRes
     gameId: input.gameId ?? null,
     dedupeKey: input.dedupeKey ?? null,
     confidence: input.confidence ?? null,
+    initial: input.initial ?? false,
   };
 
   if (action === "auto" && input.payload.op !== "match" && input.payload.op !== "conflict") {
@@ -224,7 +227,13 @@ type ProposalRow = typeof changeProposals.$inferSelect;
 /** Transaction içinde uygulanabilen öneriler (update / create / conflict). */
 async function applyInTx(tx: Tx, proposal: ProposalRow, choice?: string) {
   const payload = proposal.payload as ProposalPayload;
-  const options = { source: proposal.source, proposalId: proposal.id, tx };
+  // Kurulum önerileri kütüphaneye işlenir ama akışa düşmez.
+  const options = {
+    source: proposal.source,
+    proposalId: proposal.id,
+    tx,
+    silent: proposal.initial,
+  };
 
   switch (payload.op) {
     case "update": {
@@ -269,7 +278,7 @@ async function applyInTx(tx: Tx, proposal: ProposalRow, choice?: string) {
         entryId: proposal.entryId,
         gameId: proposal.gameId,
         items: payload.items,
-        announce: true,
+        announce: !proposal.initial,
       });
       return;
     }
@@ -395,6 +404,7 @@ export async function listProposals(
       id: changeProposals.id,
       source: changeProposals.source,
       kind: changeProposals.kind,
+      initial: changeProposals.initial,
       payload: changeProposals.payload,
       status: changeProposals.status,
       confidence: changeProposals.confidence,

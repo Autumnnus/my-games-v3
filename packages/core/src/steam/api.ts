@@ -150,3 +150,40 @@ export async function getUserScreenshots(steamId: string, page: number, perPage 
     files: body.response?.publishedfiledetails ?? [],
   };
 }
+
+type StoreItem = {
+  appid?: number;
+  assets?: { asset_url_format?: string; library_capsule?: string; header?: string };
+};
+
+const STORE_ASSETS = "https://shared.akamai.steamstatic.com/store_item_assets/";
+
+/**
+ * Mağaza kapaklarının gerçek adresleri (dikey kütüphane kapağı, yoksa yatay başlık görseli). Yeni oyunların
+ * görselleri hash'li klasörlerde; eski sabit adres (`library_600x900.jpg`) onlarda gri boş görsel döner.
+ */
+export async function getStoreCovers(appIds: number[]) {
+  const covers = new Map<number, string>();
+  for (let index = 0; index < appIds.length; index += 50) {
+    const ids = appIds.slice(index, index + 50);
+    const { status, body } = await call<{ response?: { store_items?: StoreItem[] } }>(
+      "IStoreBrowseService/GetItems/v1/",
+      {
+        input_json: JSON.stringify({
+          ids: ids.map((appid) => ({ appid })),
+          context: { language: "english", country_code: "US" },
+          data_request: { include_assets: true },
+        }),
+      },
+    );
+    if (status !== 200) continue;
+    for (const item of body.response?.store_items ?? []) {
+      const assets = item.assets;
+      const file = assets?.library_capsule ?? assets?.header;
+      if (!item.appid || !assets?.asset_url_format || !file) continue;
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: Steam'in yer tutucusu
+      covers.set(item.appid, STORE_ASSETS + assets.asset_url_format.replace("${FILENAME}", file));
+    }
+  }
+  return covers;
+}

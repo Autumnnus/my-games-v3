@@ -11,21 +11,34 @@ const ROMAN: Record<string, string> = {
   x: "10",
 };
 
-/** Oyun adlarını karşılaştırmak için sadeleştirir: aksan, noktalama, "the", Roma rakamları. */
+/**
+ * Sondaki sürüm ekleri ("GOTY", "Complete Edition"…) aynı oyunun satış paketidir; karşılaştırmada yok sayılır.
+ * Remaster/remake ayrı oyun olduğu için listede yok.
+ */
+const EDITION_SUFFIX =
+  /(?: (?:goty|game of year|complete|definitive|enhanced|deluxe|gold|ultimate|standard|special|anniversary|directors cut)(?: edition)?)+$/;
+
+/**
+ * Oyun adlarını karşılaştırmak için sadeleştirir: aksan, noktalama, "the"/"and", Roma rakamları, sürüm
+ * ekleri.
+ */
 export function normalizeTitle(input: string) {
-  return input
-    .normalize("NFKD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/ı/g, "i")
-    .toLowerCase()
-    .replace(/[™®©]/g, "")
-    .replace(/&/g, " and ")
-    .replace(/[^a-z0-9]+/g, " ")
-    .split(" ")
-    .filter((word) => word && word !== "the")
-    .map((word) => ROMAN[word] ?? word)
-    .join(" ")
-    .trim();
+  return (
+    input
+      // NFKD "™"yu "TM"ye açar; bu yüzden semboller önce silinir.
+      .replace(/[™®©]/g, " ")
+      .normalize("NFKD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/ı/g, "i")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .split(" ")
+      .filter((word) => word && word !== "the" && word !== "and")
+      .map((word) => ROMAN[word] ?? word)
+      .join(" ")
+      .replace(EDITION_SUFFIX, "")
+      .trim()
+  );
 }
 
 function bigrams(value: string) {

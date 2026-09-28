@@ -2,6 +2,7 @@ import { schema } from "@my-games/db";
 import { and, eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { gameAchievements } from "../src/achievements";
+import { refreshSteamCovers } from "../src/catalog";
 import { db } from "../src/db";
 import { addEntry } from "../src/library";
 import { processOutbox } from "../src/outbox";
@@ -209,6 +210,36 @@ describe("steam sync", () => {
     expect(hades?.entry.lastPlayedAt?.getTime()).toBe(1716100000 * 1000);
   });
 
+  it("keeps the first sync out of the feed but announces games found later", async () => {
+    const owner = await createUser();
+    await linkSteamAccount(owner.id, STEAM_ID);
+    owned = [{ appid: 1145360, name: "Hades", playtime_forever: 600 }];
+    await syncSteamUser(owner.id);
+    const addedActivities = async () => {
+      await processOutbox(socialHandlers, 100);
+      return db
+        .select()
+        .from(schema.activities)
+        .where(
+          and(eq(schema.activities.actorId, owner.id), eq(schema.activities.verb, "entry_added")),
+        );
+    };
+
+    // Kurulumda önerilen oyun sonradan onaylansa da akışa düşmez.
+    const [setup] = await listProposals(owner.id);
+    expect(setup).toMatchObject({ kind: "new_game", initial: true });
+    await resolveProposal(owner.id, setup?.id ?? "", "approve");
+    expect(await addedActivities()).toHaveLength(0);
+
+    // Sonraki senkronda bulunan yeni oyun akışa düşer.
+    owned = [...owned, { appid: 2379780, name: "Balatro", playtime_forever: 30 }];
+    await syncSteamUser(owner.id);
+    const [later] = await listProposals(owner.id);
+    expect(later).toMatchObject({ kind: "new_game", initial: false });
+    await resolveProposal(owner.id, later?.id ?? "", "approve");
+    expect(await addedActivities()).toHaveLength(1);
+  });
+
   it("does not double count sessions while playtime updates wait for approval", async () => {
     const owner = await createUser();
     const game = await createGame({ steamAppId: 620, name: "Portal 2" });
@@ -405,11 +436,16 @@ describe("steam screenshots", () => {
       await db.select().from(schema.outbox).where(eq(schema.outbox.type, "screenshots.added")),
     ).toHaveLength(0);
 
-    userFiles = [file("4", 620, 1_700_000_300), ...userFiles];
-    expect(await syncSteamScreenshots(owner.id)).toMatchObject({ imported: 1 });
-    expect(
-      await db.select().from(schema.outbox).where(eq(schema.outbox.type, "screenshots.added")),
-    ).toHaveLength(1);
+    // Sonradan bulunan eski bir görüntü sessizce eklenir; son kontrolden sonra çekilen akışa düşer.
+    const later = Math.floor(Date.now() / 1000) + 60;
+    userFiles = [file("5", 620, later), file("4", 620, 1_700_000_300), ...userFiles];
+    expect(await syncSteamScreenshots(owner.id)).toMatchObject({ imported: 2 });
+    const announced = await db
+      .select()
+      .from(schema.outbox)
+      .where(eq(schema.outbox.type, "screenshots.added"));
+    expect(announced).toHaveLength(1);
+    expect(announced[0]?.payload).toMatchObject({ screenshotIds: [expect.any(String)] });
     // Aynı dosyalar tekrar gelse de eklenmez.
     expect(await syncSteamScreenshots(owner.id)).toMatchObject({ imported: 0 });
   });
@@ -470,5 +506,41 @@ describe("steam presence", () => {
       .from(schema.outbox)
       .where(and(eq(schema.outbox.type, "steam.sync_requested")));
     expect(requested).toHaveLength(1);
+  });
+
+  it("refreshes Steam-only covers from the store's hashed asset paths", async () => {
+    fetchMock.restore();
+    fetchMock = mockFetch([
+      {
+        match: (url) => url.includes("IStoreBrowseService/GetItems"),
+        respond: () =>
+          json({
+            response: {
+              store_items: [
+                {
+                  appid: 2807960,
+                  assets: {
+                    // biome-ignore lint/suspicious/noTemplateCurlyInString: Steam'in yer tutucusu
+                    asset_url_format: "steam/apps/2807960/${FILENAME}?t=1",
+                    library_capsule: "abc123/library_capsule.jpg",
+                    header: "def456/header.jpg",
+                  },
+                },
+              ],
+            },
+          }),
+      },
+    ]);
+    const game = await createGame({
+      source: "steam",
+      steamAppId: 2807960,
+      coverUrl:
+        "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2807960/library_600x900.jpg",
+    });
+    expect(await refreshSteamCovers()).toMatchObject({ updated: 1 });
+    const [row] = await db.select().from(schema.games).where(eq(schema.games.id, game.id));
+    expect(row?.coverUrl).toBe(
+      "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2807960/abc123/library_capsule.jpg?t=1",
+    );
   });
 });

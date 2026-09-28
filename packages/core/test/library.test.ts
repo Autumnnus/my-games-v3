@@ -31,7 +31,7 @@ describe("library", () => {
       playtimeManualMin: 1500,
     });
 
-    expect(entry.finishedAt).toBe(new Date().toISOString().slice(0, 10));
+    expect(entry.finishedAt).toBe(localToday());
     const history = await listHistory(owner.id);
     expect(history).toHaveLength(1);
     expect(history[0]?.action).toBe("create");

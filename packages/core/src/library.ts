@@ -54,6 +54,8 @@ export type ChangeOptions = {
   source?: string;
   proposalId?: string | null;
   tx?: Tx;
+  /** Geçmişe yazılır ama akışa aktivite düşmez (ör. platformun ilk senkronu). */
+  silent?: boolean;
 };
 
 type FieldChange = { field: string; from: unknown; to: unknown };
@@ -157,6 +159,7 @@ export async function addEntry(
       gameId,
       status: entry.status,
       source: options.source ?? "manual",
+      silent: options.silent ?? false,
     });
     return entry;
   });
@@ -197,6 +200,7 @@ export async function updateEntry(
       userId,
       gameId: entry.gameId,
       source: options.source ?? "manual",
+      silent: options.silent ?? false,
       changes,
     });
     return entry;

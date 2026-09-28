@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { db } from "../src/db";
 import { resetIgdbTokenCache } from "../src/igdb/client";
 import { importLegacyRecords, type LegacyRecord, normalizeLegacyRecord } from "../src/legacy";
+import { type MatchCandidate, pickAutoMatch } from "../src/matching";
 import { listProposals, resolveProposal } from "../src/proposals";
 import { titleSimilarity } from "../src/text";
 import { createUser, json, mockFetch } from "./factories";
@@ -67,6 +68,41 @@ describe("legacy normalization", () => {
     expect(titleSimilarity("Dark Souls III", "DARK SOULS 3")).toBe(1);
     expect(titleSimilarity("The Witcher 3: Wild Hunt", "Witcher 3 Wild Hunt")).toBe(1);
     expect(titleSimilarity("Hades", "Hades II")).toBeLessThan(0.92);
+    expect(titleSimilarity("Hitman™ III", "Hitman 3")).toBe(1);
+  });
+
+  it("picks auto matches only when one candidate clearly wins", () => {
+    const candidate = (igdbId: number, name: string, score: number, ratingCount = 0) =>
+      ({
+        igdbId,
+        name,
+        score,
+        ratingCount,
+        coverImageId: null,
+        releaseYear: null,
+        gameType: null,
+      }) satisfies MatchCandidate;
+    // Birebir aynı ad, yalnızca benzeyen ada üstün gelir.
+    expect(
+      pickAutoMatch([
+        candidate(1, "BioShock Remastered", 1),
+        candidate(2, "BioShock 2 Remastered", 0.95),
+      ])?.igdbId,
+    ).toBe(1);
+    // Aynı adlı port/remaster: oy sayısı açıkça öne çıkan seçilir.
+    expect(
+      pickAutoMatch([
+        candidate(10, "Assassin's Creed II", 1, 30),
+        candidate(11, "Assassin's Creed II", 1, 3222),
+      ])?.igdbId,
+    ).toBe(11);
+    // Belirgin fark yoksa karar kullanıcıya kalır.
+    expect(
+      pickAutoMatch([candidate(20, "Maneater", 1, 5), candidate(21, "Maneater", 1, 3)]),
+    ).toBeNull();
+    expect(
+      pickAutoMatch([candidate(30, "Game One", 0.94), candidate(31, "Game Two", 0.93)]),
+    ).toBeNull();
   });
 });
 
