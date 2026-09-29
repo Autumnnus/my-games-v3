@@ -5,7 +5,11 @@ export type ErrorCode =
   | "invalid"
   | "unavailable"
   | "rate_limited"
-  | "quota_exceeded";
+  | "quota_exceeded"
+  /** Kullanıcının depolama kotası yetmiyor. */
+  | "storage_quota"
+  /** Sistemin toplam depolama bütçesi doldu. */
+  | "storage_full";
 
 const statusByCode: Record<ErrorCode, number> = {
   not_found: 404,
@@ -15,6 +19,8 @@ const statusByCode: Record<ErrorCode, number> = {
   unavailable: 503,
   rate_limited: 429,
   quota_exceeded: 429,
+  storage_quota: 507,
+  storage_full: 507,
 };
 
 /** İstemciye olduğu gibi gösterilebilecek hatalar. API katmanı bunları HTTP yanıtına çevirir. */

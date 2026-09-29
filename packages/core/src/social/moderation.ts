@@ -3,7 +3,7 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import { AppError, notFound } from "../errors";
 import { updateEntry } from "../library";
-import { deleteScreenshot } from "../screenshots";
+import { deleteScreenshot, screenshotThumbs } from "../screenshots";
 import { deleteComment } from "./interactions";
 
 const { reports, comments, libraryEntries, screenshots, user, activities } = schema;
@@ -95,7 +95,10 @@ async function preview(targetType: ReportTarget, targetId: string) {
       .select({ text: screenshots.caption, ownerId: screenshots.userId, url: screenshots.url })
       .from(screenshots)
       .where(eq(screenshots.id, targetId));
-    return row ?? null;
+    if (!row) return null;
+    // Yüklenen görsellerde adres asset'ten üretilir.
+    const thumbs = await screenshotThumbs([targetId]);
+    return { ...row, url: row.url ?? thumbs.get(targetId) ?? null };
   }
   const [row] = await db
     .select({ text: user.name, ownerId: user.id })

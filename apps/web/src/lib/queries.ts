@@ -257,3 +257,10 @@ export const aiUsageQuery = queryOptions({
   queryKey: ["ai", "usage"],
   queryFn: () => unwrap(api.ai.usage.$get()),
 });
+
+/** Kullanıcının depolama kullanımı, kotası ve yükleme kalitesi tercihi. */
+export const storageQuery = queryOptions({
+  queryKey: ["storage"],
+  queryFn: () => unwrap(api.me.storage.$get()),
+});
+export type StorageUsage = Awaited<ReturnType<NonNullable<typeof storageQuery.queryFn>>>;

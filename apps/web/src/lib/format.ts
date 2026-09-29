@@ -102,8 +102,23 @@ export function errorMessage(error: unknown) {
     if (error.code === "conflict")
       return error.message !== "conflict" ? error.message : m.error_conflict();
     if (error.code === "rate_limited") return m.error_rate_limited();
+    if (error.code === "storage_quota") return m.storage_error_quota();
+    if (error.code === "storage_full") return m.storage_system_full();
     if (error.code === "unavailable") return m.error_unavailable();
     if (error.message && error.message !== error.code) return error.message;
   }
   return m.error_generic();
+}
+
+/** 1536 → "1,5 KB" / "1.5 KB". Depolama göstergelerinde. */
+export function formatBytes(bytes: number) {
+  const units = ["B", "KB", "MB", "GB", "TB"];
+  let value = Math.max(0, bytes);
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  const digits = unit === 0 || value >= 100 ? 0 : 1;
+  return `${value.toLocaleString(getLocale(), { maximumFractionDigits: digits })} ${units[unit]}`;
 }

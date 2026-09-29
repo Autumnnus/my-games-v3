@@ -1,32 +1,31 @@
 import { schema } from "@my-games/db";
+import type { UploadQuality } from "@my-games/shared";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db, type Tx } from "./db";
 import { AppError, forbidden, notFound } from "./errors";
 import { emit } from "./events";
 import {
-  type AllowedImageType,
-  deleteObject,
-  headObject,
-  isAllowedImageType,
-  isOwnObjectKey,
-  maxUploadBytes,
-  newObjectKey,
-  presignPut,
-  publicUrl,
-} from "./storage";
+  assetUrls,
+  discardAssets,
+  type MediaAsset,
+  markReady,
+  reserveUploads,
+  type VariantInput,
+  verifyPendingAssets,
+} from "./media";
 
-const { screenshots, libraryEntries, user } = schema;
+const { screenshots, libraryEntries, mediaAssets, user } = schema;
 
-const MAX_SCREENSHOTS_PER_USER = 2000;
-const MAX_BATCH = 20;
+/** Link ile eklenen screenshot'lar kotaya sayılmaz; yine de sınırsız olmasınlar. */
+const MAX_LINKED_SCREENSHOTS = 2000;
 
-async function assertQuota(userId: string, adding: number) {
+async function assertLinkLimit(userId: string, adding: number) {
   const [{ count } = { count: 0 }] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(screenshots)
-    .where(eq(screenshots.userId, userId));
-  if (count + adding > MAX_SCREENSHOTS_PER_USER) {
-    throw new AppError("quota_exceeded", "Screenshot sınırına ulaştın");
+    .where(and(eq(screenshots.userId, userId), sql`${screenshots.kind} <> 'upload'`));
+  if (count + adding > MAX_LINKED_SCREENSHOTS) {
+    throw new AppError("quota_exceeded", "Link ile eklenebilecek screenshot sınırına ulaştın");
   }
 }
 
@@ -38,93 +37,53 @@ async function ownedEntry(userId: string, entryId: string) {
 }
 
 /**
- * Tarayıcının yükleyeceği her görsel için iki imzalı URL verir: orijinal (istemcide küçültülmüş) ve küçük
- * önizleme. Kayıt, yükleme bitip `confirmUploads` çağrılınca oluşur.
+ * Screenshot yüklemesinin ilk adımı: kota ayrılır, her varyant için imzalı URL döner. Görseller tarayıcıda
+ * hazırlanır (optimize: AVIF + küçük görsel; orijinal: dosyanın kendisi + gösterim kopyası + küçük görsel).
  */
-export async function createUploadTargets(
+export async function createScreenshotUploads(
   userId: string,
   entryId: string,
-  files: Array<{ contentType: string; size: number; thumbSize: number }>,
+  input: { quality: UploadQuality; files: Array<{ variants: VariantInput[] }> },
 ) {
   await ownedEntry(userId, entryId);
-  if (files.length === 0 || files.length > MAX_BATCH) {
-    throw new AppError("invalid", `Tek seferde 1–${MAX_BATCH} görsel yüklenebilir`);
-  }
-  await assertQuota(userId, files.length);
-
-  return Promise.all(
-    files.map(async (file) => {
-      if (!isAllowedImageType(file.contentType))
-        throw new AppError("invalid", "Desteklenmeyen dosya türü");
-      const type = file.contentType as AllowedImageType;
-      const key = newObjectKey("screenshots", userId, type);
-      const thumbKey = key.replace(/\.(\w+)$/, "_thumb.$1");
-      const [original, thumb] = await Promise.all([
-        presignPut(key, type, file.size),
-        presignPut(thumbKey, type, file.thumbSize),
-      ]);
-      return { key, thumbKey, upload: original, thumbUpload: thumb, maxBytes: maxUploadBytes() };
-    }),
-  );
+  return reserveUploads(userId, { purpose: "screenshot", ...input });
 }
 
-export async function confirmUploads(
+/** Yüklenen dosyaları doğrular ve screenshot kayıtlarını oluşturur. */
+export async function confirmScreenshotUploads(
   userId: string,
   entryId: string,
-  items: Array<{
-    key: string;
-    thumbKey: string;
-    width?: number;
-    height?: number;
-    caption?: string;
-  }>,
+  items: Array<{ assetId: string; caption?: string }>,
 ) {
   const entry = await ownedEntry(userId, entryId);
-  const limit = maxUploadBytes();
-
-  const verified = await Promise.all(
-    items.slice(0, MAX_BATCH).map(async (item) => {
-      // Yalnızca bu kullanıcıya `createUploadTargets` ile verilmiş biçimdeki anahtarlar kabul edilir.
-      if (
-        !isOwnObjectKey(item.key, "screenshots", userId) ||
-        item.key.includes("_thumb.") ||
-        item.thumbKey !== item.key.replace(/\.(\w+)$/, "_thumb.$1")
-      ) {
-        forbidden();
-      }
-      const [original, thumb] = await Promise.all([
-        headObject(item.key),
-        headObject(item.thumbKey),
-      ]);
-      if (!original || !thumb) throw new AppError("invalid", "Yüklenen dosya bulunamadı");
-      const valid = [original, thumb].every(
-        (object) => object.size <= limit && isAllowedImageType(object.contentType),
-      );
-      if (!valid) {
-        await Promise.all([deleteObject(item.key), deleteObject(item.thumbKey)]);
-        throw new AppError("invalid", "Geçersiz dosya");
-      }
-      return { ...item, sizeBytes: original.size };
-    }),
+  const assets = await verifyPendingAssets(
+    userId,
+    "screenshot",
+    items.map((item) => item.assetId),
   );
-  if (verified.length === 0) return [];
 
   return db.transaction(async (tx) => {
+    await markReady(
+      tx,
+      assets.map((asset) => asset.id),
+    );
     const rows = await tx
       .insert(screenshots)
       .values(
-        verified.map((item) => ({
-          entryId,
-          userId,
-          gameId: entry.gameId,
-          kind: "upload" as const,
-          storageKey: item.key,
-          thumbKey: item.thumbKey,
-          width: item.width ?? null,
-          height: item.height ?? null,
-          sizeBytes: item.sizeBytes,
-          caption: item.caption?.trim() || null,
-        })),
+        assets.map((asset) => {
+          const full = asset.variants.find((variant) => variant.name === "full");
+          const caption = items.find((item) => item.assetId === asset.id)?.caption;
+          return {
+            entryId,
+            userId,
+            gameId: entry.gameId,
+            kind: "upload" as const,
+            assetId: asset.id,
+            width: full?.width ?? null,
+            height: full?.height ?? null,
+            caption: caption?.trim() || null,
+          };
+        }),
       )
       .returning();
     await emit(tx, "screenshots.added", {
@@ -133,7 +92,12 @@ export async function confirmUploads(
       entryId,
       screenshotIds: rows.map((row) => row.id),
     });
-    return rows.map(present);
+    return rows.map((row) =>
+      present(
+        row,
+        assets.find((asset) => asset.id === row.assetId),
+      ),
+    );
   });
 }
 
@@ -145,7 +109,7 @@ export async function addExternalScreenshot(
   kind: "external" | "steam" = "external",
 ) {
   const entry = await ownedEntry(userId, entryId);
-  await assertQuota(userId, 1);
+  await assertLinkLimit(userId, 1);
   const url = new URL(input.url);
   if (url.protocol !== "https:") throw new AppError("invalid", "Sadece https bağlantılar");
   const [row] = await db
@@ -223,31 +187,19 @@ export async function insertPlatformScreenshots(
   return rows;
 }
 
-/**
- * Hesap silinirken kullanıcının yüklediği dosyaları (screenshot'lar + avatar) silinmek üzere kuyruğa atar.
- * Satırlar cascade ile silinir; dosyalar worker'da `storage.delete` işiyle kaldırılır.
- */
-export async function queueUserUploadsCleanup(userId: string, image?: string | null) {
-  const rows = await db
-    .select({ key: screenshots.storageKey, thumbKey: screenshots.thumbKey })
-    .from(screenshots)
-    .where(and(eq(screenshots.userId, userId), eq(screenshots.kind, "upload")));
-  const keys = rows.flatMap((row) => [row.key, row.thumbKey]).filter((key) => key !== null);
-  const avatarPrefix = publicUrl(`avatars/${userId}/`);
-  if (image && avatarPrefix && image.startsWith(avatarPrefix)) {
-    keys.push(image.slice(image.indexOf(`avatars/${userId}/`)));
-  }
-  if (keys.length === 0) return;
-  await db.transaction((tx) => emit(tx, "storage.objects_orphaned", { keys }));
-}
-
 export async function deleteScreenshot(userId: string, screenshotId: string, asAdmin = false) {
-  const [row] = await db.select().from(screenshots).where(eq(screenshots.id, screenshotId));
+  const [row] = await db
+    .select({ screenshot: screenshots, asset: mediaAssets })
+    .from(screenshots)
+    .leftJoin(mediaAssets, eq(mediaAssets.id, screenshots.assetId))
+    .where(eq(screenshots.id, screenshotId));
   if (!row) notFound();
-  if (row.userId !== userId && !asAdmin) forbidden();
-  await db.delete(screenshots).where(eq(screenshots.id, screenshotId));
-  const keys = [row.storageKey, row.thumbKey].filter((key): key is string => !!key);
-  await Promise.all(keys.map((key) => deleteObject(key).catch(() => {})));
+  if (row.screenshot.userId !== userId && !asAdmin) forbidden();
+  await db.transaction(async (tx) => {
+    // Yüklenen görselde asset silinince screenshot cascade ile gider; dosyalar worker'da kaldırılır.
+    if (row.asset) await discardAssets(tx, [row.asset]);
+    else await tx.delete(screenshots).where(eq(screenshots.id, screenshotId));
+  });
 }
 
 export async function updateCaption(userId: string, screenshotId: string, caption: string | null) {
@@ -257,23 +209,30 @@ export async function updateCaption(userId: string, screenshotId: string, captio
     .where(and(eq(screenshots.id, screenshotId), eq(screenshots.userId, userId)))
     .returning();
   if (!row) notFound();
-  return present(row);
+  const [asset] = row.assetId
+    ? await db.select().from(mediaAssets).where(eq(mediaAssets.id, row.assetId))
+    : [];
+  return present(row, asset);
 }
 
 type ScreenshotRow = typeof screenshots.$inferSelect;
 
-function present(row: ScreenshotRow) {
-  const url = row.kind === "upload" && row.storageKey ? publicUrl(row.storageKey) : row.url;
-  const thumbUrl =
-    row.kind === "upload" && row.thumbKey ? publicUrl(row.thumbKey) : (row.thumbUrl ?? row.url);
+/** Adresler okuma anında üretilir; CDN adresi değişse de kayıtlara dokunmak gerekmez. */
+function present(row: ScreenshotRow, asset?: MediaAsset | null) {
+  const urls = asset
+    ? assetUrls(asset)
+    : { url: row.url, thumbUrl: row.thumbUrl ?? row.url, originalUrl: null };
   return {
     id: row.id,
     entryId: row.entryId,
     gameId: row.gameId,
     userId: row.userId,
     kind: row.kind,
-    url,
-    thumbUrl,
+    url: urls.url,
+    thumbUrl: urls.thumbUrl,
+    /** Sadece "orijinal" modda yüklenenlerde: dosyanın kendisi (lightbox'ta "Orijinali aç"). */
+    originalUrl: urls.originalUrl,
+    sizeBytes: asset?.totalBytes ?? null,
     width: row.width,
     height: row.height,
     caption: row.caption,
@@ -286,10 +245,14 @@ function present(row: ScreenshotRow) {
 export async function screenshotThumbs(ids: string[]) {
   const thumbs = new Map<string, string>();
   if (ids.length === 0) return thumbs;
-  const rows = await db.select().from(screenshots).where(inArray(screenshots.id, ids));
+  const rows = await db
+    .select({ screenshot: screenshots, asset: mediaAssets })
+    .from(screenshots)
+    .leftJoin(mediaAssets, eq(mediaAssets.id, screenshots.assetId))
+    .where(inArray(screenshots.id, ids));
   for (const row of rows) {
-    const { thumbUrl } = present(row);
-    if (thumbUrl) thumbs.set(row.id, thumbUrl);
+    const { thumbUrl } = present(row.screenshot, row.asset);
+    if (thumbUrl) thumbs.set(row.screenshot.id, thumbUrl);
   }
   return thumbs;
 }
@@ -305,14 +268,16 @@ export async function listScreenshots(
   const rows = await db
     .select({
       screenshot: screenshots,
+      asset: mediaAssets,
       author: { name: user.name, username: user.displayUsername },
     })
     .from(screenshots)
     .innerJoin(user, eq(user.id, screenshots.userId))
+    .leftJoin(mediaAssets, eq(mediaAssets.id, screenshots.assetId))
     .where(and(...conditions))
     .orderBy(desc(sql`coalesce(${screenshots.takenAt}, ${screenshots.createdAt})`))
     .limit(Math.min(limit, 200));
-  return rows.map((row) => ({ ...present(row.screenshot), author: row.author }));
+  return rows.map((row) => ({ ...present(row.screenshot, row.asset), author: row.author }));
 }
 
 /** Ana sayfa için rastgele birkaç görsel (eski uygulamadaki "rastgele screenshot" bölümü). */
@@ -320,11 +285,13 @@ export async function randomScreenshots(count = 6) {
   const rows = await db
     .select({
       screenshot: screenshots,
+      asset: mediaAssets,
       author: { name: user.name, username: user.displayUsername },
     })
     .from(screenshots)
     .innerJoin(user, eq(user.id, screenshots.userId))
+    .leftJoin(mediaAssets, eq(mediaAssets.id, screenshots.assetId))
     .orderBy(sql`random()`)
     .limit(Math.min(count, 24));
-  return rows.map((row) => ({ ...present(row.screenshot), author: row.author }));
+  return rows.map((row) => ({ ...present(row.screenshot, row.asset), author: row.author }));
 }

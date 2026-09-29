@@ -101,6 +101,7 @@ export const notifications = pgTable(
   (t) => [
     index().on(t.recipientId, t.updatedAt),
     uniqueIndex().on(t.recipientId, t.groupKey).where(sql`${t.readAt} is null`),
+    index().on(t.targetType, t.targetId),
   ],
 );
 

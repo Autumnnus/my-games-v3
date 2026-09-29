@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { api, unwrap } from "@/lib/api";
 import { errorMessage } from "@/lib/format";
+import { avatarThumb } from "@/lib/media/urls";
 import { type CommentItem, commentsQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
 
@@ -106,7 +107,7 @@ function CommentRow(props: Target & { comment: CommentItem; replies?: CommentIte
     <div className="grid gap-2">
       <div className="flex gap-2">
         <Avatar className="size-7">
-          {comment.author.image && <AvatarImage src={comment.author.image} alt="" />}
+          {comment.author.image && <AvatarImage src={avatarThumb(comment.author.image)} alt="" />}
           <AvatarFallback className="text-xs">
             {comment.author.name.charAt(0) || "?"}
           </AvatarFallback>

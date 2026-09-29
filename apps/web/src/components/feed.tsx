@@ -10,6 +10,7 @@ import { RelativeTime } from "@/components/time";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { formatPlaytime, formatRating } from "@/lib/format";
+import { avatarThumb } from "@/lib/media/urls";
 import { type FeedItem, type FeedScope, feedQuery, nowPlayingQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
@@ -105,7 +106,7 @@ function ActorLine({ item }: { item: FeedItem }) {
   return (
     <div className="flex min-w-0 items-center gap-3">
       <Avatar className="size-10 ring-2 ring-white/10">
-        {item.actor.image && <AvatarImage src={item.actor.image} alt="" />}
+        {item.actor.image && <AvatarImage src={avatarThumb(item.actor.image)} alt="" />}
         <AvatarFallback>{item.actor.name.charAt(0).toUpperCase()}</AvatarFallback>
       </Avatar>
       <div className="grid min-w-0 gap-0.5">
@@ -292,7 +293,7 @@ export function NowPlaying({ className }: { className?: string }) {
             <span className="relative size-11 shrink-0">
               <span className="border-live absolute inset-0 animate-ping-slow rounded-full border-2" />
               <Avatar className="size-11">
-                {player.user.image && <AvatarImage src={player.user.image} alt="" />}
+                {player.user.image && <AvatarImage src={avatarThumb(player.user.image)} alt="" />}
                 <AvatarFallback>{player.user.name.charAt(0)}</AvatarFallback>
               </Avatar>
             </span>

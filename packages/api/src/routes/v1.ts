@@ -10,6 +10,7 @@ import { aiRoutes } from "./ai";
 import { catalogRoutes } from "./catalog";
 import { inboxRoutes } from "./inbox";
 import { libraryRoutes } from "./library";
+import { mediaRoutes } from "./media";
 import { platformRoutes } from "./platforms";
 import { socialRoutes } from "./social";
 import { statsRoutes } from "./stats";
@@ -44,6 +45,7 @@ export const v1 = new Hono<AppEnv>()
   })
   .route("/", catalogRoutes)
   .route("/", libraryRoutes)
+  .route("/", mediaRoutes)
   .route("/", inboxRoutes)
   .route("/", steamRoutes)
   .route("/", platformRoutes)

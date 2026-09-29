@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth-client";
+import { avatarThumb } from "@/lib/media/urls";
 import { type CurrentUser, useRefreshSession } from "@/lib/session";
 import { m } from "@/paraglide/messages";
 
@@ -36,7 +37,7 @@ export function UserMenu({ user }: { user: CurrentUser }) {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full">
           <Avatar className="size-8">
-            {user.image && <AvatarImage src={user.image} alt="" />}
+            {user.image && <AvatarImage src={avatarThumb(user.image)} alt="" />}
             <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </Button>

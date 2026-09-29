@@ -126,7 +126,8 @@ Tablolar ilgili fazda migration olarak eklenir.
 **Sosyal (Faz 4):** `activities`, `comments` (tek seviye yanıt, mention), `reactions`, `notifications`
 (gruplama anahtarlı), `notification_preferences`, `push_subscriptions`, `reports`.
 
-**Medya:** `screenshots` (`upload` | `external` | `steam`, R2 key, boyutlar, blurhash).
+**Medya:** `screenshots` (`upload` | `external` | `steam`, boyutlar); yüklenen dosyalar `media_assets`'te
+(varyantlar, byte, depo), kota `user_storage`'da. Ayrıntı: `docs/notes/storage.md`.
 
 **AI (Faz 6–7):** `chat_threads`, `chat_messages` (UIMessage jsonb), `ai_usage`, `documents`, `chunks`
 (embedding, `content_hash`, sahip, dil).

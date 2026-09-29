@@ -17,23 +17,32 @@ webhook ile yeni imajı çeker. **Sunucuda build yapılmaz.**
 
 1. R2'de bucket oluştur (ör. `my-games`), **Public access**'i özel domainle aç (ör. `cdn.<domain>`).
 2. **R2 API token** oluştur (Object Read & Write, sadece bu bucket).
-3. Bucket → Settings → **CORS policy** (tarayıcı doğrudan yüklediği için şart):
+3. Bucket → Settings → **CORS policy** (tarayıcı doğrudan yüklediği için şart; `Cache-Control` imzaya dahil
+   olduğu için izinli başlıklarda olmalı):
    ```json
    [
      {
-       "AllowedOrigins": ["https://<domain>"],
+       "AllowedOrigins": ["https://<domain>", "http://localhost:3300"],
        "AllowedMethods": ["PUT", "GET", "HEAD"],
-       "AllowedHeaders": ["Content-Type"],
+       "AllowedHeaders": ["Content-Type", "Cache-Control"],
        "MaxAgeSeconds": 3600
      }
    ]
    ```
-4. Değişkenler: `S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com`, `S3_REGION=auto`,
-   `S3_BUCKET=my-games`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL=https://cdn.<domain>`.
+4. Değişkenler (app **ve** worker; worker dosya silme işlerini yapar): `S3_ENDPOINT=https://<account-id>.r2.cloudflarestorage.com`,
+   `S3_REGION=auto`, `S3_BUCKET=my-games`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PUBLIC_URL=https://cdn.<domain>`.
+5. **DB yedekleri için ayrı, public erişimi kapalı bir bucket** aç (ör. `my-games-backups`) ve Coolify'a onu ver;
+   yedekler asla görsellerin public bucket'ına konmaz. 10 GB ücretsiz alan hesabın tamamı için geçerli, yedekler de
+   bu alandan yer; 7 günlük saklama yeterli.
 
-Görseller tarayıcıda WebP'ye küçültülüp imzalı URL ile doğrudan R2'ye yüklenir; sunucu byte'lara dokunmaz.
-İmzada dosya türü ve boyutu da vardır: istemci başka türde (ör. `text/html`) ya da bildirdiğinden büyük dosya
-yükleyemez. İlk deploy'dan sonra bir screenshot yükleyip bunun R2'de çalıştığını bir kez kontrol et.
+Görseller tarayıcıda AVIF'e çevrilip (ya da "orijinal" seçildiyse dosyanın kendisi) imzalı URL ile doğrudan R2'ye
+yüklenir; sunucu byte'lara dokunmaz. İmzada tür, boyut ve `Cache-Control` vardır: istemci başka türde (ör.
+`text/html`) ya da bildirdiğinden farklı boyutta dosya yükleyemez (R2'de doğrulandı). Klasör yapısı, kota ve
+sıkıştırma ayarları: `docs/notes/storage.md`.
+
+**Kota:** varsayılan kullanıcı kotası `STORAGE_DEFAULT_QUOTA_MB` (250), sistem bütçesi `STORAGE_BUDGET_GB` (8).
+Bütçe dolunca yükleme herkese kapanır; %80 ve %95'te adminlere bildirim düşer. Varsayılan kota ve kişi bazında
+kota admin API'siyle (`/api/v1/admin/storage…`) deploy'suz değişir.
 
 Ek güvenlik (önerilir): CDN alan adına Cloudflare'de bir **Transform Rule → Response Header** ile
 `X-Content-Type-Options: nosniff` ekle. Mümkünse bucket'ı uygulamadan farklı bir kayıtlı alan adından sun (ör.
@@ -61,7 +70,8 @@ GitHub token ekle (ya da paketleri public yap).
   work_mem = 8MB
   ```
 - Dışarıya açma (public port kapalı). Uygulamalar Coolify'ın iç ağından bağlanır.
-- **Scheduled Backups**: günlük, hedef olarak R2'yi S3 storage olarak ekle (Settings → S3 Storages).
+- **Scheduled Backups**: günlük, hedef olarak R2'deki **yedek bucket'ını** (`my-games-backups`, public değil) S3
+  storage olarak ekle (Settings → S3 Storages). Görsellerin bucket'ını kullanma.
 
 ### app
 
@@ -91,8 +101,9 @@ Opsiyonel olanlar boşsa ilgili özellik kapalı olur (UI `/api/v1/meta` ile ö�
 | `GOOGLE_CLIENT_ID` / `_SECRET` | opsiyonel | | Google OAuth |
 | `DISCORD_CLIENT_ID` / `_SECRET` | opsiyonel | | Discord OAuth |
 | `RESEND_API_KEY`, `EMAIL_FROM` | ✓ | | Doğrulama/şifre e-postaları (yoksa e-posta gönderilmez) |
-| `S3_*` | ✓ | | R2 (bkz. 2. bölüm) |
-| `UPLOAD_MAX_BYTES` | opsiyonel | | Varsayılan 15 MB |
+| `S3_*` | ✓ | ✓ | R2 (bkz. 2. bölüm); worker dosya silme ve yarım yükleme temizliği için kullanır |
+| `STORAGE_DEFAULT_QUOTA_MB` | opsiyonel | | Varsayılan kullanıcı kotası (250); admin API'siyle de değişir |
+| `STORAGE_BUDGET_GB` | opsiyonel | | Tüm yüklemelerin üst sınırı (8); dolunca yükleme kapanır |
 | `IGDB_CLIENT_ID` / `_SECRET` | ✓ | ✓ | Twitch uygulaması; oyun arama ve metadata |
 | `STEAM_API_KEY` | ✓ | ✓ | https://steamcommunity.com/dev/apikey — Steam girişi, sync, başarımlar, ekran görüntüleri |
 | `XBOX_CLIENT_ID` / `_SECRET` | opsiyonel | opsiyonel | Xbox bağlantısı (aşağıda "Xbox uygulaması") |

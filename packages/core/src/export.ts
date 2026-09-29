@@ -1,6 +1,7 @@
 import { schema } from "@my-games/db";
 import { and, asc, eq } from "drizzle-orm";
 import { db } from "./db";
+import { assetUrls } from "./media";
 
 const {
   user,
@@ -8,6 +9,7 @@ const {
   games,
   entryHistory,
   screenshots,
+  mediaAssets,
   userAchievements,
   achievements,
   platformAccounts,
@@ -50,8 +52,9 @@ export async function exportUserData(userId: string) {
       .where(eq(entryHistory.userId, userId))
       .orderBy(asc(entryHistory.createdAt)),
     db
-      .select()
+      .select({ screenshot: screenshots, asset: mediaAssets })
       .from(screenshots)
+      .leftJoin(mediaAssets, eq(mediaAssets.id, screenshots.assetId))
       .where(eq(screenshots.userId, userId))
       .orderBy(asc(screenshots.createdAt)),
     db
@@ -94,7 +97,13 @@ export async function exportUserData(userId: string) {
     profile,
     library: library.map(({ entry, game }) => ({ ...entry, game })),
     history,
-    screenshots: shots,
+    // Yüklenen görsellerin adresleri (dosyaların kendisi dışa aktarılmaz, adreslerden indirilebilir).
+    screenshots: shots.map(({ screenshot, asset }) => ({
+      ...screenshot,
+      ...(asset
+        ? { ...assetUrls(asset), quality: asset.quality, sizeBytes: asset.totalBytes }
+        : {}),
+    })),
     achievements: unlocked,
     linkedAccounts: [
       ...steam.map((row) => ({

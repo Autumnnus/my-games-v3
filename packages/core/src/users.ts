@@ -1,17 +1,18 @@
 import { schema } from "@my-games/db";
-import { eq, sql } from "drizzle-orm";
-import { db } from "./db";
-import { AppError, notFound } from "./errors";
-import { entryPlaytime } from "./playtime";
+import { and, eq, ne, sql } from "drizzle-orm";
+import { db, type Tx } from "./db";
+import { notFound } from "./errors";
 import {
-  type AllowedImageType,
-  isAllowedImageType,
-  newObjectKey,
-  presignPut,
-  publicUrl,
-} from "./storage";
+  assetUrls,
+  discardAssets,
+  markReady,
+  reserveUploads,
+  type VariantInput,
+  verifyPendingAssets,
+} from "./media";
+import { entryPlaytime } from "./playtime";
 
-const { user, libraryEntries, steamAccounts } = schema;
+const { user, libraryEntries, steamAccounts, mediaAssets } = schema;
 
 export async function findUserByUsername(username: string) {
   const [row] = await db
@@ -66,14 +67,51 @@ export async function getProfile(username: string) {
   };
 }
 
-/** İstemci avatarı 512 px'e küçültür; bu sınır bol bol yeter. */
-const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+/** Avatar yüklemesinin ilk adımı (512 px + 128 px küçük görsel, tarayıcıda AVIF'e çevrilir). */
+export async function createAvatarUpload(userId: string, variants: VariantInput[]) {
+  const [asset] = await reserveUploads(userId, {
+    purpose: "avatar",
+    quality: "optimized",
+    files: [{ variants }],
+  });
+  if (!asset) throw new Error("avatar ayrılamadı");
+  return asset;
+}
 
-/** Avatar için tek imzalı URL. Yükleme bitince istemci Better Auth `updateUser({ image })` çağırır. */
-export async function createAvatarUploadTarget(userId: string, contentType: string, size: number) {
-  if (!isAllowedImageType(contentType)) throw new AppError("invalid", "Desteklenmeyen dosya türü");
-  if (size > AVATAR_MAX_BYTES) throw new AppError("invalid", "Dosya çok büyük");
-  const key = newObjectKey("avatars", userId, contentType as AllowedImageType);
-  const upload = await presignPut(key, contentType as AllowedImageType, size);
-  return { key, upload, url: publicUrl(key) };
+async function discardAvatars(tx: Tx, userId: string, keepId?: string) {
+  const previous = await tx
+    .select()
+    .from(mediaAssets)
+    .where(
+      and(
+        eq(mediaAssets.userId, userId),
+        eq(mediaAssets.purpose, "avatar"),
+        eq(mediaAssets.status, "ready"),
+        keepId ? ne(mediaAssets.id, keepId) : undefined,
+      ),
+    );
+  await discardAssets(tx, previous);
+}
+
+/**
+ * Yüklenen avatarı doğrular ve profile yazar; önceki avatarın dosyaları silinir. Avatar adresini yalnızca bu
+ * akış yazar (istemcinin `updateUser({ image })` ile keyfi adres koyması auth tarafında engellenir).
+ */
+export async function confirmAvatar(userId: string, assetId: string) {
+  const [asset] = await verifyPendingAssets(userId, "avatar", [assetId]);
+  if (!asset) notFound();
+  const { url } = assetUrls(asset);
+  await db.transaction(async (tx) => {
+    await markReady(tx, [asset.id]);
+    await discardAvatars(tx, userId, asset.id);
+    await tx.update(user).set({ image: url }).where(eq(user.id, userId));
+  });
+  return { image: url };
+}
+
+export async function removeAvatar(userId: string) {
+  await db.transaction(async (tx) => {
+    await discardAvatars(tx, userId);
+    await tx.update(user).set({ image: null }).where(eq(user.id, userId));
+  });
 }

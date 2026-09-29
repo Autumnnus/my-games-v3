@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { orNotFound } from "@/lib/api";
 import { formatPlaytime, formatRating, statusLabel } from "@/lib/format";
+import { avatarThumb } from "@/lib/media/urls";
 import { gameQuery, gameScreenshotsQuery, myEntryQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
 
@@ -232,7 +233,9 @@ function GamePage() {
               >
                 <div className="flex flex-wrap items-center gap-2 text-sm">
                   <Avatar className="size-6">
-                    {review.user.image && <AvatarImage src={review.user.image} alt="" />}
+                    {review.user.image && (
+                      <AvatarImage src={avatarThumb(review.user.image)} alt="" />
+                    )}
                     <AvatarFallback>{review.user.name.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <Link

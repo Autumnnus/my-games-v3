@@ -22,8 +22,8 @@ export function createHandlers(boss: PgBoss): OutboxHandlers {
     "igdb.match_requested": async () => {
       await boss.send("catalog.match-unlinked", {}, { singletonKey: "match-unlinked" });
     },
-    "storage.objects_orphaned": async ({ keys }) => {
-      await boss.send("storage.delete", { keys });
+    "storage.objects_orphaned": async ({ keys, targetId }) => {
+      await boss.send("storage.delete", { keys, targetId: targetId ?? null });
     },
   };
 }

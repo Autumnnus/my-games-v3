@@ -3,6 +3,7 @@ export * from "./auth";
 export * from "./catalog";
 export * from "./enums";
 export * from "./library";
+export * from "./media";
 export * from "./relations";
 export * from "./social";
 export * from "./sync";

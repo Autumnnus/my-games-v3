@@ -13,13 +13,11 @@ import {
 } from "@my-games/core/library";
 import {
   addExternalScreenshot,
-  confirmUploads,
-  createUploadTargets,
   deleteScreenshot,
   listScreenshots,
   updateCaption,
 } from "@my-games/core/screenshots";
-import { createAvatarUploadTarget, findUserByUsername, getProfile } from "@my-games/core/users";
+import { findUserByUsername, getProfile } from "@my-games/core/users";
 import { entryStatuses } from "@my-games/shared";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -60,17 +58,6 @@ export const libraryRoutes = new Hono<AppEnv>()
     const ownerId = await userIdOf(c.req.param("username"));
     return c.json({ screenshots: await listScreenshots({ userId: ownerId }) });
   })
-  .post(
-    "/me/avatar",
-    withSession,
-    requireUser,
-    rateLimit("avatar", 10, 60 * 60_000),
-    validate("json", z.object({ contentType: z.string(), size: z.number().int().positive() })),
-    async (c) => {
-      const { contentType, size } = c.req.valid("json");
-      return c.json(await createAvatarUploadTarget(currentUser(c).id, contentType, size));
-    },
-  )
   .get("/me/export", withSession, requireUser, rateLimit("export", 5, 60 * 60_000), async (c) => {
     const data = await exportUserData(currentUser(c).id);
     c.header(
@@ -135,70 +122,6 @@ export const libraryRoutes = new Hono<AppEnv>()
   // --- Screenshot'lar ---
   .get("/library/:id/screenshots", validate("param", uuidParam), async (c) =>
     c.json({ screenshots: await listScreenshots({ entryId: c.req.valid("param").id }) }),
-  )
-  .post(
-    "/library/:id/screenshots/uploads",
-    withSession,
-    requireUser,
-    rateLimit("upload", 60, 60 * 60_000),
-    validate("param", uuidParam),
-    validate(
-      "json",
-      z.object({
-        files: z
-          .array(
-            z.object({
-              contentType: z.string(),
-              size: z.number().int().positive(),
-              thumbSize: z.number().int().positive(),
-            }),
-          )
-          .min(1)
-          .max(20),
-      }),
-    ),
-    async (c) =>
-      c.json({
-        targets: await createUploadTargets(
-          currentUser(c).id,
-          c.req.valid("param").id,
-          c.req.valid("json").files,
-        ),
-      }),
-  )
-  .post(
-    "/library/:id/screenshots",
-    withSession,
-    requireUser,
-    validate("param", uuidParam),
-    validate(
-      "json",
-      z.object({
-        items: z
-          .array(
-            z.object({
-              key: z.string().max(300),
-              thumbKey: z.string().max(300),
-              width: z.number().int().positive().max(20_000).optional(),
-              height: z.number().int().positive().max(20_000).optional(),
-              caption: z.string().max(500).optional(),
-            }),
-          )
-          .min(1)
-          .max(20),
-      }),
-    ),
-    async (c) =>
-      c.json(
-        {
-          screenshots: await confirmUploads(
-            currentUser(c).id,
-            c.req.valid("param").id,
-            c.req.valid("json").items,
-          ),
-        },
-        201,
-      ),
   )
   .post(
     "/library/:id/screenshots/external",

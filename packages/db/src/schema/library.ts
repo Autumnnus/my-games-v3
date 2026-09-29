@@ -14,6 +14,7 @@ import { createdAt, id, tstz, updatedAt } from "./_helpers";
 import { user } from "./auth";
 import { games } from "./catalog";
 import { entryStatusEnum, platformEnum, screenshotKindEnum, storeEnum } from "./enums";
+import { mediaAssets } from "./media";
 
 /** Kullanıcı × oyun. Görünen toplam süre = manuel + Steam + PSN + Xbox. */
 export const libraryEntries = pgTable(
@@ -78,12 +79,10 @@ export const screenshots = pgTable(
     externalId: text(),
     /** Görüntünün çekildiği/yüklendiği an (platformdan gelenler için). */
     takenAt: tstz(),
-    /** `upload` için R2 anahtarları. */
-    storageKey: text(),
-    thumbKey: text(),
+    /** `upload` için dosyalar (varyantlar, boyut, depo). Görsel silinince screenshot da gider. */
+    assetId: uuid().references(() => mediaAssets.id, { onDelete: "cascade" }),
     width: integer(),
     height: integer(),
-    sizeBytes: integer(),
     caption: text(),
     createdAt: createdAt(),
   },
@@ -91,6 +90,7 @@ export const screenshots = pgTable(
     index().on(t.entryId, t.createdAt),
     index().on(t.gameId),
     index().on(t.userId),
+    uniqueIndex().on(t.assetId).where(sql`${t.assetId} is not null`),
     uniqueIndex().on(t.userId, t.externalId).where(sql`${t.externalId} is not null`),
   ],
 );

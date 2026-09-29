@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { type FormEvent, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -7,17 +7,28 @@ import { FormField } from "@/components/auth-card";
 import { NotificationSettings } from "@/components/notification-settings";
 import { PsnCard, XboxCard } from "@/components/platform-cards";
 import { SteamCard } from "@/components/steam-card";
+import { StorageMeter } from "@/components/storage-meter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { QualityPicker } from "@/components/upload-quality";
 import { api, unwrap } from "@/lib/api";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-errors";
-import { errorMessage } from "@/lib/format";
-import { compressImage, uploadTo } from "@/lib/image";
+import { errorMessage, formatBytes } from "@/lib/format";
+import { encodeImage } from "@/lib/media/encoder";
+import {
+  describeVariants,
+  putObject,
+  releaseUploads,
+  runLimited,
+  uploadErrorMessage,
+} from "@/lib/media/upload";
+import { avatarThumb } from "@/lib/media/urls";
 import { metaQuery } from "@/lib/meta";
+import { storageQuery } from "@/lib/queries";
 import { useRefreshSession } from "@/lib/session";
 import { m } from "@/paraglide/messages";
 
@@ -41,7 +52,9 @@ function SettingsPage() {
       const { error } = await authClient.updateUser({
         name: values.name,
         bio: values.bio || null,
-        ...(values.username !== user.displayUsername ? { username: values.username } : {}),
+        ...(values.username !== user.displayUsername
+          ? { username: values.username, displayUsername: values.username }
+          : {}),
       } as Parameters<typeof authClient.updateUser>[0]);
       if (error) throw new Error(authErrorMessage(error));
     },
@@ -52,20 +65,41 @@ function SettingsPage() {
     onError: (error) => toast.error(error.message),
   });
 
+  const queryClient = useQueryClient();
+  const avatarDone = async () => {
+    toast.success(m.saved());
+    await Promise.all([
+      refreshSession(),
+      queryClient.invalidateQueries({ queryKey: storageQuery.queryKey }),
+    ]);
+  };
+  // Avatar tarayıcıda 512 px + 128 px AVIF'e çevrilir; adresi sunucu yazar ve eskisini siler.
   const uploadAvatar = useMutation({
     mutationFn: async (file: File) => {
-      const { blob } = await compressImage(file, 512, 0.85);
-      const target = await unwrap(
-        api.me.avatar.$post({ json: { contentType: blob.type, size: blob.size } }),
+      const image = await encodeImage(file, "avatar", "optimized");
+      const { asset } = await unwrap(
+        api.me.avatar.uploads.$post({ json: { variants: describeVariants(image.variants) } }),
       );
-      await uploadTo(target.upload, blob);
-      const { error } = await authClient.updateUser({ image: target.url });
-      if (error) throw new Error(authErrorMessage(error));
+      try {
+        await runLimited(
+          asset.variants.map((target) => async () => {
+            const variant = image.variants.find((item) => item.name === target.name);
+            if (!variant) throw new Error("variant missing");
+            await putObject(target.upload, variant.blob);
+          }),
+        );
+        await unwrap(api.me.avatar.$post({ json: { assetId: asset.id } }));
+      } catch (error) {
+        await releaseUploads([asset.id]);
+        throw error;
+      }
     },
-    onSuccess: async () => {
-      toast.success(m.saved());
-      await refreshSession();
-    },
+    onSuccess: avatarDone,
+    onError: (error) => toast.error(uploadErrorMessage(error)),
+  });
+  const removeAvatar = useMutation({
+    mutationFn: () => unwrap(api.me.avatar.$delete()),
+    onSuccess: avatarDone,
     onError: (error) => toast.error(errorMessage(error)),
   });
 
@@ -109,7 +143,7 @@ function SettingsPage() {
             <CardContent className="grid gap-6">
               <div className="flex items-center gap-4">
                 <Avatar className="size-16">
-                  {user.image && <AvatarImage src={user.image} alt="" />}
+                  {user.image && <AvatarImage src={avatarThumb(user.image)} alt="" />}
                   <AvatarFallback className="text-xl">
                     {user.name.charAt(0).toUpperCase()}
                   </AvatarFallback>
@@ -117,7 +151,7 @@ function SettingsPage() {
                 <input
                   ref={avatarInput}
                   type="file"
-                  accept="image/png,image/jpeg,image/webp"
+                  accept="image/png,image/jpeg,image/webp,image/avif"
                   hidden
                   onChange={(event) => {
                     const file = event.target.files?.[0];
@@ -133,6 +167,16 @@ function SettingsPage() {
                 >
                   {m.field_avatar()}
                 </Button>
+                {user.image && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={removeAvatar.isPending || uploadAvatar.isPending}
+                    onClick={() => removeAvatar.mutate()}
+                  >
+                    {m.avatar_remove()}
+                  </Button>
+                )}
               </div>
               <form className="grid gap-4" onSubmit={onSubmit}>
                 <FormField label={m.field_name()}>
@@ -163,6 +207,8 @@ function SettingsPage() {
               </form>
             </CardContent>
           </Card>
+
+          {meta.data?.features.uploads && <StorageCard />}
 
           <Card>
             <CardHeader>
@@ -209,5 +255,63 @@ function SettingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Kullanım, türe göre dağılım ve varsayılan yükleme kalitesi. */
+function StorageCard() {
+  const queryClient = useQueryClient();
+  const { data } = useQuery(storageQuery);
+  const setQuality = useMutation({
+    mutationFn: (uploadQuality: "optimized" | "original") =>
+      unwrap(api.me.storage.$patch({ json: { uploadQuality } })),
+    onSuccess: (usage) => {
+      queryClient.setQueryData(storageQuery.queryKey, usage);
+      toast.success(m.saved());
+    },
+    onError: (error) => toast.error(errorMessage(error)),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{m.storage_title()}</CardTitle>
+        <CardDescription>{m.storage_description()}</CardDescription>
+      </CardHeader>
+      {data && (
+        <CardContent className="grid gap-5">
+          <div className="grid gap-2">
+            <StorageMeter usage={data} />
+            <div className="text-muted-foreground grid gap-0.5 text-xs">
+              <span>
+                {m.storage_screenshots({
+                  count: data.breakdown.screenshot.count,
+                  size: formatBytes(data.breakdown.screenshot.bytes),
+                })}
+              </span>
+              {data.breakdown.avatar.count > 0 && (
+                <span>{m.storage_avatar({ size: formatBytes(data.breakdown.avatar.bytes) })}</span>
+              )}
+              {data.pendingBytes > 0 && (
+                <span>{m.storage_pending({ size: formatBytes(data.pendingBytes) })}</span>
+              )}
+            </div>
+            {data.systemFull ? (
+              <p className="text-destructive text-sm">{m.storage_system_full()}</p>
+            ) : data.usedBytes >= data.quotaBytes ? (
+              <p className="text-destructive text-sm">{m.storage_full()}</p>
+            ) : null}
+          </div>
+          <div className="grid gap-2">
+            <span className="text-sm font-medium">{m.storage_default_quality()}</span>
+            <QualityPicker
+              value={setQuality.variables ?? data.uploadQuality}
+              disabled={setQuality.isPending}
+              onChange={(value) => value !== data.uploadQuality && setQuality.mutate(value)}
+            />
+          </div>
+        </CardContent>
+      )}
+    </Card>
   );
 }

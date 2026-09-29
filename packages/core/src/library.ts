@@ -5,9 +5,10 @@ import { localToday } from "./config";
 import { type DbOrTx, db, type Tx } from "./db";
 import { AppError, forbidden, notFound } from "./errors";
 import { emit } from "./events";
+import { discardAssets } from "./media";
 import { entryPlaytime } from "./playtime";
 
-const { libraryEntries, games, entryHistory, user, screenshots } = schema;
+const { libraryEntries, games, entryHistory, user, screenshots, mediaAssets } = schema;
 
 export type Entry = typeof libraryEntries.$inferSelect;
 
@@ -216,13 +217,17 @@ export async function deleteEntry(userId: string, entryId: string, options: Chan
     const snapshot = Object.fromEntries(
       ENTRY_FIELDS.map((field) => [field, comparable(current[field])]),
     );
+    // Yüklenen görseller kayıtla birlikte gider (kota geri gelir, dosyalar worker'da silinir).
     const uploads = await tx
-      .select({ key: screenshots.storageKey, thumbKey: screenshots.thumbKey })
+      .select({ asset: mediaAssets })
       .from(screenshots)
-      .where(and(eq(screenshots.entryId, entryId), eq(screenshots.kind, "upload")));
+      .innerJoin(mediaAssets, eq(mediaAssets.id, screenshots.assetId))
+      .where(eq(screenshots.entryId, entryId));
+    await discardAssets(
+      tx,
+      uploads.map((row) => row.asset),
+    );
     await tx.delete(libraryEntries).where(eq(libraryEntries.id, entryId));
-    const keys = uploads.flatMap((row) => [row.key, row.thumbKey]).filter((key) => key !== null);
-    if (keys.length > 0) await emit(tx, "storage.objects_orphaned", { keys });
     await record(tx, current, "delete", [], options, { ...snapshot, gameId: current.gameId });
     await emit(tx, "entry.deleted", { entryId, userId, gameId: current.gameId });
   });

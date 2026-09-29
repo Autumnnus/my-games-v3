@@ -3,111 +3,112 @@ import { storageConfig } from "./config";
 import { AppError } from "./errors";
 
 /**
- * S3 uyumlu depolama (Cloudflare R2 / MinIO). Dosyalar tarayıcıdan presigned URL ile doğrudan yüklenir;
- * sunucu yalnızca imzalar, doğrular ve siler. Böylece görsel byte'ları sunucudan hiç geçmez.
+ * Dosyaların durduğu depo. Dosyalar tarayıcıdan doğrudan yüklenir; sunucu yalnızca imzalar, doğrular ve siler,
+ * görsel byte'ları sunucudan hiç geçmez. Şimdilik tek sürücü S3 uyumlu depo (R2, MinIO, AWS S3, B2…); kullanıcının
+ * kendi deposu ya da Imgur gibi servisler aynı arayüzle eklenecek (bkz. docs/notes/storage.md).
  */
+export type UploadInstruction = { method: "PUT"; url: string; headers: Record<string, string> };
 
-export const ALLOWED_IMAGE_TYPES = ["image/webp", "image/jpeg", "image/png", "image/avif"] as const;
-export type AllowedImageType = (typeof ALLOWED_IMAGE_TYPES)[number];
+export interface StorageDriver {
+  prepareUpload(object: {
+    key: string;
+    contentType: string;
+    bytes: number;
+  }): Promise<UploadInstruction>;
+  stat(key: string): Promise<{ bytes: number; contentType: string } | null>;
+  remove(key: string): Promise<void>;
+  publicUrl(key: string): string;
+}
 
-const extensionOf: Record<AllowedImageType, string> = {
-  "image/webp": "webp",
-  "image/jpeg": "jpg",
-  "image/png": "png",
+/** Anahtarlar hiç değişmediği için CDN ve tarayıcı bir yıl önbellekler. */
+const CACHE_CONTROL = "public, max-age=31536000, immutable";
+
+/** Sunucunun ürettiği anahtar biçimi: `users/{userId}/{avatar|screenshots}/{assetId}/{varyant}.{uzantı}`. */
+const KEY_PATTERN =
+  /^users\/[A-Za-z0-9_-]{1,64}\/(avatar|screenshots)\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/(full|display|thumb)\.(avif|webp|png|jpg)$/;
+
+export function isValidObjectKey(key: string) {
+  return KEY_PATTERN.test(key);
+}
+
+const extensionOf: Record<string, string> = {
   "image/avif": "avif",
+  "image/webp": "webp",
+  "image/png": "png",
+  "image/jpeg": "jpg",
 };
 
-function client() {
-  const config = storageConfig();
-  if (!config) throw new AppError("unavailable", "Dosya yükleme yapılandırılmamış");
-  return {
-    config,
-    aws: new AwsClient({
-      accessKeyId: config.accessKeyId,
-      secretAccessKey: config.secretAccessKey,
-      service: "s3",
-      region: config.region,
-    }),
-  };
+export function extensionFor(contentType: string) {
+  const extension = extensionOf[contentType];
+  if (!extension) throw new AppError("invalid", "Desteklenmeyen dosya türü");
+  return extension;
 }
 
-/** Sunucunun ürettiği anahtar biçimi: `<prefix>/<userId>/<uuid>[_thumb].<ext>`. */
-const KEY_PATTERN =
-  /^(screenshots|avatars)\/[A-Za-z0-9_-]{1,64}\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}(_thumb)?\.(webp|jpg|png|avif)$/;
-
-/** İstemciden gelen anahtar yalnızca bu kullanıcıya verilmiş biçimde olabilir (`..` vb. geçemez). */
-export function isOwnObjectKey(key: string, prefix: "screenshots" | "avatars", userId: string) {
-  return KEY_PATTERN.test(key) && key.startsWith(`${prefix}/${userId}/`);
-}
-
-function objectUrl(endpoint: string, bucket: string, key: string) {
+function s3Driver(config: NonNullable<ReturnType<typeof storageConfig>>): StorageDriver {
+  const aws = new AwsClient({
+    accessKeyId: config.accessKeyId,
+    secretAccessKey: config.secretAccessKey,
+    service: "s3",
+    region: config.region,
+  });
   // URL normalizasyonu `..` parçalarını çözer; başka bir nesneye işaret eden anahtar asla imzalanmaz.
-  if (!KEY_PATTERN.test(key)) throw new AppError("invalid", "Geçersiz nesne anahtarı");
-  return `${endpoint}/${bucket}/${key}`;
-}
+  const objectUrl = (key: string) => {
+    if (!isValidObjectKey(key)) throw new AppError("invalid", "Geçersiz nesne anahtarı");
+    return `${config.endpoint}/${config.bucket}/${key}`;
+  };
 
-export function publicUrl(key: string) {
-  const config = storageConfig();
-  return config ? `${config.publicUrl}/${key}` : null;
-}
-
-export function isAllowedImageType(value: string): value is AllowedImageType {
-  return (ALLOWED_IMAGE_TYPES as readonly string[]).includes(value);
-}
-
-/**
- * Tek bir nesne için 10 dakika geçerli PUT URL'i üretir. Content-Type ve Content-Length imzaya dahildir:
- * istemci başka türde (ör. text/html) ya da bildirdiğinden büyük dosya yükleyemez.
- */
-export async function presignPut(key: string, contentType: AllowedImageType, size: number) {
-  const { config, aws } = client();
-  if (!Number.isInteger(size) || size <= 0 || size > config.maxUploadBytes) {
-    throw new AppError("invalid", "Dosya çok büyük");
-  }
-  const url = new URL(objectUrl(config.endpoint, config.bucket, key));
-  url.searchParams.set("X-Amz-Expires", "600");
-  const signed = await aws.sign(url.toString(), {
-    method: "PUT",
-    headers: { "Content-Type": contentType, "Content-Length": String(size) },
-    aws: { signQuery: true, allHeaders: true },
-  });
-  // Content-Length'i tarayıcı gövdeden kendisi koyar (elle ayarlanamaz); imzadaki değerle aynı olmalı.
-  return { url: signed.url, headers: { "Content-Type": contentType } };
-}
-
-/** Kullanıcıya ait, tahmin edilemez bir nesne anahtarı üretir. */
-export function newObjectKey(
-  prefix: string,
-  userId: string,
-  contentType: AllowedImageType,
-  suffix = "",
-) {
-  return `${prefix}/${userId}/${crypto.randomUUID()}${suffix}.${extensionOf[contentType]}`;
-}
-
-export async function headObject(key: string) {
-  const { config, aws } = client();
-  const response = await aws.fetch(objectUrl(config.endpoint, config.bucket, key), {
-    method: "HEAD",
-  });
-  if (response.status === 404) return null;
-  if (!response.ok) throw new AppError("unavailable", `Depolama HEAD ${response.status}`);
   return {
-    size: Number(response.headers.get("content-length") ?? 0),
-    contentType: response.headers.get("content-type") ?? "",
+    /**
+     * 10 dakika geçerli PUT URL'i. Content-Type, Content-Length ve Cache-Control imzaya dahildir: istemci başka
+     * türde (ör. text/html) ya da bildirdiğinden farklı boyutta dosya yükleyemez.
+     */
+    async prepareUpload({ key, contentType, bytes }) {
+      if (!Number.isInteger(bytes) || bytes <= 0) throw new AppError("invalid", "Geçersiz boyut");
+      const url = new URL(objectUrl(key));
+      url.searchParams.set("X-Amz-Expires", "600");
+      const headers = { "Content-Type": contentType, "Cache-Control": CACHE_CONTROL };
+      const signed = await aws.sign(url.toString(), {
+        method: "PUT",
+        headers: { ...headers, "Content-Length": String(bytes) },
+        aws: { signQuery: true, allHeaders: true },
+      });
+      // Content-Length'i tarayıcı gövdeden kendisi koyar (elle ayarlanamaz); imzadaki değerle aynı olmalı.
+      return { method: "PUT", url: signed.url, headers };
+    },
+    async stat(key) {
+      const response = await aws.fetch(objectUrl(key), { method: "HEAD" });
+      if (response.status === 404) return null;
+      if (!response.ok) throw new AppError("unavailable", `Depolama HEAD ${response.status}`);
+      return {
+        bytes: Number(response.headers.get("content-length") ?? 0),
+        contentType: response.headers.get("content-type") ?? "",
+      };
+    },
+    async remove(key) {
+      const response = await aws.fetch(objectUrl(key), { method: "DELETE" });
+      if (!response.ok && response.status !== 404) {
+        throw new AppError("unavailable", `Depolama DELETE ${response.status}`);
+      }
+    },
+    publicUrl: (key) => `${config.publicUrl}/${key}`,
   };
 }
 
-export async function deleteObject(key: string) {
-  const { config, aws } = client();
-  const response = await aws.fetch(objectUrl(config.endpoint, config.bucket, key), {
-    method: "DELETE",
-  });
-  if (!response.ok && response.status !== 404) {
-    throw new AppError("unavailable", `Depolama DELETE ${response.status}`);
-  }
+/** Sistemin deposu (env'deki S3/R2). Yapılandırılmamışsa `null`: yükleme kapalıdır. */
+export function systemStorage() {
+  const config = storageConfig();
+  return config ? s3Driver(config) : null;
 }
 
-export function maxUploadBytes() {
-  return storageConfig()?.maxUploadBytes ?? 0;
+/** Bir görselin deposu. `targetId` = `null` sistem deposu; kullanıcı depoları sonraki fazda. */
+export function storageFor(targetId: string | null): StorageDriver {
+  if (targetId !== null) throw new AppError("unavailable", "Harici depolar henüz desteklenmiyor");
+  const driver = systemStorage();
+  if (!driver) throw new AppError("unavailable", "Dosya yükleme yapılandırılmamış");
+  return driver;
+}
+
+/** Worker'daki `storage.delete` işi; 404 başarı sayılır. */
+export async function deleteObject(key: string, targetId: string | null = null) {
+  await storageFor(targetId).remove(key);
 }

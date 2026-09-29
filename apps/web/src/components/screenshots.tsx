@@ -1,15 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
-import { ImagePlusIcon, Trash2Icon } from "lucide-react";
+import { ExternalLinkIcon, ImagePlusIcon, Trash2Icon } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { StorageMeter } from "@/components/storage-meter";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { ACCEPTED_IMAGES, ScreenshotUploadDialog } from "@/components/upload-dialog";
 import { api, unwrap } from "@/lib/api";
 import { errorMessage } from "@/lib/format";
-import { compressImage, uploadTo } from "@/lib/image";
 import { metaQuery } from "@/lib/meta";
-import type { Screenshot } from "@/lib/queries";
+import { type Screenshot, storageQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
 
 type ScreenshotWithAuthor = Screenshot & { author?: { name: string; username: string | null } };
@@ -26,7 +27,13 @@ export function ScreenshotGrid(props: {
     onSuccess: async () => {
       setSelected(null);
       toast.success(m.deleted());
-      await queryClient.invalidateQueries({ queryKey: ["screenshots"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["screenshots"] }),
+        queryClient.invalidateQueries({ queryKey: ["storage"] }),
+        // Aktivite önizlemesi ve beğeni/yorumları da silinen görüntüyle gider.
+        queryClient.invalidateQueries({ queryKey: ["feed"] }),
+        queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+      ]);
     },
     onError: (error) => toast.error(errorMessage(error)),
   });
@@ -70,6 +77,14 @@ export function ScreenshotGrid(props: {
           )}
           <div className="flex items-center gap-3 px-2 pb-1 text-sm">
             <span className="flex-1">{selected?.caption}</span>
+            {selected?.originalUrl && (
+              <Button asChild variant="ghost" size="sm">
+                <a href={selected.originalUrl} target="_blank" rel="noreferrer">
+                  <ExternalLinkIcon />
+                  {m.screenshot_open_original()}
+                </a>
+              </Button>
+            )}
             {props.showAuthor && selected?.author?.username && (
               <Link
                 to="/u/$username"
@@ -100,96 +115,61 @@ export function ScreenshotGrid(props: {
 }
 
 /**
- * Seçilen görselleri tarayıcıda WebP'ye çevirir (en uzun kenar 2560 px + 480 px önizleme), imzalı URL'lerle
- * doğrudan depolamaya yükler ve sonra kaydı onaylatır.
+ * Yükleme butonu: seçilen dosyalar yükleme penceresinde hazırlanır (kalite seçimi, boyutlar, kota). Kota ya da
+ * sistem deposu doluysa buton kapanır ve nedeni yazılır.
  */
 export function ScreenshotUploader({ entryId }: { entryId: string }) {
   const input = useRef<HTMLInputElement>(null);
-  const queryClient = useQueryClient();
   const meta = useQuery(metaQuery);
-
-  const upload = useMutation({
-    mutationFn: async (files: File[]) => {
-      const prepared = await Promise.all(
-        files.slice(0, 20).map(async (file) => {
-          const [full, thumb] = await Promise.all([
-            compressImage(file, 2560),
-            compressImage(file, 480, 0.75),
-          ]);
-          return { full, thumb };
-        }),
-      );
-      const { targets } = await unwrap(
-        api.library[":id"].screenshots.uploads.$post({
-          param: { id: entryId },
-          json: {
-            files: prepared.map((item) => ({
-              contentType: item.full.blob.type,
-              size: item.full.blob.size,
-              thumbSize: item.thumb.blob.size,
-            })),
-          },
-        }),
-      );
-      await Promise.all(
-        targets.map(async (target, index) => {
-          const item = prepared[index];
-          if (!item) return;
-          await Promise.all([
-            uploadTo(target.upload, item.full.blob),
-            uploadTo(target.thumbUpload, item.thumb.blob),
-          ]);
-        }),
-      );
-      return unwrap(
-        api.library[":id"].screenshots.$post({
-          param: { id: entryId },
-          json: {
-            items: targets.map((target, index) => ({
-              key: target.key,
-              thumbKey: target.thumbKey,
-              width: prepared[index]?.full.width,
-              height: prepared[index]?.full.height,
-            })),
-          },
-        }),
-      );
-    },
-    onSuccess: async () => {
-      toast.success(m.screenshots_uploaded());
-      await queryClient.invalidateQueries({ queryKey: ["screenshots"] });
-    },
-    onError: (error) => toast.error(errorMessage(error)),
-  });
+  const storage = useQuery({ ...storageQuery, enabled: meta.data?.features.uploads === true });
+  const [files, setFiles] = useState<File[] | null>(null);
 
   if (meta.data && !meta.data.features.uploads) {
     return <p className="text-muted-foreground text-xs">{m.screenshots_disabled()}</p>;
   }
+  const usage = storage.data;
+  const blocked = usage
+    ? usage.systemFull
+      ? m.storage_system_full()
+      : usage.usedBytes >= usage.quotaBytes
+        ? m.storage_full()
+        : null
+    : null;
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex flex-wrap items-center gap-3">
       <input
         ref={input}
         type="file"
-        accept="image/png,image/jpeg,image/webp,image/avif"
+        accept={ACCEPTED_IMAGES}
         multiple
         hidden
         onChange={(event) => {
-          const files = Array.from(event.target.files ?? []);
+          const selected = Array.from(event.target.files ?? []);
           event.target.value = "";
-          if (files.length) upload.mutate(files);
+          if (selected.length) setFiles(selected);
         }}
       />
+      {usage && <StorageMeter usage={usage} className="w-48" />}
       <Button
         variant="outline"
         size="sm"
-        disabled={upload.isPending}
+        disabled={!usage || !!blocked}
+        title={blocked ?? undefined}
         onClick={() => input.current?.click()}
       >
         <ImagePlusIcon />
-        {upload.isPending ? m.screenshots_uploading() : m.action_upload()}
+        {m.action_upload()}
       </Button>
-      <span className="text-muted-foreground text-xs">{m.screenshots_hint()}</span>
+      {blocked && <span className="text-muted-foreground w-full text-xs">{blocked}</span>}
+      {files && usage && (
+        <ScreenshotUploadDialog
+          entryId={entryId}
+          files={files}
+          usage={usage}
+          onClose={() => setFiles(null)}
+        />
+      )}
     </div>
   );
 }

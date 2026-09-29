@@ -5,6 +5,7 @@ import { RelativeTime } from "@/components/time";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { api, unwrap } from "@/lib/api";
+import { avatarThumb } from "@/lib/media/urls";
 import { type NotificationItem, notificationsQuery, unreadQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
 
@@ -29,6 +30,9 @@ function text(item: NotificationItem) {
     case "proposals":
       return m.notification_proposals({ count: item.count });
     default:
+      if (item.data.kind === "storage_budget") {
+        return m.notification_storage_budget({ percent: Number(item.data.percent) });
+      }
       return m.notification_system();
   }
 }
@@ -81,7 +85,9 @@ function NotificationsPage() {
                 className={`hover:bg-accent/50 flex items-center gap-3 p-3 ${item.readAt ? "opacity-70" : ""}`}
               >
                 <Avatar className="size-8">
-                  {item.actors[0]?.image && <AvatarImage src={item.actors[0].image} alt="" />}
+                  {item.actors[0]?.image && (
+                    <AvatarImage src={avatarThumb(item.actors[0].image)} alt="" />
+                  )}
                   <AvatarFallback>{(item.actors[0]?.name ?? "•").charAt(0)}</AvatarFallback>
                 </Avatar>
                 <div className="grid min-w-0 flex-1 gap-0.5 text-sm">

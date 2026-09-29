@@ -170,3 +170,55 @@ export function steamCapsuleUrl(appId: number) {
 export function steamHeaderUrl(appId: number) {
   return `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${appId}/header.jpg`;
 }
+
+// --- Görsel yükleme: sunucu ve tarayıcı aynı kuralları kullanır ---
+
+/** `optimized`: tarayıcıda AVIF'e çevrilir · `original`: dosya hiç dokunulmadan yüklenir. */
+export const uploadQualities = ["optimized", "original"] as const;
+export type UploadQuality = (typeof uploadQualities)[number];
+
+export const mediaPurposes = ["screenshot", "avatar"] as const;
+export type MediaPurpose = (typeof mediaPurposes)[number];
+
+/** `full`: asıl görsel · `display`: orijinalin sayfada gösterilen kopyası · `thumb`: küçük görsel. */
+export const mediaVariantNames = ["full", "display", "thumb"] as const;
+export type MediaVariantName = (typeof mediaVariantNames)[number];
+
+/** Tarayıcının ürettiği varyantlar (AVIF, kodlanamazsa WebP). */
+export const encodedImageTypes = ["image/avif", "image/webp"] as const;
+/** "Orijinal" modda olduğu gibi kabul edilen dosyalar. */
+export const originalImageTypes = ["image/png", "image/jpeg", "image/webp", "image/avif"] as const;
+
+export type MediaVariantRule = {
+  /** En uzun kenar (px); `null` = dokunulmaz. */
+  maxSide: number | null;
+  maxBytes: number;
+  types: readonly string[];
+};
+
+const MB = 1024 * 1024;
+const encodedFull = (maxSide: number, maxBytes: number): MediaVariantRule => ({
+  maxSide,
+  maxBytes,
+  types: encodedImageTypes,
+});
+
+/** Amaç + kaliteye göre zorunlu varyantlar. Listede olmayan varyant kabul edilmez. */
+export const mediaRules: Record<
+  MediaPurpose,
+  Partial<Record<UploadQuality, Partial<Record<MediaVariantName, MediaVariantRule>>>>
+> = {
+  screenshot: {
+    optimized: { full: encodedFull(2560, 15 * MB), thumb: encodedFull(640, 300 * 1024) },
+    original: {
+      full: { maxSide: null, maxBytes: 40 * MB, types: originalImageTypes },
+      display: encodedFull(2560, 5 * MB),
+      thumb: encodedFull(640, 300 * 1024),
+    },
+  },
+  // Avatar her zaman optimize edilir.
+  avatar: { optimized: { full: encodedFull(512, 2 * MB), thumb: encodedFull(128, 200 * 1024) } },
+};
+
+/** Tek istekte en fazla kaç görsel. */
+export const MAX_UPLOAD_BATCH = 20;

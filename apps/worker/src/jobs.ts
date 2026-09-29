@@ -1,5 +1,6 @@
 import { refreshGameArt, refreshStaleGames, refreshSteamCovers } from "@my-games/core/catalog";
 import { matchUnlinkedGames } from "@my-games/core/matching";
+import { cleanupPendingAssets } from "@my-games/core/media";
 import { pruneOutbox } from "@my-games/core/outbox";
 import { platformAccountsDueForSync } from "@my-games/core/platforms/accounts";
 import { syncPsnUser } from "@my-games/core/psn/sync";
@@ -78,10 +79,17 @@ export const jobs: JobDefinition[] = [
     name: "storage.delete",
     run: async (data) => {
       const keys = Array.isArray(data.keys) ? data.keys.map(String) : [];
+      const targetId = typeof data.targetId === "string" ? data.targetId : null;
       // 404 başarı sayılır; hata olursa pg-boss yeniden dener.
-      for (const key of keys) await deleteObject(key);
+      for (const key of keys) await deleteObject(key, targetId);
       return { deleted: keys.length };
     },
+  },
+  {
+    // Tarayıcıda yarım kalan (onaylanmayan) yüklemeler: dosyalar silinir, ayrılan kota geri gelir.
+    name: "media.cleanup-pending",
+    cron: "*/15 * * * *",
+    run: () => cleanupPendingAssets(),
   },
   {
     name: "maintenance.prune-outbox",

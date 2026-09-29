@@ -1,0 +1,3 @@
+ALTER TABLE "screenshots" ADD COLUMN "asset_id" uuid;--> statement-breakpoint
+ALTER TABLE "screenshots" ADD CONSTRAINT "screenshots_asset_id_media_assets_id_fk" FOREIGN KEY ("asset_id") REFERENCES "public"."media_assets"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
+CREATE UNIQUE INDEX "screenshots_asset_id_index" ON "screenshots" USING btree ("asset_id") WHERE "screenshots"."asset_id" is not null;

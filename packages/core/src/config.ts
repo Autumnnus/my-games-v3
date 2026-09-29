@@ -94,7 +94,17 @@ export function storageConfig() {
     accessKeyId,
     secretAccessKey,
     publicUrl: publicUrl.replace(/\/+$/, ""),
-    maxUploadBytes: readNumber("UPLOAD_MAX_BYTES", 15 * 1024 * 1024),
+  };
+}
+
+/**
+ * Sistem deposunun (R2) sınırları. Varsayılan kota admin tarafından `app_config` ile değiştirilebilir; bu
+ * değer sadece başlangıç. Bütçe tüm kullanıcıların toplamı: dolunca yükleme herkese kapanır (fatura çıkmaz).
+ */
+export function storageLimits() {
+  return {
+    defaultQuotaBytes: readNumber("STORAGE_DEFAULT_QUOTA_MB", 250) * 1024 * 1024,
+    budgetBytes: readNumber("STORAGE_BUDGET_GB", 8) * 1024 * 1024 * 1024,
   };
 }
 

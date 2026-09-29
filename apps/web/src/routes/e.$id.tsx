@@ -94,6 +94,8 @@ function EntryPage() {
       queryClient.invalidateQueries({ queryKey: ["profile"] }),
       queryClient.invalidateQueries({ queryKey: ["history"] }),
       queryClient.invalidateQueries({ queryKey: ["game"] }),
+      // Silinen/geri alınan işlemlerin aktiviteleri akıştan hemen düşer.
+      queryClient.invalidateQueries({ queryKey: ["feed"] }),
     ]);
 
   const update = useMutation({

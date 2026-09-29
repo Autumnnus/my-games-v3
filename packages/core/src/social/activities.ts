@@ -61,6 +61,10 @@ async function upsertActivity(
   });
 }
 
+async function removeActivity(tx: Tx, groupKey: string) {
+  await tx.delete(activities).where(eq(activities.groupKey, groupKey));
+}
+
 export async function onEntryCreated(payload: EventPayload<"entry.created">, tx: Tx) {
   if (payload.silent || SILENT_SOURCES.has(payload.source)) return;
   const item = { entryId: payload.entryId, gameId: payload.gameId, status: payload.status };
@@ -82,43 +86,55 @@ export async function onEntryCreated(payload: EventPayload<"entry.created">, tx:
 }
 
 export async function onEntryUpdated(payload: EventPayload<"entry.updated">, tx: Tx) {
-  if (payload.silent || SILENT_SOURCES.has(payload.source)) return;
+  // Sessiz kaynaklar yeni aktivite açmaz ama geri alınan bir işlemi (ör. `revert`) akıştan yine kaldırır.
+  const quiet = payload.silent || SILENT_SOURCES.has(payload.source);
   const change = (field: string) => payload.changes.find((item) => item.field === field);
   const day = today();
   const base = { actorId: payload.userId, gameId: payload.gameId, entryId: payload.entryId };
 
+  // Geri alınan değişiklik akışta kalmaz; aktivitenin beğeni/yorumları DB tetikleyicisiyle gider.
   const status = change("status");
   if (status) {
-    await upsertActivity(tx, {
-      ...base,
-      verb: "status_changed",
-      groupKey: `status:${payload.entryId}:${day}`,
-      data: { from: status.from, to: status.to },
-      merge: (previous) => ({ from: previous.from, to: status.to }),
-    });
+    const groupKey = `status:${payload.entryId}:${day}`;
+    const [existing] = await tx
+      .select({ data: activities.data })
+      .from(activities)
+      .where(eq(activities.groupKey, groupKey));
+    const from = existing ? existing.data.from : status.from;
+    if (from === status.to) await removeActivity(tx, groupKey);
+    else if (!quiet) {
+      await upsertActivity(tx, {
+        ...base,
+        verb: "status_changed",
+        groupKey,
+        data: { from, to: status.to },
+      });
+    }
   }
 
   const rating = change("rating");
-  if (rating && rating.to !== null) {
-    await upsertActivity(tx, {
-      ...base,
-      verb: "rated",
-      groupKey: `rated:${payload.entryId}:${day}`,
-      data: { rating: rating.to },
-    });
+  if (rating) {
+    const groupKey = `rated:${payload.entryId}:${day}`;
+    if (rating.to === null) await removeActivity(tx, groupKey);
+    else if (!quiet)
+      await upsertActivity(tx, { ...base, verb: "rated", groupKey, data: { rating: rating.to } });
   }
 
   const review = change("review");
-  if (review && typeof review.to === "string" && review.to.trim()) {
-    await upsertActivity(tx, {
-      ...base,
-      verb: "reviewed",
-      groupKey: `reviewed:${payload.entryId}`,
-      data: { excerpt: review.to.slice(0, 280) },
-    });
+  if (review) {
+    const groupKey = `reviewed:${payload.entryId}`;
+    if (!(typeof review.to === "string" && review.to.trim())) await removeActivity(tx, groupKey);
+    else if (!quiet) {
+      await upsertActivity(tx, {
+        ...base,
+        verb: "reviewed",
+        groupKey,
+        data: { excerpt: review.to.slice(0, 280) },
+      });
+    }
   }
 
-  const unlocked = change("achievementsUnlocked");
+  const unlocked = quiet ? undefined : change("achievementsUnlocked");
   const [entry] = unlocked
     ? await tx
         .select({
@@ -170,14 +186,14 @@ export async function onScreenshotsAdded(payload: EventPayload<"screenshots.adde
     groupKey: `screenshots:${payload.entryId}:${today()}`,
     gameId: payload.gameId,
     entryId: payload.entryId,
-    data: { screenshotIds: payload.screenshotIds.slice(0, 8), count: payload.screenshotIds.length },
-    merge: (previous) => ({
-      screenshotIds: [
-        ...payload.screenshotIds,
-        ...((previous.screenshotIds as string[]) ?? []),
-      ].slice(0, 8),
-      count: Number(previous.count ?? 0) + payload.screenshotIds.length,
-    }),
+    // Tüm id'ler tutulur: silinen görüntü DB tetikleyicisiyle listeden (ve sayıdan) düşer.
+    data: { screenshotIds: payload.screenshotIds, count: payload.screenshotIds.length },
+    merge: (previous) => {
+      const screenshotIds = [
+        ...new Set([...payload.screenshotIds, ...((previous.screenshotIds as string[]) ?? [])]),
+      ];
+      return { screenshotIds, count: screenshotIds.length };
+    },
   });
 }
 

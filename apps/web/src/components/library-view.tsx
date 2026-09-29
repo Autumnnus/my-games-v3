@@ -24,6 +24,16 @@ const statusDot: Record<string, string> = {
   dropped: "bg-destructive",
 };
 
+/**
+ * Kapak, kayıt sayfasına geçişte yerinde uçsun diye adı yalnızca tıklanan karta verilir. Izgaradaki her
+ * kapak ad taşısaydı sayfaya her girişte yüzlerce ayrı geçiş katmanı oluşur, kapaklar yanıp sönerdi.
+ * Link kendi yönlendirmesinden önce bu işleyiciyi çalıştırır; ad eski görüntü alınmadan yerinde olur.
+ */
+function flyCover(card: HTMLElement, entryId: string) {
+  const cover = card.querySelector<HTMLElement>("[data-cover]");
+  if (cover) cover.style.viewTransitionName = `cover-${entryId}`;
+}
+
 export function LibraryGrid({ items }: { items: LibraryItem[] }) {
   return (
     <div className="grid grid-cols-3 gap-x-3 gap-y-6 sm:grid-cols-4 sm:gap-x-5 md:grid-cols-5 lg:grid-cols-7">
@@ -33,6 +43,7 @@ export function LibraryGrid({ items }: { items: LibraryItem[] }) {
           to="/e/$id"
           params={{ id: item.id }}
           className="group animate-rise grid content-start gap-2.5"
+          onClick={(event) => flyCover(event.currentTarget, item.id)}
           style={{
             animationDelay: `${Math.min(index, 21) * 22}ms`,
             ["--glow" as string]: item.game.accentColor ?? "rgba(0,0,0,0.6)",
@@ -43,7 +54,6 @@ export function LibraryGrid({ items }: { items: LibraryItem[] }) {
               url={item.game.coverUrl}
               name={item.game.name}
               color={item.game.accentColor}
-              transitionName={`cover-${item.id}`}
               className="transition-shadow duration-400 group-hover:shadow-[0_26px_50px_-16px_var(--glow)] group-hover:ring-white/15"
             />
             {liveStatuses.has(item.status) && (

@@ -77,7 +77,7 @@ export type DomainEvent =
   | { type: "platform.sync_requested"; payload: { userId: string; provider: "psn" | "xbox" } }
   | { type: "igdb.match_requested"; payload: { gameId: string } }
   /** Silinen kayıtların depodaki dosyaları (kayıt silinince R2'de sahipsiz kalmasın). */
-  | { type: "storage.objects_orphaned"; payload: { keys: string[] } };
+  | { type: "storage.objects_orphaned"; payload: { keys: string[]; targetId?: string | null } };
 
 export type EventType = DomainEvent["type"];
 export type EventPayload<T extends EventType> = Extract<DomainEvent, { type: T }>["payload"];

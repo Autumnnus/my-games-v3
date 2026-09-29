@@ -1,7 +1,7 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { steamConfig, turnstileConfig } from "@my-games/core/config";
 import { db } from "@my-games/core/db";
-import { queueUserUploadsCleanup } from "@my-games/core/screenshots";
+import { queueUserMediaCleanup } from "@my-games/core/media";
 import { schema } from "@my-games/db";
 import { APIError } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
@@ -76,7 +76,22 @@ export const auth = betterAuth({
       delete: {
         // Satırlar cascade ile gider; R2'deki dosyalar worker'da silinir.
         before: async (user) => {
-          await queueUserUploadsCleanup(user.id, user.image);
+          await queueUserMediaCleanup(user.id);
+        },
+      },
+      update: {
+        // Avatar yalnızca yükleme akışından (`/api/v1/me/avatar`) yazılır; istemci keyfi bir adres koyamaz.
+        before: async (data, ctx) => {
+          // Better Auth her güncellemede `image` anahtarını (değeri `undefined` olsa da) gönderir.
+          if (ctx?.path === "/update-user" && data.image !== undefined) {
+            throw new APIError("BAD_REQUEST", { message: "Avatar yükleme akışıyla değiştirilir" });
+          }
+          // Username eklentisi `displayUsername`'i yalnızca kayıtta doldurur; güncellemede eski adda
+          // kalırsa profil linkleri (displayUsername ile kurulur) artık var olmayan adrese gider.
+          const record = data as typeof data & { username?: unknown; displayUsername?: unknown };
+          if (typeof record.username === "string" && record.displayUsername === undefined) {
+            return { data: { ...data, displayUsername: record.username } };
+          }
         },
       },
       create: {

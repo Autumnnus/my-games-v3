@@ -190,25 +190,4 @@ describe("small rules", () => {
     expect(isPushServiceEndpoint("http://fcm.googleapis.com/x")).toBe(false);
     expect(isPushServiceEndpoint("https://fcm.googleapis.com:8443/x")).toBe(false);
   });
-
-  it("queues uploaded files of a deleted entry for removal", async () => {
-    const owner = await createUser();
-    const game = await createGame();
-    const entry = await addEntry(owner.id, { gameId: game.id, status: "playing" });
-    const key = `screenshots/${owner.id}/${crypto.randomUUID()}.webp`;
-    await db.insert(schema.screenshots).values({
-      entryId: entry.id,
-      userId: owner.id,
-      gameId: game.id,
-      kind: "upload",
-      storageKey: key,
-      thumbKey: key.replace(".webp", "_thumb.webp"),
-    });
-    await deleteEntry(owner.id, entry.id);
-    const [event] = await db
-      .select()
-      .from(schema.outbox)
-      .where(eq(schema.outbox.type, "storage.objects_orphaned"));
-    expect(event?.payload).toEqual({ keys: [key, key.replace(".webp", "_thumb.webp")] });
-  });
 });

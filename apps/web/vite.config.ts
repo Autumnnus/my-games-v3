@@ -20,6 +20,9 @@ export default defineConfig(({ mode }) => {
   return {
     envDir: repoRoot,
     resolve: { tsconfigPaths: true },
+    // jSquash kodlayıcıları WASM'ı `new URL(..., import.meta.url)` ile bulur; ön paketleme bu yolları bozar.
+    optimizeDeps: { exclude: ["@jsquash/avif", "@jsquash/webp", "@jsquash/resize"] },
+    worker: { format: "es" },
     plugins: [
       paraglideVitePlugin({
         project: "./project.inlang",

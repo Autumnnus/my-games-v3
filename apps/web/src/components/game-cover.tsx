@@ -39,6 +39,7 @@ export function GameCover(props: {
   }, [src, fail]);
   return (
     <div
+      data-cover
       className={cn(
         "bg-muted relative aspect-[2/3] w-full overflow-hidden rounded-xl ring-1 ring-white/6",
         props.className,
