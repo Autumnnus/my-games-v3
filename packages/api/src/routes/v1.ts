@@ -1,13 +1,16 @@
 import { features } from "@my-games/core/config";
 import { pool } from "@my-games/core/db";
 import { findEntryByGame } from "@my-games/core/library";
+import { signupsOpen } from "@my-games/core/settings";
 import { Hono } from "hono";
 import { z } from "zod";
 import { enabledSocialProviders } from "../auth";
 import { type AppEnv, withSession } from "../middleware";
 import { validate } from "../validation";
+import { adminRoutes } from "./admin";
 import { aiRoutes } from "./ai";
 import { catalogRoutes } from "./catalog";
+import { estimateRoutes } from "./estimates";
 import { inboxRoutes } from "./inbox";
 import { libraryRoutes } from "./library";
 import { mediaRoutes } from "./media";
@@ -21,7 +24,13 @@ export const v1 = new Hono<AppEnv>()
     await pool().query("select 1");
     return c.json({ ok: true });
   })
-  .get("/meta", (c) => c.json({ socialProviders: enabledSocialProviders, features: features() }))
+  .get("/meta", async (c) =>
+    c.json({
+      socialProviders: enabledSocialProviders,
+      features: features(),
+      signupsOpen: await signupsOpen(),
+    }),
+  )
   .get("/me", withSession, (c) => {
     const user = c.get("user");
     if (!user) return c.json({ user: null });
@@ -35,6 +44,7 @@ export const v1 = new Hono<AppEnv>()
         displayUsername: user.displayUsername ?? null,
         bio: user.bio ?? null,
         role: user.role ?? "user",
+        locale: user.locale ?? null,
       },
     });
   })
@@ -51,4 +61,9 @@ export const v1 = new Hono<AppEnv>()
   .route("/", platformRoutes)
   .route("/", socialRoutes)
   .route("/", statsRoutes)
+  .route("/", estimateRoutes)
   .route("/", aiRoutes);
+
+// Yönetim API'si ayrı tiple (`AdminAppType`) kullanılır; uygulamanın istemci tipine karışmaz. Kapısı kendi
+// içinde (`routes/admin.ts`).
+v1.route("/admin", adminRoutes);

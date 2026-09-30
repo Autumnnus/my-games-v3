@@ -19,7 +19,7 @@ export async function linkSteamAccount(
   await db.transaction(async (tx) => {
     const [taken] = await tx.select().from(steamAccounts).where(eq(steamAccounts.steamId, steamId));
     if (taken && taken.userId !== userId) {
-      throw new AppError("conflict", "Bu Steam hesabı başka bir kullanıcıya bağlı");
+      throw new AppError("conflict", "Bu Steam hesabı başka bir kullanıcıya bağlı", "steam_taken");
     }
     // Farklı bir Steam hesabına geçildiyse eski hesabın süre gözlemleri sahte oturum üretmesin; ilk sync
     // yeni hesabı sıfırdan gözlemler.
@@ -85,6 +85,6 @@ export async function setSteamSyncEnabled(userId: string, enabled: boolean) {
 
 export async function requestSteamSync(userId: string) {
   const account = await getSteamStatus(userId);
-  if (!account) throw new AppError("not_found", "Steam hesabı bağlı değil");
+  if (!account) throw new AppError("not_found", "Steam hesabı bağlı değil", "steam_not_linked");
   await db.transaction((tx) => emit(tx, "steam.sync_requested", { userId }));
 }

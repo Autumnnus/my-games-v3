@@ -4,6 +4,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgTable,
   smallint,
   text,
@@ -93,4 +94,26 @@ export const screenshots = pgTable(
     uniqueIndex().on(t.assetId).where(sql`${t.assetId} is not null`),
     uniqueIndex().on(t.userId, t.externalId).where(sql`${t.externalId} is not null`),
   ],
+);
+
+/**
+ * Akıllı liste: kaydedilmiş bir kütüphane sorgusu (filtre + sıralama). İçerik saklanmaz; liste her açılışta
+ * sorgudan üretilir, bu yüzden yeni oyunlar kendiliğinden girer. Filtrenin biçimi core/library-filter.
+ */
+export const smartLists = pgTable(
+  "smart_lists",
+  {
+    id: id(),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text().notNull(),
+    filter: jsonb().$type<Record<string, unknown>>().notNull(),
+    sort: text(),
+    /** `ai`: asistanın bir cevabından kaydedildi. */
+    source: text().$type<"ai" | "manual">().notNull().default("manual"),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [index().on(t.userId, t.createdAt)],
 );

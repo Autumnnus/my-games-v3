@@ -27,8 +27,9 @@ export async function createReport(
   input: { targetType: ReportTarget; targetId: string; reason: string },
 ) {
   const reason = input.reason.trim().slice(0, 1000);
-  if (!reason) throw new AppError("invalid", "Bir sebep yazmalısın");
-  if (!(await targetExists(input.targetType, input.targetId))) notFound("İçerik bulunamadı");
+  if (!reason) throw new AppError("invalid", "Bir sebep yazmalısın", "report_reason_required");
+  if (!(await targetExists(input.targetType, input.targetId)))
+    notFound("İçerik bulunamadı", "content_not_found");
   // Aynı kişi aynı içeriği açık bir şikayet varken tekrar şikayet edemez.
   const [open] = await db
     .select({ id: reports.id })

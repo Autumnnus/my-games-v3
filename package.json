@@ -17,8 +17,9 @@
     "db:generate": "pnpm --filter @my-games/db run generate",
     "db:migrate": "pnpm --filter @my-games/db run migrate",
     "db:studio": "pnpm --filter @my-games/db run studio",
+    "admin": "pnpm --filter @my-games/db run admin",
     "auth:schema": "pnpm --filter @my-games/api run auth:schema",
-    "test": "pnpm --filter @my-games/core run test",
+    "test": "pnpm --filter @my-games/core run test && pnpm --filter @my-games/api run test",
     "migrate:legacy": "pnpm --filter @my-games/core run migrate:legacy --"
   },
   "devDependencies": {

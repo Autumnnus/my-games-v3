@@ -10,6 +10,7 @@ import { RelativeTime } from "@/components/time";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { formatPlaytime, formatRating } from "@/lib/format";
+import { useHydrated } from "@/lib/hydrated";
 import { avatarThumb } from "@/lib/media/urls";
 import { type FeedItem, type FeedScope, feedQuery, nowPlayingQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
@@ -262,6 +263,7 @@ function LiveDot() {
 
 /** Steam'de şu an oyunda olanlar; cam panel, nabız gibi atan canlı durum. */
 export function NowPlaying({ className }: { className?: string }) {
+  const hydrated = useHydrated();
   const { data } = useQuery(nowPlayingQuery);
   const players = data?.players ?? [];
   return (
@@ -280,9 +282,11 @@ export function NowPlaying({ className }: { className?: string }) {
         <p className="text-muted-foreground text-sm">{m.salon_now_playing_empty()}</p>
       )}
       {players.map((player) => {
-        const minutes = player.since
-          ? Math.max(1, Math.round((Date.now() - new Date(player.since).getTime()) / 60_000))
-          : null;
+        // Geçen süre saate bağlı: ilk karede (sunucu + hydration) yazılmaz, sonra eklenir.
+        const minutes =
+          hydrated && player.since
+            ? Math.max(1, Math.round((Date.now() - new Date(player.since).getTime()) / 60_000))
+            : null;
         return (
           <Link
             key={player.user.id}

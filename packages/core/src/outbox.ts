@@ -2,6 +2,7 @@ import { schema } from "@my-games/db";
 import { and, asc, eq, isNull, lt, lte, sql } from "drizzle-orm";
 import { db, type Tx } from "./db";
 import type { EventPayload, EventType } from "./events";
+import { logger } from "./log";
 
 export type OutboxHandlers = {
   [T in EventType]?: (payload: EventPayload<T>, tx: Tx) => Promise<void>;
@@ -41,9 +42,12 @@ export async function processOutbox(handlers: OutboxHandlers, limit = 50) {
       } catch (error) {
         const attempts = event.attempts + 1;
         const message = error instanceof Error ? error.message : String(error);
-        console.error(
-          `[outbox] ${event.type}#${event.id} başarısız (${attempts}. deneme):`,
-          message,
+        // Son deneme de başarısızsa olay bırakılır (panelden yeniden denenebilir).
+        logger[attempts >= MAX_ATTEMPTS ? "error" : "warn"](
+          "outbox",
+          attempts >= MAX_ATTEMPTS ? "event_dead" : "event_failed",
+          `${event.type}#${event.id} başarısız (${attempts}. deneme): ${message}`,
+          { context: { eventId: event.id, type: event.type, attempts } },
         );
         await tx
           .update(schema.outbox)

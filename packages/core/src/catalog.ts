@@ -77,7 +77,7 @@ export async function importIgdbGame(igdbId: number): Promise<Game> {
   if (existing) return existing;
 
   const fetched = await fetchIgdbGame(igdbId);
-  if (!fetched) notFound("IGDB oyunu bulunamadı");
+  if (!fetched) notFound("IGDB oyunu bulunamadı", "game_not_found");
   const mapped = mapIgdbGame(fetched.game, fetched.timeToBeat);
 
   return db.transaction(async (tx) => {
@@ -108,10 +108,10 @@ export async function importIgdbGame(igdbId: number): Promise<Game> {
         // Aynı oyunu eşzamanlı içe aktaran başka bir istek kazandı.
         const [raced] = await tx.select().from(games).where(eq(games.igdbId, igdbId)).limit(1);
         if (raced) return raced;
-        throw new AppError("conflict", "Oyun kaydedilemedi, tekrar dene");
+        throw new AppError("conflict", "Oyun kaydedilemedi, tekrar dene", "game_save_failed");
       }
     }
-    if (!row) throw new AppError("conflict", "Oyun kaydedilemedi");
+    if (!row) throw new AppError("conflict", "Oyun kaydedilemedi", "game_save_failed");
     await replaceTerms(tx, row.id, mapped.terms);
     return row;
   });
@@ -149,7 +149,7 @@ export async function createCustomGame(
   input: { name: string; releaseDate?: string | null; coverUrl?: string | null },
 ) {
   const name = input.name.trim();
-  if (!name) throw new AppError("invalid", "Oyun adı boş olamaz");
+  if (!name) throw new AppError("invalid", "Oyun adı boş olamaz", "game_name_empty");
   return db.transaction(async (tx) => {
     const slug = await uniqueSlug(tx, name, input.releaseDate);
     const [row] = await tx
@@ -459,7 +459,7 @@ export async function searchCatalog(
 
 export async function getGameBySlug(slug: string) {
   const [game] = await db.select().from(games).where(eq(games.slug, slug)).limit(1);
-  if (!game) notFound("Oyun bulunamadı");
+  if (!game) notFound("Oyun bulunamadı", "game_not_found");
 
   const [termRows, stats, reviews] = await Promise.all([
     db
@@ -547,6 +547,6 @@ async function markSynced(gameId: string) {
 
 export async function findGameIdBySlug(slug: string) {
   const [row] = await db.select({ id: games.id }).from(games).where(eq(games.slug, slug)).limit(1);
-  if (!row) notFound("Oyun bulunamadı");
+  if (!row) notFound("Oyun bulunamadı", "game_not_found");
   return row.id;
 }

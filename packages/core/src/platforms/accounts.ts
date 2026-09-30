@@ -50,7 +50,7 @@ export async function savePlatformAccount(input: {
         ),
       );
     if (taken && taken.userId !== input.userId) {
-      throw new AppError("conflict", "Bu hesap başka bir kullanıcıya bağlı");
+      throw new AppError("conflict", "Bu hesap başka bir kullanıcıya bağlı", "account_taken");
     }
     const [previous] = await tx
       .select({ externalId: platformAccounts.externalId })
@@ -168,12 +168,12 @@ export async function setPlatformSyncEnabled(
     .set({ syncEnabled: enabled, updatedAt: new Date() })
     .where(and(eq(platformAccounts.userId, userId), eq(platformAccounts.provider, provider)))
     .returning({ userId: platformAccounts.userId });
-  if (!row) throw new AppError("not_found", "Bağlı hesap yok");
+  if (!row) throw new AppError("not_found", "Bağlı hesap yok", "account_not_linked");
 }
 
 export async function requestPlatformSync(userId: string, provider: LinkedProvider) {
   const account = await getPlatformAccount(userId, provider);
-  if (!account) throw new AppError("not_found", "Bağlı hesap yok");
+  if (!account) throw new AppError("not_found", "Bağlı hesap yok", "account_not_linked");
   if (account.needsReauth) throw new PlatformReauthError(provider);
   await db.transaction((tx) => emit(tx, "platform.sync_requested", { userId, provider }));
 }

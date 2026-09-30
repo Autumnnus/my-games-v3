@@ -11,25 +11,40 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthedRouteImport } from './routes/_authed'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StatsRouteImport } from './routes/stats'
-import { Route as AuthedAdminRouteImport } from './routes/_authed/admin'
+import { Route as UsersRouteImport } from './routes/users'
+import { Route as AuthedAiRouteImport } from './routes/_authed/ai'
 import { Route as AuthedChatRouteImport } from './routes/_authed/chat'
 import { Route as AuthedHistoryRouteImport } from './routes/_authed/history'
 import { Route as AuthedInboxRouteImport } from './routes/_authed/inbox'
 import { Route as AuthedNotificationsRouteImport } from './routes/_authed/notifications'
 import { Route as AuthedSettingsRouteImport } from './routes/_authed/settings'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminAuditRouteImport } from './routes/admin.audit'
+import { Route as AdminLogsRouteImport } from './routes/admin.logs'
+import { Route as AdminReportsRouteImport } from './routes/admin.reports'
+import { Route as AdminStorageRouteImport } from './routes/admin.storage'
+import { Route as AdminSystemRouteImport } from './routes/admin.system'
 import { Route as EIdRouteImport } from './routes/e.$id'
 import { Route as GSlugRouteImport } from './routes/g.$slug'
 import { Route as UUsernameRouteImport } from './routes/u.$username'
+import { Route as AdminAiIndexRouteImport } from './routes/admin.ai.index'
+import { Route as AdminUsersIndexRouteImport } from './routes/admin.users.index'
+import { Route as AdminUsersIdRouteImport } from './routes/admin.users.$id'
 import { Route as UUsernameIndexRouteImport } from './routes/u.$username.index'
 import { Route as UUsernameActivityRouteImport } from './routes/u.$username.activity'
+import { Route as UUsernameLibraryRouteImport } from './routes/u.$username.library'
 import { Route as UUsernameScreenshotsRouteImport } from './routes/u.$username.screenshots'
 import { Route as UUsernameStatsRouteImport } from './routes/u.$username.stats'
+import { Route as AdminAiThreadsIdRouteImport } from './routes/admin.ai.threads.$id'
+import { Route as AdminAiTracesIndexRouteImport } from './routes/admin.ai.traces.index'
+import { Route as AdminAiTracesIdRouteImport } from './routes/admin.ai.traces.$id'
 import { Route as UUsernameWrappedYearRouteImport } from './routes/u.$username.wrapped.$year'
 
 const IndexRoute = IndexRouteImport.update({
@@ -39,6 +54,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthedRoute = AuthedRouteImport.update({
   id: '/_authed',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CompareRoute = CompareRouteImport.update({
@@ -71,9 +91,14 @@ const StatsRoute = StatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthedAdminRoute = AuthedAdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
+const UsersRoute = UsersRouteImport.update({
+  id: '/users',
+  path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthedAiRoute = AuthedAiRouteImport.update({
+  id: '/ai',
+  path: '/ai',
   getParentRoute: () => AuthedRoute,
 } as any)
 const AuthedChatRoute = AuthedChatRouteImport.update({
@@ -101,6 +126,36 @@ const AuthedSettingsRoute = AuthedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthedRoute,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLogsRoute = AdminLogsRouteImport.update({
+  id: '/logs',
+  path: '/logs',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminReportsRoute = AdminReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminStorageRoute = AdminStorageRouteImport.update({
+  id: '/storage',
+  path: '/storage',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSystemRoute = AdminSystemRouteImport.update({
+  id: '/system',
+  path: '/system',
+  getParentRoute: () => AdminRoute,
+} as any)
 const EIdRoute = EIdRouteImport.update({
   id: '/e/$id',
   path: '/e/$id',
@@ -116,6 +171,21 @@ const UUsernameRoute = UUsernameRouteImport.update({
   path: '/u/$username',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminAiIndexRoute = AdminAiIndexRouteImport.update({
+  id: '/ai/',
+  path: '/ai/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersIdRoute = AdminUsersIdRouteImport.update({
+  id: '/users/$id',
+  path: '/users/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 const UUsernameIndexRoute = UUsernameIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -124,6 +194,11 @@ const UUsernameIndexRoute = UUsernameIndexRouteImport.update({
 const UUsernameActivityRoute = UUsernameActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
+  getParentRoute: () => UUsernameRoute,
+} as any)
+const UUsernameLibraryRoute = UUsernameLibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
   getParentRoute: () => UUsernameRoute,
 } as any)
 const UUsernameScreenshotsRoute = UUsernameScreenshotsRouteImport.update({
@@ -136,6 +211,21 @@ const UUsernameStatsRoute = UUsernameStatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => UUsernameRoute,
 } as any)
+const AdminAiThreadsIdRoute = AdminAiThreadsIdRouteImport.update({
+  id: '/ai/threads/$id',
+  path: '/ai/threads/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAiTracesIndexRoute = AdminAiTracesIndexRouteImport.update({
+  id: '/ai/traces/',
+  path: '/ai/traces/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAiTracesIdRoute = AdminAiTracesIdRouteImport.update({
+  id: '/ai/traces/$id',
+  path: '/ai/traces/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 const UUsernameWrappedYearRoute = UUsernameWrappedYearRouteImport.update({
   id: '/wrapped/$year',
   path: '/wrapped/$year',
@@ -144,26 +234,41 @@ const UUsernameWrappedYearRoute = UUsernameWrappedYearRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/compare': typeof CompareRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
-  '/admin': typeof AuthedAdminRoute
+  '/users': typeof UsersRoute
+  '/ai': typeof AuthedAiRoute
   '/chat': typeof AuthedChatRoute
   '/history': typeof AuthedHistoryRoute
   '/inbox': typeof AuthedInboxRoute
   '/notifications': typeof AuthedNotificationsRoute
   '/settings': typeof AuthedSettingsRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/storage': typeof AdminStorageRoute
+  '/admin/system': typeof AdminSystemRoute
   '/e/$id': typeof EIdRoute
   '/g/$slug': typeof GSlugRoute
   '/u/$username': typeof UUsernameRouteWithChildren
+  '/admin/': typeof AdminIndexRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
   '/u/$username/activity': typeof UUsernameActivityRoute
+  '/u/$username/library': typeof UUsernameLibraryRoute
   '/u/$username/screenshots': typeof UUsernameScreenshotsRoute
   '/u/$username/stats': typeof UUsernameStatsRoute
+  '/admin/ai/': typeof AdminAiIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
   '/u/$username/': typeof UUsernameIndexRoute
+  '/admin/ai/threads/$id': typeof AdminAiThreadsIdRoute
+  '/admin/ai/traces/$id': typeof AdminAiTracesIdRoute
   '/u/$username/wrapped/$year': typeof UUsernameWrappedYearRoute
+  '/admin/ai/traces/': typeof AdminAiTracesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -173,69 +278,113 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
-  '/admin': typeof AuthedAdminRoute
+  '/users': typeof UsersRoute
+  '/ai': typeof AuthedAiRoute
   '/chat': typeof AuthedChatRoute
   '/history': typeof AuthedHistoryRoute
   '/inbox': typeof AuthedInboxRoute
   '/notifications': typeof AuthedNotificationsRoute
   '/settings': typeof AuthedSettingsRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/storage': typeof AdminStorageRoute
+  '/admin/system': typeof AdminSystemRoute
   '/e/$id': typeof EIdRoute
   '/g/$slug': typeof GSlugRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
   '/u/$username/activity': typeof UUsernameActivityRoute
+  '/u/$username/library': typeof UUsernameLibraryRoute
   '/u/$username/screenshots': typeof UUsernameScreenshotsRoute
   '/u/$username/stats': typeof UUsernameStatsRoute
+  '/admin/ai': typeof AdminAiIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
   '/u/$username': typeof UUsernameIndexRoute
+  '/admin/ai/threads/$id': typeof AdminAiThreadsIdRoute
+  '/admin/ai/traces/$id': typeof AdminAiTracesIdRoute
   '/u/$username/wrapped/$year': typeof UUsernameWrappedYearRoute
+  '/admin/ai/traces': typeof AdminAiTracesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authed': typeof AuthedRouteWithChildren
+  '/admin': typeof AdminRouteWithChildren
   '/compare': typeof CompareRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
-  '/_authed/admin': typeof AuthedAdminRoute
+  '/users': typeof UsersRoute
+  '/_authed/ai': typeof AuthedAiRoute
   '/_authed/chat': typeof AuthedChatRoute
   '/_authed/history': typeof AuthedHistoryRoute
   '/_authed/inbox': typeof AuthedInboxRoute
   '/_authed/notifications': typeof AuthedNotificationsRoute
   '/_authed/settings': typeof AuthedSettingsRoute
+  '/admin/audit': typeof AdminAuditRoute
+  '/admin/logs': typeof AdminLogsRoute
+  '/admin/reports': typeof AdminReportsRoute
+  '/admin/storage': typeof AdminStorageRoute
+  '/admin/system': typeof AdminSystemRoute
   '/e/$id': typeof EIdRoute
   '/g/$slug': typeof GSlugRoute
   '/u/$username': typeof UUsernameRouteWithChildren
+  '/admin/': typeof AdminIndexRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
   '/u/$username/activity': typeof UUsernameActivityRoute
+  '/u/$username/library': typeof UUsernameLibraryRoute
   '/u/$username/screenshots': typeof UUsernameScreenshotsRoute
   '/u/$username/stats': typeof UUsernameStatsRoute
+  '/admin/ai/': typeof AdminAiIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
   '/u/$username/': typeof UUsernameIndexRoute
+  '/admin/ai/threads/$id': typeof AdminAiThreadsIdRoute
+  '/admin/ai/traces/$id': typeof AdminAiTracesIdRoute
   '/u/$username/wrapped/$year': typeof UUsernameWrappedYearRoute
+  '/admin/ai/traces/': typeof AdminAiTracesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/compare'
     | '/forgot-password'
     | '/login'
     | '/register'
     | '/reset-password'
     | '/stats'
-    | '/admin'
+    | '/users'
+    | '/ai'
     | '/chat'
     | '/history'
     | '/inbox'
     | '/notifications'
     | '/settings'
+    | '/admin/audit'
+    | '/admin/logs'
+    | '/admin/reports'
+    | '/admin/storage'
+    | '/admin/system'
     | '/e/$id'
     | '/g/$slug'
     | '/u/$username'
+    | '/admin/'
+    | '/admin/users/$id'
     | '/u/$username/activity'
+    | '/u/$username/library'
     | '/u/$username/screenshots'
     | '/u/$username/stats'
+    | '/admin/ai/'
+    | '/admin/users/'
     | '/u/$username/'
+    | '/admin/ai/threads/$id'
+    | '/admin/ai/traces/$id'
     | '/u/$username/wrapped/$year'
+    | '/admin/ai/traces/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -245,54 +394,85 @@ export interface FileRouteTypes {
     | '/register'
     | '/reset-password'
     | '/stats'
-    | '/admin'
+    | '/users'
+    | '/ai'
     | '/chat'
     | '/history'
     | '/inbox'
     | '/notifications'
     | '/settings'
+    | '/admin/audit'
+    | '/admin/logs'
+    | '/admin/reports'
+    | '/admin/storage'
+    | '/admin/system'
     | '/e/$id'
     | '/g/$slug'
+    | '/admin'
+    | '/admin/users/$id'
     | '/u/$username/activity'
+    | '/u/$username/library'
     | '/u/$username/screenshots'
     | '/u/$username/stats'
+    | '/admin/ai'
+    | '/admin/users'
     | '/u/$username'
+    | '/admin/ai/threads/$id'
+    | '/admin/ai/traces/$id'
     | '/u/$username/wrapped/$year'
+    | '/admin/ai/traces'
   id:
     | '__root__'
     | '/'
     | '/_authed'
+    | '/admin'
     | '/compare'
     | '/forgot-password'
     | '/login'
     | '/register'
     | '/reset-password'
     | '/stats'
-    | '/_authed/admin'
+    | '/users'
+    | '/_authed/ai'
     | '/_authed/chat'
     | '/_authed/history'
     | '/_authed/inbox'
     | '/_authed/notifications'
     | '/_authed/settings'
+    | '/admin/audit'
+    | '/admin/logs'
+    | '/admin/reports'
+    | '/admin/storage'
+    | '/admin/system'
     | '/e/$id'
     | '/g/$slug'
     | '/u/$username'
+    | '/admin/'
+    | '/admin/users/$id'
     | '/u/$username/activity'
+    | '/u/$username/library'
     | '/u/$username/screenshots'
     | '/u/$username/stats'
+    | '/admin/ai/'
+    | '/admin/users/'
     | '/u/$username/'
+    | '/admin/ai/threads/$id'
+    | '/admin/ai/traces/$id'
     | '/u/$username/wrapped/$year'
+    | '/admin/ai/traces/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthedRoute: typeof AuthedRouteWithChildren
+  AdminRoute: typeof AdminRouteWithChildren
   CompareRoute: typeof CompareRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StatsRoute: typeof StatsRoute
+  UsersRoute: typeof UsersRoute
   EIdRoute: typeof EIdRoute
   GSlugRoute: typeof GSlugRoute
   UUsernameRoute: typeof UUsernameRouteWithChildren
@@ -312,6 +492,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/compare': {
@@ -356,11 +543,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authed/admin': {
-      id: '/_authed/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AuthedAdminRouteImport
+    '/users': {
+      id: '/users'
+      path: '/users'
+      fullPath: '/users'
+      preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authed/ai': {
+      id: '/_authed/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AuthedAiRouteImport
       parentRoute: typeof AuthedRoute
     }
     '/_authed/chat': {
@@ -398,6 +592,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthedSettingsRouteImport
       parentRoute: typeof AuthedRoute
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/audit': {
+      id: '/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/logs': {
+      id: '/admin/logs'
+      path: '/logs'
+      fullPath: '/admin/logs'
+      preLoaderRoute: typeof AdminLogsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/reports': {
+      id: '/admin/reports'
+      path: '/reports'
+      fullPath: '/admin/reports'
+      preLoaderRoute: typeof AdminReportsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/storage': {
+      id: '/admin/storage'
+      path: '/storage'
+      fullPath: '/admin/storage'
+      preLoaderRoute: typeof AdminStorageRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/system': {
+      id: '/admin/system'
+      path: '/system'
+      fullPath: '/admin/system'
+      preLoaderRoute: typeof AdminSystemRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/e/$id': {
       id: '/e/$id'
       path: '/e/$id'
@@ -419,6 +655,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/ai/': {
+      id: '/admin/ai/'
+      path: '/ai'
+      fullPath: '/admin/ai/'
+      preLoaderRoute: typeof AdminAiIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users/': {
+      id: '/admin/users/'
+      path: '/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users/$id': {
+      id: '/admin/users/$id'
+      path: '/users/$id'
+      fullPath: '/admin/users/$id'
+      preLoaderRoute: typeof AdminUsersIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/u/$username/': {
       id: '/u/$username/'
       path: '/'
@@ -431,6 +688,13 @@ declare module '@tanstack/react-router' {
       path: '/activity'
       fullPath: '/u/$username/activity'
       preLoaderRoute: typeof UUsernameActivityRouteImport
+      parentRoute: typeof UUsernameRoute
+    }
+    '/u/$username/library': {
+      id: '/u/$username/library'
+      path: '/library'
+      fullPath: '/u/$username/library'
+      preLoaderRoute: typeof UUsernameLibraryRouteImport
       parentRoute: typeof UUsernameRoute
     }
     '/u/$username/screenshots': {
@@ -447,6 +711,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UUsernameStatsRouteImport
       parentRoute: typeof UUsernameRoute
     }
+    '/admin/ai/threads/$id': {
+      id: '/admin/ai/threads/$id'
+      path: '/ai/threads/$id'
+      fullPath: '/admin/ai/threads/$id'
+      preLoaderRoute: typeof AdminAiThreadsIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ai/traces/': {
+      id: '/admin/ai/traces/'
+      path: '/ai/traces'
+      fullPath: '/admin/ai/traces/'
+      preLoaderRoute: typeof AdminAiTracesIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/ai/traces/$id': {
+      id: '/admin/ai/traces/$id'
+      path: '/ai/traces/$id'
+      fullPath: '/admin/ai/traces/$id'
+      preLoaderRoute: typeof AdminAiTracesIdRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/u/$username/wrapped/$year': {
       id: '/u/$username/wrapped/$year'
       path: '/wrapped/$year'
@@ -458,7 +743,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthedRouteChildren {
-  AuthedAdminRoute: typeof AuthedAdminRoute
+  AuthedAiRoute: typeof AuthedAiRoute
   AuthedChatRoute: typeof AuthedChatRoute
   AuthedHistoryRoute: typeof AuthedHistoryRoute
   AuthedInboxRoute: typeof AuthedInboxRoute
@@ -467,7 +752,7 @@ interface AuthedRouteChildren {
 }
 
 const AuthedRouteChildren: AuthedRouteChildren = {
-  AuthedAdminRoute: AuthedAdminRoute,
+  AuthedAiRoute: AuthedAiRoute,
   AuthedChatRoute: AuthedChatRoute,
   AuthedHistoryRoute: AuthedHistoryRoute,
   AuthedInboxRoute: AuthedInboxRoute,
@@ -478,8 +763,41 @@ const AuthedRouteChildren: AuthedRouteChildren = {
 const AuthedRouteWithChildren =
   AuthedRoute._addFileChildren(AuthedRouteChildren)
 
+interface AdminRouteChildren {
+  AdminAuditRoute: typeof AdminAuditRoute
+  AdminLogsRoute: typeof AdminLogsRoute
+  AdminReportsRoute: typeof AdminReportsRoute
+  AdminStorageRoute: typeof AdminStorageRoute
+  AdminSystemRoute: typeof AdminSystemRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminUsersIdRoute: typeof AdminUsersIdRoute
+  AdminAiIndexRoute: typeof AdminAiIndexRoute
+  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
+  AdminAiThreadsIdRoute: typeof AdminAiThreadsIdRoute
+  AdminAiTracesIdRoute: typeof AdminAiTracesIdRoute
+  AdminAiTracesIndexRoute: typeof AdminAiTracesIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminAuditRoute: AdminAuditRoute,
+  AdminLogsRoute: AdminLogsRoute,
+  AdminReportsRoute: AdminReportsRoute,
+  AdminStorageRoute: AdminStorageRoute,
+  AdminSystemRoute: AdminSystemRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminUsersIdRoute: AdminUsersIdRoute,
+  AdminAiIndexRoute: AdminAiIndexRoute,
+  AdminUsersIndexRoute: AdminUsersIndexRoute,
+  AdminAiThreadsIdRoute: AdminAiThreadsIdRoute,
+  AdminAiTracesIdRoute: AdminAiTracesIdRoute,
+  AdminAiTracesIndexRoute: AdminAiTracesIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 interface UUsernameRouteChildren {
   UUsernameActivityRoute: typeof UUsernameActivityRoute
+  UUsernameLibraryRoute: typeof UUsernameLibraryRoute
   UUsernameScreenshotsRoute: typeof UUsernameScreenshotsRoute
   UUsernameStatsRoute: typeof UUsernameStatsRoute
   UUsernameIndexRoute: typeof UUsernameIndexRoute
@@ -488,6 +806,7 @@ interface UUsernameRouteChildren {
 
 const UUsernameRouteChildren: UUsernameRouteChildren = {
   UUsernameActivityRoute: UUsernameActivityRoute,
+  UUsernameLibraryRoute: UUsernameLibraryRoute,
   UUsernameScreenshotsRoute: UUsernameScreenshotsRoute,
   UUsernameStatsRoute: UUsernameStatsRoute,
   UUsernameIndexRoute: UUsernameIndexRoute,
@@ -501,12 +820,14 @@ const UUsernameRouteWithChildren = UUsernameRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthedRoute: AuthedRouteWithChildren,
+  AdminRoute: AdminRouteWithChildren,
   CompareRoute: CompareRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StatsRoute: StatsRoute,
+  UsersRoute: UsersRoute,
   EIdRoute: EIdRoute,
   GSlugRoute: GSlugRoute,
   UUsernameRoute: UUsernameRouteWithChildren,

@@ -30,7 +30,7 @@ export class SteamPrivateError extends AppError {
 
 async function call<T>(path: string, params: Record<string, string | number | boolean>) {
   const config = steamConfig();
-  if (!config) throw new AppError("unavailable", "Steam yapılandırılmamış");
+  if (!config) throw new AppError("unavailable", "Steam yapılandırılmamış", "steam_disabled");
   const url = new URL(`${API}/${path}`);
   url.searchParams.set("key", config.apiKey);
   url.searchParams.set("format", "json");
@@ -46,13 +46,17 @@ async function call<T>(path: string, params: Record<string, string | number | bo
     const type = response.headers.get("content-type") ?? "";
     if (!type.includes("json")) {
       if (response.status === 401 || response.status === 403) {
-        throw new AppError("unavailable", `Steam API anahtarı reddedildi (${response.status})`);
+        throw new AppError(
+          "unavailable",
+          `Steam API anahtarı reddedildi (${response.status})`,
+          "steam_unavailable",
+        );
       }
-      throw new AppError("unavailable", `Steam ${path} ${response.status}`);
+      throw new AppError("unavailable", `Steam ${path} ${response.status}`, "steam_unavailable");
     }
     return { status: response.status, body: (await response.json()) as T };
   }
-  throw new AppError("rate_limited", "Steam istek sınırı");
+  throw new AppError("rate_limited", "Steam istek sınırı", "steam_rate_limited");
 }
 
 /** Sahip olunan oyunlar + süreler. Profil/oyun detayları gizliyse `SteamPrivateError`. */

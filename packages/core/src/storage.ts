@@ -40,7 +40,7 @@ const extensionOf: Record<string, string> = {
 
 export function extensionFor(contentType: string) {
   const extension = extensionOf[contentType];
-  if (!extension) throw new AppError("invalid", "Desteklenmeyen dosya türü");
+  if (!extension) throw new AppError("invalid", "Desteklenmeyen dosya türü", "upload_unsupported");
   return extension;
 }
 
@@ -102,9 +102,11 @@ export function systemStorage() {
 
 /** Bir görselin deposu. `targetId` = `null` sistem deposu; kullanıcı depoları sonraki fazda. */
 export function storageFor(targetId: string | null): StorageDriver {
-  if (targetId !== null) throw new AppError("unavailable", "Harici depolar henüz desteklenmiyor");
+  if (targetId !== null)
+    throw new AppError("unavailable", "Harici depolar henüz desteklenmiyor", "uploads_disabled");
   const driver = systemStorage();
-  if (!driver) throw new AppError("unavailable", "Dosya yükleme yapılandırılmamış");
+  if (!driver)
+    throw new AppError("unavailable", "Dosya yükleme yapılandırılmamış", "uploads_disabled");
   return driver;
 }
 

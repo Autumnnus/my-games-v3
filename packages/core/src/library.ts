@@ -5,6 +5,7 @@ import { localToday } from "./config";
 import { type DbOrTx, db, type Tx } from "./db";
 import { AppError, forbidden, notFound } from "./errors";
 import { emit } from "./events";
+import { filterConditions, type LibraryFilter } from "./library-filter";
 import { discardAssets } from "./media";
 import { entryPlaytime } from "./playtime";
 
@@ -143,14 +144,14 @@ export async function addEntry(
 
   return inTx(options.tx, async (tx) => {
     const [game] = await tx.select({ id: games.id }).from(games).where(eq(games.id, gameId));
-    if (!game) notFound("Oyun bulunamadı");
+    if (!game) notFound("Oyun bulunamadı", "game_not_found");
 
     const [entry] = await tx
       .insert(libraryEntries)
       .values({ ...fields, status: fields.status ?? input.status, userId, gameId, legacyRef })
       .onConflictDoNothing({ target: [libraryEntries.userId, libraryEntries.gameId] })
       .returning();
-    if (!entry) throw new AppError("conflict", "Bu oyun zaten kütüphanende");
+    if (!entry) throw new AppError("conflict", "Bu oyun zaten kütüphanende", "entry_exists");
 
     const changes = diff({}, fields).filter((change) => change.to !== null);
     await record(tx, entry, "create", changes, options);
@@ -178,7 +179,7 @@ export async function updateEntry(
       .from(libraryEntries)
       .where(eq(libraryEntries.id, entryId))
       .for("update");
-    if (!current) notFound("Kayıt bulunamadı");
+    if (!current) notFound("Kayıt bulunamadı", "entry_not_found");
     if (current.userId !== userId) forbidden();
 
     const next = withStatusDefaults(current, normalize(patch));
@@ -211,7 +212,7 @@ export async function updateEntry(
 export async function deleteEntry(userId: string, entryId: string, options: ChangeOptions = {}) {
   return inTx(options.tx, async (tx) => {
     const [current] = await tx.select().from(libraryEntries).where(eq(libraryEntries.id, entryId));
-    if (!current) notFound("Kayıt bulunamadı");
+    if (!current) notFound("Kayıt bulunamadı", "entry_not_found");
     if (current.userId !== userId) forbidden();
 
     const snapshot = Object.fromEntries(
@@ -241,19 +242,20 @@ export async function revertHistory(userId: string, historyId: string) {
       .from(entryHistory)
       .where(eq(entryHistory.id, historyId))
       .for("update");
-    if (!item || item.userId !== userId) notFound("Geçmiş kaydı bulunamadı");
-    if (item.revertedAt) throw new AppError("conflict", "Bu değişiklik zaten geri alındı");
+    if (!item || item.userId !== userId) notFound("Geçmiş kaydı bulunamadı", "history_not_found");
+    if (item.revertedAt)
+      throw new AppError("conflict", "Bu değişiklik zaten geri alındı", "history_reverted");
     // Moderasyon (ör. kaldırılan inceleme) kullanıcı tarafından geri alınamaz.
     if (item.source === "system") forbidden();
 
     const options = { source: "revert", tx };
     if (item.action === "update") {
-      if (!item.entryId) throw new AppError("conflict", "Kayıt artık yok");
+      if (!item.entryId) throw new AppError("conflict", "Kayıt artık yok", "entry_gone");
       const [current] = await tx
         .select()
         .from(libraryEntries)
         .where(eq(libraryEntries.id, item.entryId));
-      if (!current) throw new AppError("conflict", "Kayıt artık yok");
+      if (!current) throw new AppError("conflict", "Kayıt artık yok", "entry_gone");
       // Yalnızca o günden beri başka bir değişiklik görmemiş alanlar geri alınır.
       const patch: Record<string, unknown> = {};
       for (const change of item.changes) {
@@ -262,14 +264,19 @@ export async function revertHistory(userId: string, historyId: string) {
         }
       }
       if (Object.keys(patch).length === 0) {
-        throw new AppError("conflict", "Alanlar o günden beri değişmiş, geri alınacak bir şey yok");
+        throw new AppError(
+          "conflict",
+          "Alanlar o günden beri değişmiş, geri alınacak bir şey yok",
+          "history_nothing_to_revert",
+        );
       }
       await updateEntry(userId, item.entryId, patch as Partial<EntryFields>, options);
     } else if (item.action === "create") {
       if (item.entryId) await deleteEntry(userId, item.entryId, options);
     } else if (item.action === "delete") {
       const snapshot = item.snapshot as Record<string, unknown> | null;
-      if (!snapshot?.gameId) throw new AppError("conflict", "Silinen kaydın içeriği yok");
+      if (!snapshot?.gameId)
+        throw new AppError("conflict", "Silinen kaydın içeriği yok", "history_nothing_to_revert");
       const fields = Object.fromEntries(
         ENTRY_FIELDS.map((field) => [field, revive(field, snapshot[field])]),
       ) as unknown as EntryFields;
@@ -371,6 +378,18 @@ function present<T extends EntryRow>(row: T) {
   return { ...row, game: { ...row.game, coverUrl: gameCoverUrl(row.game) } };
 }
 
+/** `listLibrary` öğeleriyle aynı biçimde kayıtlar; profil özeti gibi başka okumalar aynı kartları çizer. */
+export async function selectEntries(where: SQL | undefined, orderBy: SQL[], limit: number) {
+  const rows = await db
+    .select(entryColumns)
+    .from(libraryEntries)
+    .innerJoin(games, eq(games.id, libraryEntries.gameId))
+    .where(where)
+    .orderBy(...orderBy, asc(libraryEntries.id))
+    .limit(limit);
+  return rows.map(present);
+}
+
 export async function listLibrary(
   ownerId: string,
   filters: {
@@ -379,6 +398,8 @@ export async function listLibrary(
     sort?: LibrarySort;
     order?: "asc" | "desc";
     favorites?: boolean;
+    /** Akıllı liste / asistan filtresi; diğer filtrelerle birlikte uygulanır. */
+    filter?: LibraryFilter;
     limit?: number;
     offset?: number;
   } = {},
@@ -387,6 +408,7 @@ export async function listLibrary(
   if (filters.status) conditions.push(eq(libraryEntries.status, filters.status));
   if (filters.favorites) conditions.push(eq(libraryEntries.isFavorite, true));
   if (filters.q?.trim()) conditions.push(ilike(games.name, `%${filters.q.trim()}%`));
+  if (filters.filter) conditions.push(...filterConditions(filters.filter));
 
   const direction = filters.order === "asc" ? asc : desc;
   const orderBy = {
@@ -446,7 +468,7 @@ export async function getEntry(entryId: string) {
     .innerJoin(games, eq(games.id, libraryEntries.gameId))
     .innerJoin(user, eq(user.id, libraryEntries.userId))
     .where(eq(libraryEntries.id, entryId));
-  if (!row) notFound("Kayıt bulunamadı");
+  if (!row) notFound("Kayıt bulunamadı", "entry_not_found");
   return present(row);
 }
 

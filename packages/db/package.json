@@ -11,6 +11,7 @@
     "typecheck": "tsc",
     "generate": "drizzle-kit generate",
     "migrate": "tsx --env-file-if-exists=../../.env src/migrate.ts",
+    "admin": "tsx --env-file-if-exists=../../.env src/admin-cli.ts",
     "studio": "drizzle-kit studio"
   },
   "dependencies": {

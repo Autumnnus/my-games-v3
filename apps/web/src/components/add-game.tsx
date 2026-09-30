@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useRouteContext } from "@tanstack/react-router";
 import { ArrowLeftIcon, PlusIcon } from "lucide-react";
-import { createContext, type ReactNode, useContext, useEffect, useState } from "react";
+import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { EntryForm, type EntryFormValues } from "@/components/entry-form";
 import { GameCover } from "@/components/game-cover";
@@ -15,7 +15,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { api, unwrap } from "@/lib/api";
 import { errorMessage } from "@/lib/format";
 import { metaQuery } from "@/lib/meta";
@@ -39,7 +39,11 @@ type Target =
     }
   | { kind: "custom"; name: string };
 
-type AddGameContext = { open: (target?: Target) => void };
+export type AddGameTarget = Target;
+type AddGameContext = {
+  /** Diyaloğu açar: bir oyunla (doğrudan forma) ya da arama kutusu `query` ile dolu olarak. */
+  open: (target?: Target, options?: { query?: string }) => void;
+};
 
 const Context = createContext<AddGameContext>({ open: () => {} });
 
@@ -51,29 +55,21 @@ export function AddGameProvider({ children }: { children: ReactNode }) {
   const { user } = useRouteContext({ from: "__root__" });
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState<Target | null>(null);
-
-  useEffect(() => {
-    if (!user) return;
-    const onKey = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        setTarget(null);
+  const [initialQuery, setInitialQuery] = useState("");
+  // ⌘K artık Spotlight'ın (components/spotlight.tsx); oyun ekleme oradan ve kütüphane sayfasından açılır.
+  const value = useMemo<AddGameContext>(
+    () => ({
+      open: (next, options) => {
+        setTarget(next ?? null);
+        setInitialQuery(options?.query ?? "");
         setOpen(true);
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [user]);
+      },
+    }),
+    [],
+  );
 
   return (
-    <Context.Provider
-      value={{
-        open: (next) => {
-          setTarget(next ?? null);
-          setOpen(true);
-        },
-      }}
-    >
+    <Context.Provider value={value}>
       {children}
       {user && (
         <AddGameDialog
@@ -81,6 +77,7 @@ export function AddGameProvider({ children }: { children: ReactNode }) {
           onOpenChange={setOpen}
           target={target}
           onTargetChange={setTarget}
+          initialQuery={initialQuery}
           username={user.displayUsername ?? user.username ?? ""}
         />
       )}
@@ -102,9 +99,15 @@ function AddGameDialog(props: {
   onOpenChange: (open: boolean) => void;
   target: Target | null;
   onTargetChange: (target: Target | null) => void;
+  initialQuery: string;
   username: string;
 }) {
   const [query, setQuery] = useState("");
+  const { open, initialQuery } = props;
+  // Her açılışta arama kutusu verilen sorguyla (Spotlight'ta yazılan ad) ya da boş başlar.
+  useEffect(() => {
+    if (open) setQuery(initialQuery);
+  }, [open, initialQuery]);
   const debounced = useDebounced(query.trim(), 300);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -183,10 +186,12 @@ function AddGameDialog(props: {
                 <AlertDescription>{m.add_game_igdb_disabled()}</AlertDescription>
               </Alert>
             )}
-            <Input
+            <SearchInput
               autoFocus
               placeholder={m.add_game_search()}
+              aria-label={m.add_game_search()}
               value={query}
+              loading={search.isFetching}
               onChange={(event) => setQuery(event.target.value)}
             />
             <div className="grid gap-1">
@@ -214,9 +219,13 @@ function AddGameDialog(props: {
                           },
                     )
                   }
-                  className="hover:bg-accent flex items-center gap-3 rounded-md p-2 text-left disabled:opacity-60"
+                  className="flex items-center gap-3 rounded-2xl p-2 text-left transition-colors hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:outline-none disabled:opacity-55"
                 >
-                  <GameCover url={result.coverUrl} name={result.name} className="w-10 shrink-0" />
+                  <GameCover
+                    url={result.coverUrl}
+                    name={result.name}
+                    className="w-11 shrink-0 rounded-lg"
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="truncate font-medium">{result.name}</div>
                     <div className="text-muted-foreground text-xs">{result.releaseYear ?? ""}</div>
@@ -231,9 +240,11 @@ function AddGameDialog(props: {
                 <button
                   type="button"
                   onClick={() => props.onTargetChange({ kind: "custom", name: query.trim() })}
-                  className="hover:bg-accent text-muted-foreground flex items-center gap-2 rounded-md p-2 text-left text-sm"
+                  className="text-foreground/75 hover:text-foreground mt-1 flex items-center gap-3 rounded-2xl border border-dashed border-white/12 p-3 text-left text-sm font-semibold transition-colors hover:bg-white/[0.05]"
                 >
-                  <PlusIcon className="size-4" />
+                  <span className="flex size-8 items-center justify-center rounded-full bg-white/8">
+                    <PlusIcon className="size-4" />
+                  </span>
                   {m.add_game_custom({ name: query.trim() })}
                 </button>
               )}

@@ -20,6 +20,8 @@ import { gameQuery, gameScreenshotsQuery, myEntryQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/g/$slug")({
+  // Başka oyuna geçince yerel durum (logo hatası, yorum taslağı) önceki oyundan taşınmasın.
+  remountDeps: ({ params }) => params,
   loader: async ({ context, params }) => {
     const data = await orNotFound(context.queryClient.ensureQueryData(gameQuery(params.slug)));
     void context.queryClient.prefetchQuery(gameScreenshotsQuery(params.slug));

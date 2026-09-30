@@ -6,7 +6,7 @@ import type {
   Store,
   SyncProvider,
 } from "@my-games/shared";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import {
   type AchievementDef,
   linkAchievementSet,
@@ -121,22 +121,45 @@ export const newGameKey = (provider: string, externalId: string) =>
 async function saveSnapshot(
   tx: DbOrTx,
   key: { userId: string; provider: string; externalId: string },
-  values: { playtimeMin?: number | null; achievementsUnlocked?: number | null; checkedAt?: Date },
+  values: {
+    playtimeMin?: number | null;
+    /** Yalnızca sürenin ilk gözleminde saklanır (`baselineLastPlayedAt`). */
+    lastPlayedAt?: Date | null;
+    achievementsUnlocked?: number | null;
+    checkedAt?: Date;
+  },
 ) {
+  const now = new Date();
   const set = {
     ...(values.playtimeMin !== undefined ? { playtimeMin: values.playtimeMin } : {}),
     ...(values.achievementsUnlocked !== undefined
       ? { achievementsUnlocked: values.achievementsUnlocked }
       : {}),
     ...(values.checkedAt ? { achievementsCheckedAt: values.checkedAt } : {}),
-    updatedAt: new Date(),
+    updatedAt: now,
   };
+  // Sürenin ilk gözlemi oturum üretmez; o ana kadarki süre tahmini geçmiştir ve sınırı bir kez yazılır.
+  const observed = values.playtimeMin !== undefined && values.playtimeMin !== null;
+  const lastPlayedAt = values.lastPlayedAt ?? null;
   await tx
     .insert(platformSnapshots)
-    .values({ ...key, ...set })
+    .values({
+      ...key,
+      ...set,
+      ...(observed ? { baselineAt: now, baselineLastPlayedAt: lastPlayedAt } : {}),
+    })
     .onConflictDoUpdate({
       target: [platformSnapshots.userId, platformSnapshots.provider, platformSnapshots.externalId],
-      set,
+      set: {
+        ...set,
+        ...(observed
+          ? {
+              baselineAt: sql`coalesce(${platformSnapshots.baselineAt}, ${now}::timestamptz)`,
+              baselineLastPlayedAt: sql`case when ${platformSnapshots.baselineAt} is null
+                then ${lastPlayedAt}::timestamptz else ${platformSnapshots.baselineLastPlayedAt} end`,
+            }
+          : {}),
+      },
     });
 }
 
@@ -269,7 +292,10 @@ export async function applyPlatformTitles(input: {
       if (!needsUpdate && delta <= 0) {
         if (achievementsChanged) achievementChecks.push({ entry, title });
         if (!snapshot)
-          await saveSnapshot(db, snapshotKey(title), { playtimeMin: title.playtimeMin });
+          await saveSnapshot(db, snapshotKey(title), {
+            playtimeMin: title.playtimeMin,
+            lastPlayedAt: title.lastPlayedAt,
+          });
         continue;
       }
 
@@ -349,7 +375,10 @@ export async function applyPlatformTitles(input: {
             if (suggestion.status !== "ignored") stats.statusSuggestions++;
           }
         }
-        await saveSnapshot(tx, snapshotKey(title), { playtimeMin: title.playtimeMin });
+        await saveSnapshot(tx, snapshotKey(title), {
+          playtimeMin: title.playtimeMin,
+          lastPlayedAt: title.lastPlayedAt,
+        });
       });
       if (achievementsChanged || (title.hasAchievements && delta > 0)) {
         achievementChecks.push({ entry, title });
@@ -360,7 +389,10 @@ export async function applyPlatformTitles(input: {
     // Kütüphanede yok: "yeni oyun" önerisi. Yok sayılanlar için katalog kaydı bile açılmaz.
     const key = newGameKey(provider, title.externalId);
     if (ignored.has(ignoreKey(provider, key) ?? "")) {
-      await saveSnapshot(db, snapshotKey(title), { playtimeMin: title.playtimeMin });
+      await saveSnapshot(db, snapshotKey(title), {
+        playtimeMin: title.playtimeMin,
+        lastPlayedAt: title.lastPlayedAt,
+      });
       continue;
     }
     if (snapshot && delta <= 0) continue;
@@ -395,7 +427,10 @@ export async function applyPlatformTitles(input: {
       );
       if (result.status !== "ignored") stats.newGames++;
       await recordSession(tx, catalogGame.id, null);
-      await saveSnapshot(tx, snapshotKey(title), { playtimeMin: title.playtimeMin });
+      await saveSnapshot(tx, snapshotKey(title), {
+        playtimeMin: title.playtimeMin,
+        lastPlayedAt: title.lastPlayedAt,
+      });
     });
   }
 
@@ -476,6 +511,10 @@ export async function applyPlatformTitles(input: {
     }
   }
 
-  await db.transaction((tx) => notifyPending(tx, userId, pending));
+  await db.transaction(async (tx) => {
+    await notifyPending(tx, userId, pending);
+    // İlk gözlemler ve yeni kanıtlar (başarım tarihleri) tahmini geçmişi değiştirir.
+    await emit(tx, "estimates.requested", { userId });
+  });
   return { stats, pending };
 }

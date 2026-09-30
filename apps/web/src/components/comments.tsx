@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, useRouteContext } from "@tanstack/react-router";
-import { ReplyIcon, Trash2Icon } from "lucide-react";
+import { ArrowUpIcon, ReplyIcon, Trash2Icon } from "lucide-react";
 import { type FormEvent, useState } from "react";
 import { toast } from "sonner";
 import { ReportButton } from "@/components/report-dialog";
@@ -67,22 +67,31 @@ function Composer(props: Target & { parentId?: string; onDone?: () => void; auto
   }
 
   return (
-    <form className="flex items-start gap-2" onSubmit={onSubmit}>
+    // Gönder düğmesi alanın içinde, sağ altta: metin uzadıkça alan büyür, düğme yerinde kalır.
+    <form className="relative" onSubmit={onSubmit}>
       <Textarea
         value={body}
         onChange={(event) => setBody(event.target.value)}
         placeholder={m.comment_placeholder()}
+        aria-label={m.comment_placeholder()}
         rows={1}
         maxLength={2000}
         autoFocus={props.autoFocus}
-        className="min-h-9 resize-y"
+        className="max-h-72 min-h-11 resize-none py-[10px] pr-12 leading-[22px]"
         onKeyDown={(event) => {
           if (event.key === "Enter" && (event.metaKey || event.ctrlKey))
             event.currentTarget.form?.requestSubmit();
         }}
       />
-      <Button type="submit" size="sm" disabled={send.isPending || !body.trim()}>
-        {m.comment_submit()}
+      <Button
+        type="submit"
+        size="icon-sm"
+        aria-label={m.comment_submit()}
+        title={m.comment_submit()}
+        disabled={send.isPending || !body.trim()}
+        className="absolute right-1.5 bottom-1.5 disabled:opacity-30"
+      >
+        <ArrowUpIcon strokeWidth={2.5} />
       </Button>
     </form>
   );

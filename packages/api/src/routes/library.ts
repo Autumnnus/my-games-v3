@@ -1,3 +1,4 @@
+import { isAdmin } from "@my-games/core/admin/access";
 import { importIgdbGame } from "@my-games/core/catalog";
 import { AppError } from "@my-games/core/errors";
 import { exportUserData } from "@my-games/core/export";
@@ -11,12 +12,21 @@ import {
   revertHistory,
   updateEntry,
 } from "@my-games/core/library";
+import { libraryFilterSchema } from "@my-games/core/library-filter";
+import { getProfileOverview, listUsers, userDirectorySorts } from "@my-games/core/profiles";
 import {
   addExternalScreenshot,
   deleteScreenshot,
   listScreenshots,
   updateCaption,
 } from "@my-games/core/screenshots";
+import {
+  createSmartList,
+  deleteSmartList,
+  getSmartList,
+  listSmartLists,
+  renameSmartList,
+} from "@my-games/core/smart-lists";
 import { findUserByUsername, getProfile } from "@my-games/core/users";
 import { entryStatuses } from "@my-games/shared";
 import { Hono } from "hono";
@@ -35,7 +45,19 @@ const libraryQuery = z.object({
     .optional(),
   limit: z.coerce.number().int().min(1).max(500).optional(),
   offset: z.coerce.number().int().min(0).optional(),
+  /** Akıllı liste: kayıtlı filtresi uygulanır (liste o kullanıcının olmalı). */
+  list: z.uuid().optional(),
 });
+
+const usersQuery = z.object({
+  q: z.string().trim().max(64).optional(),
+  sort: z.enum(userDirectorySorts).optional(),
+  offset: z.coerce.number().int().min(0).max(10_000).optional(),
+});
+
+/** Herkese açık ama birkaç toplamlı sorgu: IP/kullanıcı başına dakikada sınırlı (aramada yazarken de yeter). */
+const directoryLimit = rateLimit("users", 120, 60_000);
+const overviewLimit = rateLimit("profile-overview", 120, 60_000);
 
 const addEntrySchema = entryFieldsSchema.extend({
   gameId: z.uuid().optional(),
@@ -49,10 +71,68 @@ async function userIdOf(username: string) {
 }
 
 export const libraryRoutes = new Hono<AppEnv>()
+  .get("/users", withSession, directoryLimit, validate("query", usersQuery), async (c) =>
+    c.json(await listUsers(c.req.valid("query"))),
+  )
   .get("/users/:username", async (c) => c.json(await getProfile(c.req.param("username"))))
+  .get("/users/:username/overview", withSession, overviewLimit, async (c) =>
+    c.json(await getProfileOverview(c.req.param("username"))),
+  )
   .get("/users/:username/library", validate("query", libraryQuery), async (c) => {
     const ownerId = await userIdOf(c.req.param("username"));
-    return c.json(await listLibrary(ownerId, c.req.valid("query")));
+    const { list, ...query } = c.req.valid("query");
+    if (!list) return c.json(await listLibrary(ownerId, query));
+    const smart = await getSmartList(list);
+    if (smart.userId !== ownerId) throw new AppError("not_found", "Liste bulunamadı");
+    return c.json(
+      await listLibrary(ownerId, {
+        ...query,
+        filter: smart.filter,
+        sort: query.sort ?? smart.sort ?? undefined,
+      }),
+    );
+  })
+  .get("/users/:username/lists", async (c) => {
+    const ownerId = await userIdOf(c.req.param("username"));
+    return c.json({ lists: await listSmartLists(ownerId) });
+  })
+  .post(
+    "/lists",
+    withSession,
+    requireUser,
+    rateLimit("lists", 30, 60 * 60_000),
+    validate(
+      "json",
+      z.object({
+        name: z.string().trim().min(1).max(60),
+        filter: libraryFilterSchema,
+        sort: z.enum(librarySorts).nullable().optional(),
+        source: z.enum(["ai", "manual"]).optional(),
+      }),
+    ),
+    async (c) => {
+      const list = await createSmartList(currentUser(c).id, c.req.valid("json"));
+      return c.json({ list }, 201);
+    },
+  )
+  .patch(
+    "/lists/:id",
+    withSession,
+    requireUser,
+    validate("param", uuidParam),
+    validate("json", z.object({ name: z.string().trim().min(1).max(60) })),
+    async (c) => {
+      const list = await renameSmartList(
+        currentUser(c).id,
+        c.req.valid("param").id,
+        c.req.valid("json").name,
+      );
+      return c.json({ list });
+    },
+  )
+  .delete("/lists/:id", withSession, requireUser, validate("param", uuidParam), async (c) => {
+    await deleteSmartList(currentUser(c).id, c.req.valid("param").id);
+    return c.json({ ok: true });
   })
   .get("/users/:username/screenshots", async (c) => {
     const ownerId = await userIdOf(c.req.param("username"));
@@ -162,6 +242,10 @@ export const libraryRoutes = new Hono<AppEnv>()
   )
   .delete("/screenshots/:id", withSession, requireUser, validate("param", uuidParam), async (c) => {
     const user = currentUser(c);
-    await deleteScreenshot(user.id, c.req.valid("param").id, user.role === "admin");
+    await deleteScreenshot(
+      user.id,
+      c.req.valid("param").id,
+      user.role === "admin" && (await isAdmin(user.id)),
+    );
     return c.json({ ok: true });
   });

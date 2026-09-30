@@ -1,15 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ExternalLinkIcon, RefreshCwIcon, UnlinkIcon } from "lucide-react";
+import { ExternalLinkIcon, KeyRoundIcon, RefreshCwIcon, UnlinkIcon } from "lucide-react";
 import { type FormEvent, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { FormField } from "@/components/auth-card";
 import { DateText, RelativeTime } from "@/components/time";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { FormField, SwitchField } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { api, unwrap } from "@/lib/api";
 import { errorMessage } from "@/lib/format";
 import { metaQuery } from "@/lib/meta";
@@ -109,15 +108,13 @@ function LinkedAccount({ provider }: { provider: Provider }) {
         )
       )}
       <div className="flex flex-wrap items-center justify-between gap-3">
-        {/* biome-ignore lint/a11y/noLabelWithoutControl: Switch label içinde */}
-        <label className="flex items-center gap-2 text-sm">
-          <Switch
-            checked={account.syncEnabled}
-            onCheckedChange={(value) => toggle.mutate(value)}
-            disabled={toggle.isPending}
-          />
-          {m.platform_auto_sync()}
-        </label>
+        <SwitchField
+          className="min-w-60 flex-1"
+          label={m.platform_auto_sync()}
+          checked={account.syncEnabled}
+          onCheckedChange={(value) => toggle.mutate(value)}
+          disabled={toggle.isPending}
+        />
         <Button
           size="sm"
           variant="ghost"
@@ -206,6 +203,7 @@ export function PsnCard() {
                     autoComplete="off"
                     spellCheck={false}
                     className="font-mono"
+                    leading={<KeyRoundIcon />}
                   />
                 </FormField>
                 <Button type="submit" className="w-fit" disabled={link.isPending || !npsso.trim()}>

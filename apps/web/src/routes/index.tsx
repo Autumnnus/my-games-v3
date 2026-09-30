@@ -16,6 +16,7 @@ import {
   formatRelative,
   statusLabel,
 } from "@/lib/format";
+import { useHydrated } from "@/lib/hydrated";
 import {
   feedQuery,
   type LibraryItem,
@@ -95,7 +96,7 @@ function SignedInHome({ username }: { username: string }) {
             <div className="flex items-baseline gap-4">
               <h2 className="text-[15px] font-bold">{m.salon_shelf()}</h2>
               <Link
-                to="/u/$username"
+                to="/u/$username/library"
                 params={{ username }}
                 className="text-foreground/70 hover:text-foreground text-sm"
               >
@@ -191,11 +192,14 @@ function Spotlight({ item }: { item: LibraryItem }) {
   const failLogo = useCallback(() => setLogoFailed(true), []);
   const game = item.game;
   const playing = item.status === "playing";
-  const when = item.lastPlayedAt
-    ? m.salon_last_played({ time: formatRelative(item.lastPlayedAt) })
-    : item.finishedAt
-      ? formatDate(item.finishedAt, "long")
-      : null;
+  // "3 gün önce" saate bağlı; ilk karede (sunucu + hydration) yazılmaz ki metinler uyuşsun.
+  const hydrated = useHydrated();
+  const when =
+    item.lastPlayedAt && hydrated
+      ? m.salon_last_played({ time: formatRelative(item.lastPlayedAt) })
+      : !item.lastPlayedAt && item.finishedAt
+        ? formatDate(item.finishedAt, "long")
+        : null;
   const rating = formatRating(item.rating);
 
   return (

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { StarIcon } from "lucide-react";
+import type { MouseEvent } from "react";
 import { GameCover } from "@/components/game-cover";
 import { StatusBadge } from "@/components/status-badge";
 import { DateText } from "@/components/time";
@@ -29,9 +30,17 @@ const statusDot: Record<string, string> = {
  * kapak ad taşısaydı sayfaya her girişte yüzlerce ayrı geçiş katmanı oluşur, kapaklar yanıp sönerdi.
  * Link kendi yönlendirmesinden önce bu işleyiciyi çalıştırır; ad eski görüntü alınmadan yerinde olur.
  */
-function flyCover(card: HTMLElement, entryId: string) {
-  const cover = card.querySelector<HTMLElement>("[data-cover]");
-  if (cover) cover.style.viewTransitionName = `cover-${entryId}`;
+function flyCover(event: MouseEvent<HTMLElement>, entryId: string) {
+  // Yeni sekmede açma (⌘/Ctrl/orta tık) sayfayı değiştirmez; ad verilirse ızgarada asılı kalırdı.
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)
+    return;
+  const cover = event.currentTarget.querySelector<HTMLElement>("[data-cover]");
+  if (!cover) return;
+  cover.style.viewTransitionName = `cover-${entryId}`;
+  // Geçiş bitince ad kaldırılır; sonraki bir geçişte bu kapak başlığın üstünden uçmasın.
+  setTimeout(() => {
+    cover.style.viewTransitionName = "";
+  }, 1000);
 }
 
 export function LibraryGrid({ items }: { items: LibraryItem[] }) {
@@ -43,7 +52,7 @@ export function LibraryGrid({ items }: { items: LibraryItem[] }) {
           to="/e/$id"
           params={{ id: item.id }}
           className="group animate-rise grid content-start gap-2.5"
-          onClick={(event) => flyCover(event.currentTarget, item.id)}
+          onClick={(event) => flyCover(event, item.id)}
           style={{
             animationDelay: `${Math.min(index, 21) * 22}ms`,
             ["--glow" as string]: item.game.accentColor ?? "rgba(0,0,0,0.6)",

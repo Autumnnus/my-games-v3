@@ -71,7 +71,11 @@ async function xbl<T>(
   });
   if (response.status === 401) throw new XboxTokenRejected();
   if (!response.ok)
-    throw new AppError("unavailable", `Xbox ${new URL(url).host} ${response.status}`);
+    throw new AppError(
+      "unavailable",
+      `Xbox ${new URL(url).host} ${response.status}`,
+      "xbox_unavailable",
+    );
   return (await response.json()) as T;
 }
 

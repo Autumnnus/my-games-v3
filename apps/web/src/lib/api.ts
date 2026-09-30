@@ -7,7 +7,7 @@ import { hc } from "hono/client";
  * Tüm veri Hono API'den gelir (desktop/Tauri de aynı API'yi kullanacak).
  * SSR sırasında istek ağa çıkmadan process içinde Hono'ya verilir; tarayıcıda normal fetch yapılır.
  */
-const apiFetch = createIsomorphicFn()
+export const apiFetch = createIsomorphicFn()
   .server(async (input: RequestInfo | URL, init?: RequestInit) => {
     const { serverFetch } = await import("./api.server");
     return serverFetch(input, init);
@@ -21,11 +21,14 @@ export const api = hc<AppType>("/", { fetch: apiFetch }).api.v1;
 export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
+  /** Sunucunun dilden bağımsız hata sebebi (ör. "entry_exists"); kullanıcı mesajı buradan seçilir. */
+  readonly reason: string | undefined;
 
-  constructor(status: number, code: string, message?: string) {
+  constructor(status: number, code: string, message?: string, reason?: string) {
     super(message ?? code);
     this.status = status;
     this.code = code;
+    this.reason = reason;
   }
 }
 
@@ -38,8 +41,12 @@ export async function unwrap<R extends { ok: boolean; status: number; json(): Pr
 ): Promise<Success<R>> {
   const resolved = await response;
   if (!resolved.ok) {
-    const body = (await resolved.json().catch(() => ({}))) as { error?: string; message?: string };
-    throw new ApiError(resolved.status, body.error ?? "error", body.message);
+    const body = (await resolved.json().catch(() => ({}))) as {
+      error?: string;
+      reason?: string;
+      message?: string;
+    };
+    throw new ApiError(resolved.status, body.error ?? "error", body.message, body.reason);
   }
   return (await resolved.json()) as Success<R>;
 }

@@ -1,7 +1,9 @@
 import { drizzleAdapter } from "@better-auth/drizzle-adapter";
 import { steamConfig, turnstileConfig } from "@my-games/core/config";
 import { db } from "@my-games/core/db";
+import { log } from "@my-games/core/log";
 import { queueUserMediaCleanup } from "@my-games/core/media";
+import { signupsOpen } from "@my-games/core/settings";
 import { schema } from "@my-games/db";
 import { APIError } from "better-auth/api";
 import { betterAuth } from "better-auth/minimal";
@@ -31,6 +33,20 @@ export const auth = betterAuth({
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: [env.APP_URL],
   database: drizzleAdapter(db, { provider: "pg", schema }),
+  // Uyarı ve hatalar sistem loglarına da düşer (yönetim paneli › Loglar).
+  logger: {
+    level: "warn",
+    log: (level, message, ...args) => {
+      if (level !== "warn" && level !== "error") return;
+      log({
+        level,
+        source: "auth",
+        event: level === "error" ? "auth_error" : "auth_warning",
+        message,
+        context: args.length ? { details: args.map(describe) } : undefined,
+      });
+    },
+  },
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
@@ -58,7 +74,8 @@ export const auth = betterAuth({
       // Push/e-posta bildirimlerinin dili (tarayıcıdan tespit edilir, dil değişince güncellenir).
       locale: { type: "string", required: false, input: true, defaultValue: "en" },
     },
-    deleteUser: { enabled: true },
+    // Kullanıcılar hesabını kendisi silemez; silme yalnızca yönetim panelinden, denetim kaydıyla yapılır.
+    deleteUser: { enabled: false },
   },
   account: {
     accountLinking: { enabled: true, trustedProviders: ["google", "discord"] },
@@ -97,6 +114,10 @@ export const auth = betterAuth({
       create: {
         // Sosyal girişte kullanıcı adı gelmez; profil URL'leri için otomatik üretilir, sonra değiştirilebilir.
         before: async (user, ctx) => {
+          // Yönetim panelinden kayıtlar kapatıldıysa hiçbir yoldan (e-posta, Google, Discord, Steam) hesap açılmaz.
+          if (!(await signupsOpen())) {
+            throw new APIError("FORBIDDEN", { message: "signups_closed" });
+          }
           // Steam kullanıcılarına üretilen adresler başkası tarafından e-postayla alınamasın (Steam id'leri herkese açık).
           if (isPlaceholderEmail(user.email) && ctx?.path !== "/steam/callback") {
             throw new APIError("BAD_REQUEST", { message: "Invalid email" });
@@ -138,6 +159,11 @@ export const auth = betterAuth({
     ...(steamConfig() ? [steamAuth()] : []),
   ],
 });
+
+function describe(value: unknown) {
+  if (value instanceof Error) return value.message;
+  return typeof value === "string" ? value.slice(0, 500) : JSON.stringify(value)?.slice(0, 500);
+}
 
 /** Steam gibi e-posta vermeyen sağlayıcılar için üretilen adresler (`…@steam.placeholder.invalid`). */
 export function isPlaceholderEmail(email: string) {

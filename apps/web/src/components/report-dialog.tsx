@@ -59,11 +59,19 @@ export function ReportButton(props: {
             rows={4}
             maxLength={1000}
             placeholder={m.report_reason()}
+            aria-label={m.report_reason()}
             required
+            showCount
+            className="min-h-32"
           />
-          <Button type="submit" className="w-fit" disabled={report.isPending}>
-            {m.report_submit()}
-          </Button>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
+              {m.action_cancel()}
+            </Button>
+            <Button type="submit" disabled={report.isPending}>
+              {m.report_submit()}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

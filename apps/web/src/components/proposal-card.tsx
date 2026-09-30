@@ -137,9 +137,9 @@ export function ProposalCard(props: {
     <article className="bg-card flex gap-3 rounded-[22px] border p-4">
       {props.onSelect && isBulkable(proposal) && !resolved && (
         // Radix'in gizli form input'u SSR'da stil uyuşmazlığı veriyor; seçim zaten JS ister.
-        <ClientOnly fallback={<span className="mt-1 size-4 shrink-0" />}>
+        <ClientOnly fallback={<span className="mt-0.5 size-5 shrink-0" />}>
           <Checkbox
-            className="mt-1"
+            className="mt-0.5"
             checked={props.selected}
             onCheckedChange={(checked) => props.onSelect?.(checked === true)}
             aria-label={game?.name ?? ""}

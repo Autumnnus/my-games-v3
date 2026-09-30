@@ -4,12 +4,15 @@ import { PencilIcon, StarIcon, Trash2Icon } from "lucide-react";
 import { type ReactNode, useCallback, useState } from "react";
 import { toast } from "sonner";
 import { EntryAchievements } from "@/components/achievements";
+import { RecapCard, ReviewInvite } from "@/components/assistant/entry-cards";
+import { useOptionalAssistant } from "@/components/assistant/provider";
 import { CommentThread } from "@/components/comments";
 import { EntryForm } from "@/components/entry-form";
 import { GameCover } from "@/components/game-cover";
 import { GameLogo } from "@/components/game-logo";
 import { LikeButton } from "@/components/like-button";
 import { CompletedStamp, RollingText } from "@/components/motion";
+import { PlayHistory } from "@/components/play-history";
 import { ReportButton } from "@/components/report-dialog";
 import { ScreenshotGrid, ScreenshotUploader } from "@/components/screenshots";
 import { Stage } from "@/components/stage";
@@ -35,6 +38,9 @@ import {
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/e/$id")({
+  // Başka bir kayda geçince sayfa baştan kurulur; düzenleme modu, logo hatası, beğeni sayacı gibi yerel
+  // durumlar önceki kayıttan taşınmaz.
+  remountDeps: ({ params }) => params,
   loader: async ({ context, params }) => {
     const data = await orNotFound(context.queryClient.ensureQueryData(entryQuery(params.id)));
     void context.queryClient.prefetchQuery(entryScreenshotsQuery(params.id));
@@ -86,6 +92,7 @@ function EntryPage() {
   const failLogo = useCallback(() => setLogoFailed(true), []);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const assistant = useOptionalAssistant();
 
   const invalidate = () =>
     Promise.all([
@@ -103,9 +110,25 @@ function EntryPage() {
       unwrap(api.library[":id"].$patch({ param: { id }, json: values })),
     onSuccess: async (_, values) => {
       setEditing(false);
-      // "Bitirdim" anı: kayıt yeni bitirildiyse damga vurulur, yoksa sade bir bildirim yeter.
-      if (values.status === "completed" && entry.status !== "completed") setStamp((n) => n + 1);
-      else toast.success(m.saved());
+      // "Bitirdim" anı: kayıt yeni bitirildiyse damga vurulur, yoksa sade bir bildirim yeter. İncelemesi
+      // yoksa damgadan sonra My games AI röportaja çağırır.
+      if (values.status === "completed" && entry.status !== "completed") {
+        setStamp((n) => n + 1);
+        if (!values.review && !entry.review && assistant?.enabled) {
+          setTimeout(
+            () =>
+              toast(m.ai_review_cta_title(), {
+                description: m.ai_review_cta_sub(),
+                action: {
+                  label: m.ai_review_cta_button(),
+                  onClick: () => assistant.openInterview(id),
+                },
+                duration: 10_000,
+              }),
+            1900,
+          );
+        }
+      } else toast.success(m.saved());
       await invalidate();
     },
     onError: (error) => toast.error(errorMessage(error)),
@@ -115,8 +138,13 @@ function EntryPage() {
     mutationFn: () => unwrap(api.library[":id"].$delete({ param: { id } })),
     onSuccess: async () => {
       toast.success(m.deleted());
-      await invalidate();
-      await navigate({ to: "/u/$username", params: { username: entry.user.username ?? "" } });
+      // Silinen kaydın sorgusu atılır; açıkken tazelenseydi 404 alıp yeniden denerken sayfa saniyelerce takılırdı.
+      queryClient.removeQueries({ queryKey: ["entry", id], exact: true });
+      await navigate({
+        to: "/u/$username/library",
+        params: { username: entry.user.username ?? "" },
+      });
+      void invalidate();
     },
     onError: (error) => toast.error(errorMessage(error)),
   });
@@ -243,13 +271,27 @@ function EntryPage() {
         </aside>
       </section>
 
+      {isOwner && (
+        <RecapCard
+          entry={{
+            id: entry.id,
+            status: entry.status,
+            lastPlayedAt: entry.lastPlayedAt,
+            game: { id: entry.game.id, name: entry.game.name, accentColor: entry.game.accentColor },
+          }}
+        />
+      )}
+
       <section className="grid gap-3">
         <h2 className="text-lg font-bold">{m.field_review()}</h2>
+        {!entry.review && isOwner && entry.status === "completed" && (
+          <ReviewInvite entryId={entry.id} accent={entry.game.accentColor} />
+        )}
         {entry.review ? (
           <p className="text-foreground/90 max-w-3xl text-lg leading-relaxed whitespace-pre-line">
             {entry.review}
           </p>
-        ) : (
+        ) : isOwner && entry.status === "completed" && assistant?.enabled ? null : (
           <p className="text-muted-foreground text-sm">{m.entry_no_review()}</p>
         )}
         <div className="-ml-2 flex items-center">
@@ -266,6 +308,8 @@ function EntryPage() {
       </section>
 
       <EntryAchievements entryId={id} />
+
+      <PlayHistory entryId={id} isOwner={isOwner} />
 
       <section className="grid gap-3">
         <div className="flex flex-wrap items-center justify-between gap-2">

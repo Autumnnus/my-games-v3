@@ -2,10 +2,12 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import {
   HistoryIcon,
   InboxIcon,
-  LibraryIcon,
+  LayoutGridIcon,
   LogOutIcon,
   SettingsIcon,
   ShieldIcon,
+  UserRoundIcon,
+  UsersIcon,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -25,6 +27,7 @@ import { m } from "@/paraglide/messages";
 export function UserMenu({ user }: { user: CurrentUser }) {
   const refreshSession = useRefreshSession();
   const navigate = useNavigate();
+  const username = user.displayUsername ?? user.username;
 
   async function signOut() {
     await authClient.signOut();
@@ -33,31 +36,45 @@ export function UserMenu({ user }: { user: CurrentUser }) {
   }
 
   return (
-    <DropdownMenu>
+    // modal={false}: menü açıkken sayfa kilitlenmez, kaydırma çubuğu kaybolup sabit öğeler kaymaz ve menü
+    // dışına yapılan ilk tıklama yutulmaz.
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="rounded-full">
+        <Button variant="ghost" size="icon" className="rounded-full" aria-label={user.name}>
           <Avatar className="size-8">
             {user.image && <AvatarImage src={avatarThumb(user.image)} alt="" />}
             <AvatarFallback>{user.name.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-60">
         <DropdownMenuLabel className="font-normal">
-          <div className="font-medium">{user.name}</div>
-          {user.displayUsername && (
-            <div className="text-muted-foreground text-xs">@{user.displayUsername}</div>
-          )}
+          <div className="truncate font-medium">{user.name}</div>
+          {username && <div className="text-muted-foreground truncate text-xs">@{username}</div>}
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {user.displayUsername && (
+        {username && (
+          <DropdownMenuItem asChild>
+            <Link to="/u/$username" params={{ username }}>
+              <UserRoundIcon />
+              {m.nav_profile()}
+            </Link>
+          </DropdownMenuItem>
+        )}
+        {username && (
           <DropdownMenuItem asChild className="md:hidden">
-            <Link to="/u/$username" params={{ username: user.displayUsername }}>
-              <LibraryIcon />
+            <Link to="/u/$username/library" params={{ username }}>
+              <LayoutGridIcon />
               {m.nav_library()}
             </Link>
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem asChild className="md:hidden">
+          <Link to="/users">
+            <UsersIcon />
+            {m.nav_users()}
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuItem asChild className="md:hidden">
           <Link to="/inbox">
             <InboxIcon />
@@ -84,6 +101,7 @@ export function UserMenu({ user }: { user: CurrentUser }) {
             {m.nav_settings()}
           </Link>
         </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => void signOut()}>
           <LogOutIcon />
           {m.nav_sign_out()}

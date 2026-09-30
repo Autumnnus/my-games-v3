@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { AtSignIcon } from "lucide-react";
 import type { FormEvent } from "react";
 import * as z from "zod/mini";
 import { StatTile } from "@/components/charts";
@@ -109,17 +110,29 @@ function ComparePage() {
           name="a"
           defaultValue={search.a}
           placeholder={m.compare_first()}
-          className="max-w-48"
+          aria-label={m.compare_first()}
+          autoComplete="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          leading={<AtSignIcon />}
+          className="max-w-56"
           required
         />
         <Input
           name="b"
           defaultValue={search.b}
           placeholder={m.compare_second()}
-          className="max-w-48"
+          aria-label={m.compare_second()}
+          autoComplete="off"
+          autoCapitalize="none"
+          spellCheck={false}
+          leading={<AtSignIcon />}
+          className="max-w-56"
           required
         />
-        <Button type="submit">{m.compare_submit()}</Button>
+        <Button type="submit" className="h-11 px-5">
+          {m.compare_submit()}
+        </Button>
       </form>
 
       {query.error && (

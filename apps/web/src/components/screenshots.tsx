@@ -20,12 +20,14 @@ export function ScreenshotGrid(props: {
   canDelete?: (screenshot: ScreenshotWithAuthor) => boolean;
   showAuthor?: boolean;
 }) {
+  // Kapanırken son görüntü yerinde kalır (çıkış animasyonu boyunca pencere boşalmasın); `open` ayrı tutulur.
   const [selected, setSelected] = useState<ScreenshotWithAuthor | null>(null);
+  const [open, setOpen] = useState(false);
   const queryClient = useQueryClient();
   const remove = useMutation({
     mutationFn: (id: string) => unwrap(api.screenshots[":id"].$delete({ param: { id } })),
     onSuccess: async () => {
-      setSelected(null);
+      setOpen(false);
       toast.success(m.deleted());
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["screenshots"] }),
@@ -51,7 +53,10 @@ export function ScreenshotGrid(props: {
           <button
             type="button"
             key={screenshot.id}
-            onClick={() => setSelected(screenshot)}
+            onClick={() => {
+              setSelected(screenshot);
+              setOpen(true);
+            }}
             className="bg-muted aspect-video overflow-hidden rounded-md border"
           >
             {screenshot.thumbUrl && (
@@ -65,7 +70,7 @@ export function ScreenshotGrid(props: {
           </button>
         ))}
       </div>
-      <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-[min(96vw,1400px)] p-2 sm:max-w-[min(96vw,1400px)]">
           <DialogTitle className="sr-only">{selected?.caption ?? m.game_screenshots()}</DialogTitle>
           {selected?.url && (

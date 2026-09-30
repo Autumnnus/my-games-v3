@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { type FormEvent, useCallback, useState } from "react";
 import { AuthCard, FormField } from "@/components/auth-card";
@@ -6,6 +7,7 @@ import { Turnstile, useTurnstileRequired } from "@/components/turnstile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { metaQuery } from "@/lib/meta";
@@ -15,12 +17,14 @@ export const Route = createFileRoute("/register")({
   beforeLoad: ({ context }) => {
     if (context.user) throw redirect({ to: "/" });
   },
-  loader: ({ context }) => context.queryClient.ensureQueryData(metaQuery),
+  // Kayıtların açık olup olmadığı her girişte taze okunur (yönetim panelinden değişebilir).
+  loader: ({ context }) => context.queryClient.fetchQuery({ ...metaQuery, staleTime: 0 }),
   head: () => ({ meta: [{ title: `${m.sign_up_title()} · ${m.app_name()}` }] }),
   component: RegisterPage,
 });
 
 function RegisterPage() {
+  const meta = useQuery(metaQuery);
   const [captcha, setCaptcha] = useState<string | null>(null);
   const captchaRequired = useTurnstileRequired();
   const onCaptcha = useCallback((token: string | null) => setCaptcha(token), []);
@@ -58,6 +62,16 @@ function RegisterPage() {
     </>
   );
 
+  if (meta.data?.signupsOpen === false) {
+    return (
+      <AuthCard title={m.sign_up_title()} footer={footer}>
+        <Alert>
+          <AlertDescription>{m.sign_up_closed()}</AlertDescription>
+        </Alert>
+      </AuthCard>
+    );
+  }
+
   if (sentTo) {
     return (
       <AuthCard title={m.sign_up_title()} footer={footer}>
@@ -71,7 +85,9 @@ function RegisterPage() {
   return (
     <AuthCard title={m.sign_up_title()} footer={footer}>
       <SocialButtons callbackURL="/" />
-      <form className="grid gap-4" onSubmit={onSubmit}>
+      {/* method="post": sayfa henüz etkileşimli değilken (hydration öncesi) Enter'a basılırsa tarayıcı formu
+          kendisi gönderir; GET olsaydı şifre adres çubuğuna ve geçmişe yazılırdı. */}
+      <form method="post" className="grid gap-4" onSubmit={onSubmit}>
         <FormField label={m.field_name()}>
           <Input name="name" autoComplete="name" required maxLength={64} />
         </FormField>
@@ -89,13 +105,7 @@ function RegisterPage() {
           <Input name="email" type="email" autoComplete="email" required />
         </FormField>
         <FormField label={m.field_password()} hint={m.field_password_hint()}>
-          <Input
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={8}
-          />
+          <PasswordInput name="password" autoComplete="new-password" required minLength={8} />
         </FormField>
         {error && (
           <Alert variant="destructive">
@@ -103,7 +113,7 @@ function RegisterPage() {
           </Alert>
         )}
         <Turnstile onToken={onCaptcha} />
-        <Button type="submit" disabled={pending || (captchaRequired && !captcha)}>
+        <Button type="submit" size="lg" disabled={pending || (captchaRequired && !captcha)}>
           {m.sign_up_submit()}
         </Button>
       </form>

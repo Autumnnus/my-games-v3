@@ -26,7 +26,7 @@ export async function findUserByUsername(username: string) {
 /** Profil sayfası başlığı: kişi, özet sayılar ve Steam durumu. */
 export async function getProfile(username: string) {
   const found = await findUserByUsername(username);
-  if (!found) notFound("Kullanıcı bulunamadı");
+  if (!found) notFound("Kullanıcı bulunamadı", "user_not_found");
 
   const [[summary], [steam]] = await Promise.all([
     db

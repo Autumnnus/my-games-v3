@@ -55,19 +55,32 @@ function WrappedPage() {
         <p className="text-muted-foreground py-8">{m.wrapped_empty()}</p>
       ) : (
         <>
-          <WrappedStory data={data} name={profile.data?.user.name ?? username} />
+          <WrappedStory key={year} data={data} name={profile.data?.user.name ?? username} />
           <h3 className="font-display pt-6 text-xl font-medium">{m.wrapped_details()}</h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <StatTile label={m.wrapped_finished()} value={data.finishedCount} />
             <StatTile
-              label={m.wrapped_played()}
-              value={data.playedMinutes ? formatPlaytime(data.playedMinutes) : m.unknown()}
+              label={
+                data.estimatedMinutes > 0
+                  ? `${m.wrapped_played()} · ${m.estimated()}`
+                  : m.wrapped_played()
+              }
+              value={
+                data.playedMinutes
+                  ? `${data.estimatedMinutes > 0 ? "~" : ""}${formatPlaytime(data.playedMinutes)}`
+                  : m.unknown()
+              }
             />
             <StatTile label={m.wrapped_days()} value={data.playedDays || m.unknown()} />
             <StatTile label={m.wrapped_added()} value={data.addedCount} />
           </div>
           {data.playedMinutes === 0 && (
             <p className="text-muted-foreground text-sm">{m.wrapped_no_sessions()}</p>
+          )}
+          {data.estimatedMinutes > 0 && (
+            <p className="text-muted-foreground text-sm">
+              {m.wrapped_estimated_note({ time: formatPlaytime(data.estimatedMinutes) })}
+            </p>
           )}
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -98,7 +111,11 @@ function WrappedPage() {
             {data.topGames.length > 0 && (
               <ChartCard title={m.wrapped_top_games()}>
                 <BarList
-                  items={data.topGames.map((game) => ({ label: game.name, value: game.minutes }))}
+                  items={data.topGames.map((game) => ({
+                    label: game.name,
+                    value: game.minutes,
+                    detail: game.estimatedMinutes > 0 ? m.estimated() : undefined,
+                  }))}
                   format={formatPlaytime}
                 />
               </ChartCard>

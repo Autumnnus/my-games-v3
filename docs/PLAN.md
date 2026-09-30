@@ -158,6 +158,44 @@ kuyruk rate-limit'e göre backoff. Steam oturum geçmişi vermez; süre farklar�
 - Gereksinim: Steam Web API key; kullanıcının profili ve oyun detayları public olmalı.
 - "Powered by Steam" ibaresi ve IGDB attribution gösterilir.
 
+### Takipten önceki oynama geçmişi (tahmin)
+
+Platformlar oturum geçmişi vermez: ilk gözlemdeki süre (ve elle/eski sistemden gelen süre) hiçbir güne yazılmaz.
+`core/estimates` bu süreyi takibin başladığı andan (ufuk) önceye dağıtır; ısı haritası, yıllık istatistik ve Wrapped
+eski yılları da gösterir. İlke: **AI bilgi verir, kod hesaplar.**
+
+- **Bütçe** = kaydın görünen toplam süresi − gerçek oturumlar; tahmin + oturumlar her zaman kütüphanedeki toplamdır.
+  **Ufuk** = başlığın ilk gözlemi (`platform_snapshots.baseline_at`) ve ilk gerçek oturum; tahmin asla ufuktan sonraya
+  yazılmaz, gerçek oturumlarla çakışmaz.
+- **Kanıt** (`evidence.ts`): ekran görüntüsü ve başarım günleri (aynı dakikadaki toplu açılımlar zayıf), bitirme ve son
+  oynama (ilk gözlemdeki değer dondurulur), eklenme günü (toplu içe aktarım günleri hariç), çıkış tarihi, IGDB bitirme
+  süresi, tür/mod.
+- **Plan** (`planner.ts`): kanıt günleri kümelenir, her küme süresini taşıyacak kadar genişletilir; yıllara yayılan
+  oyunlarda düzenli bir arka plan fazı eklenir. ≥5 saatlik ve güveni < 0,5 olan oyunlarda AI (`ai.ts`) yalnızca oyun
+  bilgisini verir: tür (araç → dağıtılmaz, kampanya, yıllara yayılan), gerçek çıkış tarihi, saatlerin gittiği dönemler.
+  İpucu planla saklanır; kurallar ya da kanıt değişince plan AI'ya tekrar sorulmadan yeniden kurulur.
+- **Sentez** (`synthesize.ts`): tohumlu (kayıt kimliği + üretici sürümü) ve deterministik; Markov zinciriyle seri halinde
+  aktif günler, uzun fazlarda aylık dalga, kişisel haftalık ritim, toplam tam bütçe. Kullanıcı düzeyinde uzlaştırma: aylık
+  yük sınırını aşan aylar geriye yayılır (önce yıllara yayılan oyunlar kayar), günlük tavan aşılmaz.
+- **Kayıt**: `play_estimate_plans` (kayıt başına plan + kanıt), `play_estimate_days` (gün × kayıt), `play_estimate_builds`
+  (derleme özeti). Kayıt silinince tahmini de gider. Worker: platform sync'i bitince (`estimates.requested`) ve 20 dakikada
+  bir değişen kullanıcılar için `estimates.rebuild-user`. Elle: `pnpm --filter @my-games/core estimates:rebuild -- --user
+  <ad> [--no-ai] [--force] [--ask-ai]`.
+- **İşaret**: API tahmin olan kısmı ayrı döner (`estimatedMinutes`); ısı haritasında taralı, Wrapped'da "~" ve "Tahmini".
+  Akış, bildirim, karşılaştırma ve site geneli istatistikler tahmini kullanmaz.
+- **Kayıt sayfası** (`components/play-history.tsx`): ay ay (üç yıldan uzunsa yıl yıl) gerçek + taralı tahmini süre,
+  tahminin kaynağı (kurallar / AI / kullanıcı), güveni ve AI notu. Sahip "Tarihleri düzelt" ile dönemleri (başlangıç,
+  bitiş, yoğun / düzenli / ara sıra) ya da "bu bir oyun değil"i girer; pay dönem uzunluğu × yoğunluktan hesaplanır,
+  plan `planner = user` olarak kilitlenir (AI ve kurallar değiştirmez), takip başladıktan sonrası seçilemez. "Tahmine
+  dön" saklanan AI ipucuyla planı yeniden kurar. API: `GET|PUT|DELETE /library/:id/play-history`.
+- **"Geçmişini netleştir" destesi** (`components/play-history-deck.tsx`, kendi istatistik sayfandaki takvimden): çok
+  saatli ve kanıtı az oyunlar (öncelik = süre × (1 − kanıt güveni); AI'nın kendi güvenine bakılmaz, eşik 0,6) birer birer
+  sorulur: "bir kerede" (yıl, biliniyorsa ay), "yıllara yayarak" (yıllar), "tahmin doğru", "oyun değil", "atla". Cevap
+  kullanıcı planı olarak kilitlenir; geometriyi kod kurar (`planFromAnswer`). API: `GET /me/play-history/questions`,
+  `POST /library/:id/play-history/answer`. AI gerekmez; asistan sohbetine araç olarak bağlanması sonraki iş.
+- Sonraki adımlar: görünürlük tercihi (herkese / yalnızca ben / kapalı), asistan sohbetinde "Witcher 3'ü 2016 yazında
+  bitirdim" gibi cümlelerden aynı cevabı üreten onaylı araç, gerçek oturumlarla geriye dönük doğruluk ölçümü.
+
 ## 8. Sosyal: akış, beğeni, yorum, bildirim
 
 - Aktivite türleri: başladı, bitirdi, bıraktı, puanladı, review yazdı, backlog/wishlist'e ekledi, süre eşiği
@@ -179,6 +217,15 @@ bağlam yönetimi. İlk tool'lar salt-okuma (kütüphane arama, istatistik, oyun
 Sohbetler Postgres'te; her adım ve tool çağrısı loglanır. Kullanıcı başına günlük kota.
 
 **Büyük geliştirme (Faz 7):** yazma tool'ları (öneri onay kutusuna düşer), RAG, hafıza.
+
+**My games AI (Faz 7a, 2026-09-29):** sayfanın üstünde panel (⌘J, sabitlenebilir), `/ai` tam ekran,
+sayfa bağlamı, `@`/`/`, Sor/Yap (yazma araçları AI SDK tool onayıyla; kart + geri al), kart cevaplar,
+akıllı listeler, "Ne oynasam?", oyun sonrası röportaj, "Kaldığın yer". Sağlayıcıdan bağımsız anahtar
+havuzu + yedek model zinciri. Ayrıntı: [notes/ai.md](notes/ai.md).
+
+**Yönetim tarafı (2026-09-30):** her model çağrısı iz olarak kaydedilir (adımlar, araçlar, süreler,
+anahtar değişimleri, token'lar; içerik değil). Maliyet fiyat tablosuyla okuma anında hesaplanır, kişi başı
+sınır ve AI'yı kapatma panelden. Ayrıntı: [notes/admin.md](notes/admin.md).
 
 **RAG:** ayrı vektör DB yok; aynı Postgres'te pgvector (yetki filtresi ve join'ler aynı sorguda).
 `documents` + `chunks`, boyutu düşürülmüş embedding, HNSW index. Hibrit arama (Postgres FTS TR/EN + vektör,
@@ -232,7 +279,8 @@ Kaynak: `my-games-old/old_db_data/kadir_games.json` (98 oyun, kullanıcı `vecto
 | 4 | Sosyal: global akış, beğeni/yorum, bildirimler (uygulama içi + push), moderasyon, Turnstile | Tamam |
 | 5 | İstatistikler, karşılaştırma, yıl özeti | Tamam |
 | 6 | AI temeli: agent, okuma tool'ları, kota | Tamam |
-| 7 | AI büyük geliştirme: RAG, yazma tool'ları, hafıza | Altyapı hazır ([rag.md](notes/rag.md)) |
+| 7 | AI büyük geliştirme: RAG, yazma tool'ları, hafıza | Asistan + yazma tool'ları tamam ([ai.md](notes/ai.md)); RAG altyapısı hazır ([rag.md](notes/rag.md)) |
+| 7b | Yönetim paneli: kullanıcılar ve veri silme, AI izleri ve maliyet, kotalar, sistem durumu, loglar, denetim kaydı ([admin.md](notes/admin.md)) | Tamam |
 | 8 | Desktop (Tauri) | — |
 
 ### Faz 0 notları

@@ -72,6 +72,49 @@ export const playSessionSources = [
 ] as const;
 export type PlaySessionSource = (typeof playSessionSources)[number];
 
+/**
+ * Takipten önceki oynama geçmişinin tahmin deseni. `excluded`: süre oyun değil (arka planda çalışan araç,
+ * rölanti), günlere dağıtılmaz.
+ */
+export const estimatePatterns = ["sampled", "campaign", "episodic", "steady", "excluded"] as const;
+export type EstimatePattern = (typeof estimatePatterns)[number];
+
+/** Bir tahmin fazının yoğunluğu: günlerin ne kadarında ve ne kadar oynandığı. */
+export const estimateIntensities = ["binge", "regular", "casual"] as const;
+export type EstimateIntensity = (typeof estimateIntensities)[number];
+
+/** Tahmin planı: bütçenin (dakika) hangi tarih aralıklarına hangi payla dağıtılacağı. */
+export type EstimatePhase = {
+  from: string;
+  to: string;
+  share: number;
+  intensity: EstimateIntensity;
+};
+/**
+ * AI'nın bir oyun için verdiği bilgi: türü, gerçek çıkış tarihi, saatlerin gittiği dönemler. Planla birlikte
+ * saklanır; kurallar ya da kanıt değişince plan bundan yeniden kurulur (AI'ya tekrar sorulmaz).
+ */
+export type EstimateHint = {
+  kind: "tool" | "short" | "campaign" | "long_running";
+  releaseDate: string | null;
+  periods: Array<{ from: string; to: string }>;
+  confidence: number;
+  note: string | null;
+};
+
+export type EstimatePlan = {
+  pattern: EstimatePattern;
+  phases: EstimatePhase[];
+  confidence: number;
+  /** Kullanıcıya gösterilebilecek kısa açıklama (AI planlarında). */
+  note?: string | null;
+  /** Kanıt penceresinden dar etkin pencere (ör. AI'nın bildiği çıkış tarihi); yoksa kanıt penceresi. */
+  window?: { from: string; to: string };
+  /** AI planlarında planın kurulduğu ipucu. */
+  hint?: EstimateHint;
+};
+export type EstimatePlanner = "heuristic" | "ai" | "user";
+
 export const screenshotKinds = ["upload", "external", "steam"] as const;
 
 /** Kütüphane ve başarımları senkronize edilen platformlar. */

@@ -1,5 +1,13 @@
 import { AppError } from "@my-games/core/errors";
-import { compareUsers, globalStats, userStats, wrapped, wrappedYears } from "@my-games/core/stats";
+import {
+  activityHeatmap,
+  compareUsers,
+  globalStats,
+  heatmapYears,
+  userStats,
+  wrapped,
+  wrappedYears,
+} from "@my-games/core/stats";
 import { findUserByUsername } from "@my-games/core/users";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -21,12 +29,27 @@ let globalCache: { at: number; value: Awaited<ReturnType<typeof globalStats>> } 
 
 export const statsRoutes = new Hono<AppEnv>()
   .use("/users/:username/stats", statsLimit)
+  .use("/users/:username/heatmap", statsLimit)
   .use("/users/:username/wrapped/*", statsLimit)
   .use("/stats/*", statsLimit)
   .get("/users/:username/stats", async (c) => {
     const owner = await userIdOf(c.req.param("username"));
     return c.json(await userStats(owner.id));
   })
+  // Isı haritası (yıl verilmezse son 12 ay). Takipten önceki tahmin günleri `estimatedMinutes` ile işaretli.
+  .get(
+    "/users/:username/heatmap",
+    validate("query", z.object({ year: z.coerce.number().int().min(1990).max(2100).optional() })),
+    async (c) => {
+      const owner = await userIdOf(c.req.param("username"));
+      const { year } = c.req.valid("query");
+      const [days, years] = await Promise.all([
+        activityHeatmap(owner.id, year),
+        heatmapYears(owner.id),
+      ]);
+      return c.json({ year: year ?? null, days, years });
+    },
+  )
   .get("/users/:username/wrapped", async (c) => {
     const owner = await userIdOf(c.req.param("username"));
     return c.json({ years: await wrappedYears(owner.id) });

@@ -99,6 +99,11 @@
   --animate-rise: rise 0.7s var(--ease-salon) backwards;
   --animate-ping-slow: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 
+  --animate-orbit: orbit 14s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pop: pop 0.25s var(--ease-salon) both;
+  --animate-typing: typing 1.2s ease-in-out infinite;
+
   --animate-roll-in: roll-in 0.55s var(--ease-salon) both;
   --animate-roll-out: roll-out 0.55s var(--ease-salon) both;
   --animate-stamp: stamp 1.9s var(--ease-salon) both;
@@ -108,6 +113,33 @@
     from {
       opacity: 0;
       translate: 0 16px;
+    }
+  }
+  /* My games AI: kürenin uydusu, hafif süzülme, açılan menüler ve "yazıyor" noktaları. */
+  @keyframes orbit {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  @keyframes float {
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+  @keyframes pop {
+    from {
+      opacity: 0;
+      transform: translateY(6px) scale(0.98);
+    }
+  }
+  @keyframes typing {
+    0%,
+    80%,
+    100% {
+      opacity: 0.25;
+    }
+    40% {
+      opacity: 1;
     }
   }
   /* Yıl özeti: aktif karenin ilerleme çubuğu. */
@@ -170,6 +202,25 @@
   }
 }
 
+/* My games AI küresi: renk tonları `orbColors`'tan gelir. */
+.orb {
+  background: radial-gradient(
+    circle at 34% 30%,
+    #fff 0%,
+    var(--orb-0) 16%,
+    var(--orb-1) 56%,
+    var(--orb-2) 100%
+  );
+  box-shadow: inset 0 -4px 10px rgb(0 0 0 / 25%);
+}
+
+/* Asistan paneli geniş ekranda sabitlenince sayfa sağdan onun genişliği kadar daralır (Cloudflare gibi). */
+@media (min-width: 1280px) {
+  html[data-assistant="docked"] .app-shell {
+    padding-right: 440px;
+  }
+}
+
 /* Cam yüzey: sahnenin üstünde duran paneller (menü, canlı durum, kartlar). */
 @utility glass {
   background-color: rgb(18 19 25 / 58%);
@@ -192,6 +243,11 @@
   }
 }
 
+/* Bildirimler (sonner, `unstyled`): yığın kapalıyken arkadaki kartların yazısı öndekinin altından görünmesin. */
+[data-sonner-toast][data-expanded="false"][data-front="false"] > * {
+  opacity: 0;
+}
+
 /* Sayfa geçişleri (TanStack Router `defaultViewTransition`): kısa bir kararma, kapaklar yerinde uçar. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
@@ -200,6 +256,24 @@
 ::view-transition-group(*) {
   animation-duration: 0.45s;
   animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+/* Geçiş sürerken sayfanın anlık görüntüsü tıklamaları yutmasın (başlık "tıklanmıyor" hissi buradan geliyordu). */
+:root::view-transition {
+  pointer-events: none;
+}
+/* Başlık ve telefon sekme çubuğu geçişte yerinde durur (sönüp yanmaz) ve uçan kapakların üstünde kalır. */
+::view-transition-group(site-header),
+::view-transition-group(tab-bar) {
+  z-index: 100;
+  animation: none;
+}
+::view-transition-old(site-header),
+::view-transition-old(tab-bar) {
+  display: none;
+}
+::view-transition-new(site-header),
+::view-transition-new(tab-bar) {
+  animation: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

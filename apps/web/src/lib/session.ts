@@ -24,8 +24,9 @@ export function useRefreshSession() {
   return async () => {
     // SSR'dan hydrate edilen sorgunun client'ta queryFn'i olmaz; `invalidateQueries` bu yüzden
     // yeniden çekemez. `fetchQuery` sorgu tanımını da verdiği için her durumda taze veri getirir.
-    await queryClient.fetchQuery({ ...sessionQuery, staleTime: 0 });
+    const user = await queryClient.fetchQuery({ ...sessionQuery, staleTime: 0 });
     await router.invalidate();
+    return user;
   };
 }
 

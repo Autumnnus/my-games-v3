@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { LanguagePicker } from "@/components/language-picker";
 import { Stage } from "@/components/stage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -21,17 +22,12 @@ export function AuthCard(props: {
       {props.footer && (
         <div className="text-muted-foreground mt-4 text-center text-sm">{props.footer}</div>
       )}
+      {/* Giriş yapmadan dil seçilebilir; seçim giriş yapılınca hesaba yazılır. */}
+      <div className="mt-8 flex justify-center">
+        <LanguagePicker signedIn={false} />
+      </div>
     </div>
   );
 }
 
-export function FormField(props: { label: string; hint?: string; children: ReactNode }) {
-  return (
-    // biome-ignore lint/a11y/noLabelWithoutControl: kontrol children olarak geliyor
-    <label className="grid gap-2 text-sm">
-      <span className="font-medium">{props.label}</span>
-      {props.children}
-      {props.hint && <span className="text-muted-foreground text-xs">{props.hint}</span>}
-    </label>
-  );
-}
+export { FormField } from "@/components/ui/field";

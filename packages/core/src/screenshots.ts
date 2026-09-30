@@ -25,13 +25,17 @@ async function assertLinkLimit(userId: string, adding: number) {
     .from(screenshots)
     .where(and(eq(screenshots.userId, userId), sql`${screenshots.kind} <> 'upload'`));
   if (count + adding > MAX_LINKED_SCREENSHOTS) {
-    throw new AppError("quota_exceeded", "Link ile eklenebilecek screenshot sınırına ulaştın");
+    throw new AppError(
+      "quota_exceeded",
+      "Link ile eklenebilecek screenshot sınırına ulaştın",
+      "screenshot_link_limit",
+    );
   }
 }
 
 async function ownedEntry(userId: string, entryId: string) {
   const [entry] = await db.select().from(libraryEntries).where(eq(libraryEntries.id, entryId));
-  if (!entry) notFound("Kayıt bulunamadı");
+  if (!entry) notFound("Kayıt bulunamadı", "entry_not_found");
   if (entry.userId !== userId) forbidden();
   return entry;
 }
@@ -111,7 +115,8 @@ export async function addExternalScreenshot(
   const entry = await ownedEntry(userId, entryId);
   await assertLinkLimit(userId, 1);
   const url = new URL(input.url);
-  if (url.protocol !== "https:") throw new AppError("invalid", "Sadece https bağlantılar");
+  if (url.protocol !== "https:")
+    throw new AppError("invalid", "Sadece https bağlantılar", "https_only");
   const [row] = await db
     .insert(screenshots)
     .values({

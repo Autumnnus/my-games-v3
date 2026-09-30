@@ -4,7 +4,16 @@ import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { db } from "./db";
 import { aliasedPlaytime, entryPlaytime } from "./playtime";
 
-const { libraryEntries: e, games: g, gameTerms, terms, playSessions, screenshots, user } = schema;
+const {
+  libraryEntries: e,
+  games: g,
+  gameTerms,
+  terms,
+  playSessions,
+  playEstimateDays,
+  screenshots,
+  user,
+} = schema;
 
 /** Toplam süre = elle girilen + platformlar. */
 const playtime = entryPlaytime;
@@ -55,23 +64,45 @@ async function byTerm(
     .limit(limit);
 }
 
-/** Son `days` gün için gün başına oynama süresi (oturumlardan). */
-export async function activityHeatmap(userId: string, days = 371) {
-  const rows = await db
-    .select({
-      day: sql<string>`to_char(date_trunc('day', ${playSessions.endedAt}), 'YYYY-MM-DD')`,
-      minutes: sql<number>`sum(${playSessions.durationMin})::int`,
-    })
-    .from(playSessions)
-    .where(
-      and(
-        eq(playSessions.userId, userId),
-        sql`${playSessions.endedAt} >= now() - make_interval(days => ${days})`,
-      ),
-    )
-    .groupBy(sql`1`)
-    .orderBy(sql`1`);
-  return rows;
+export type HeatmapDay = { day: string; minutes: number; estimatedMinutes: number };
+
+/**
+ * Gün başına oynama süresi. `minutes` o günün toplamıdır; `estimatedMinutes` bunun takipten önceki
+ * tahmin olan kısmı (bkz. core/estimates) ve arayüz bu günleri ayrıca işaretler. Yıl verilmezse son 371 gün.
+ */
+export async function activityHeatmap(userId: string, year?: number): Promise<HeatmapDay[]> {
+  const [start, end] = year
+    ? [sql`${`${year}-01-01`}::date`, sql`${`${year + 1}-01-01`}::date`]
+    : [sql`current_date - 371`, sql`current_date + 1`];
+  const rows = await db.execute<HeatmapDay>(sql`
+    select to_char(day, 'YYYY-MM-DD') as day, sum(minutes)::int as minutes,
+      sum(estimated)::int as "estimatedMinutes"
+    from (
+      select date_trunc('day', ${playSessions.endedAt})::date as day,
+        ${playSessions.durationMin} as minutes, 0 as estimated
+      from ${playSessions}
+      where ${playSessions.userId} = ${userId}
+        and ${playSessions.endedAt} >= ${start} and ${playSessions.endedAt} < ${end}
+      union all
+      select ${playEstimateDays.day}, ${playEstimateDays.minutes}, ${playEstimateDays.minutes}
+      from ${playEstimateDays}
+      where ${playEstimateDays.userId} = ${userId}
+        and ${playEstimateDays.day} >= ${start} and ${playEstimateDays.day} < ${end}
+    ) plays
+    group by 1 order by 1
+  `);
+  return rows.rows;
+}
+
+/** Isı haritasında gösterilecek veri olan yıllar (gerçek oturum ya da tahmin), yeniden eskiye. */
+export async function heatmapYears(userId: string) {
+  const rows = await db.execute<{ year: number }>(sql`
+    select distinct extract(year from ended_at)::int as year from ${playSessions} where user_id = ${userId}
+    union
+    select distinct extract(year from day)::int from ${playEstimateDays} where user_id = ${userId}
+    order by year desc
+  `);
+  return rows.rows.map((row) => row.year);
 }
 
 export async function userStats(userId: string) {
@@ -111,66 +142,75 @@ export async function userStats(userId: string) {
     byTerm("company", "publisher", userId),
   ]);
 
-  const [releaseYears, ratings, completions, topPlayed, backlog, heatmap, [screenshotCount]] =
-    await Promise.all([
-      db
-        .select({
-          key: sql<string>`extract(year from ${g.releaseDate})::int::text`,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(e)
-        .innerJoin(g, eq(g.id, e.gameId))
-        .where(and(eq(e.userId, userId), isNotNull(g.releaseDate)))
-        .groupBy(sql`1`)
-        .orderBy(sql`1`),
-      db
-        .select({
-          key: sql<string>`floor(${e.rating} / 10)::int::text`,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(e)
-        .where(and(eq(e.userId, userId), isNotNull(e.rating)))
-        .groupBy(sql`1`)
-        .orderBy(sql`min(${e.rating})`),
-      db
-        .select({
-          key: sql<string>`extract(year from ${e.finishedAt})::int::text`,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(e)
-        .where(and(eq(e.userId, userId), eq(e.status, "completed"), isNotNull(e.finishedAt)))
-        .groupBy(sql`1`)
-        .orderBy(sql`1`),
-      db
-        .select({
-          entryId: e.id,
-          name: g.name,
-          slug: g.slug,
-          coverImageId: g.coverImageId,
-          coverUrl: g.coverUrl,
-          playtimeMin: sql<number>`${playtime}::int`,
-          rating: e.rating,
-        })
-        .from(e)
-        .innerJoin(g, eq(g.id, e.gameId))
-        .where(and(eq(e.userId, userId), sql`${playtime} > 0`))
-        .orderBy(desc(playtime))
-        .limit(10),
-      db
-        .select({
-          count: sql<number>`count(*)::int`,
-          estimated: sql<number>`count(${g.timeToBeatNormally})::int`,
-          timeToBeatMin: sql<number>`coalesce(sum(${g.timeToBeatNormally}) / 60, 0)::int`,
-        })
-        .from(e)
-        .innerJoin(g, eq(g.id, e.gameId))
-        .where(and(eq(e.userId, userId), inArray(e.status, ["backlog", "wishlist"]))),
-      activityHeatmap(userId),
-      db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(screenshots)
-        .where(eq(screenshots.userId, userId)),
-    ]);
+  const [
+    releaseYears,
+    ratings,
+    completions,
+    topPlayed,
+    backlog,
+    heatmap,
+    [screenshotCount],
+    years,
+  ] = await Promise.all([
+    db
+      .select({
+        key: sql<string>`extract(year from ${g.releaseDate})::int::text`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(e)
+      .innerJoin(g, eq(g.id, e.gameId))
+      .where(and(eq(e.userId, userId), isNotNull(g.releaseDate)))
+      .groupBy(sql`1`)
+      .orderBy(sql`1`),
+    db
+      .select({
+        key: sql<string>`floor(${e.rating} / 10)::int::text`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(e)
+      .where(and(eq(e.userId, userId), isNotNull(e.rating)))
+      .groupBy(sql`1`)
+      .orderBy(sql`min(${e.rating})`),
+    db
+      .select({
+        key: sql<string>`extract(year from ${e.finishedAt})::int::text`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(e)
+      .where(and(eq(e.userId, userId), eq(e.status, "completed"), isNotNull(e.finishedAt)))
+      .groupBy(sql`1`)
+      .orderBy(sql`1`),
+    db
+      .select({
+        entryId: e.id,
+        name: g.name,
+        slug: g.slug,
+        coverImageId: g.coverImageId,
+        coverUrl: g.coverUrl,
+        playtimeMin: sql<number>`${playtime}::int`,
+        rating: e.rating,
+      })
+      .from(e)
+      .innerJoin(g, eq(g.id, e.gameId))
+      .where(and(eq(e.userId, userId), sql`${playtime} > 0`))
+      .orderBy(desc(playtime))
+      .limit(10),
+    db
+      .select({
+        count: sql<number>`count(*)::int`,
+        estimated: sql<number>`count(${g.timeToBeatNormally})::int`,
+        timeToBeatMin: sql<number>`coalesce(sum(${g.timeToBeatNormally}) / 60, 0)::int`,
+      })
+      .from(e)
+      .innerJoin(g, eq(g.id, e.gameId))
+      .where(and(eq(e.userId, userId), inArray(e.status, ["backlog", "wishlist"]))),
+    activityHeatmap(userId),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(screenshots)
+      .where(eq(screenshots.userId, userId)),
+    heatmapYears(userId),
+  ]);
 
   return {
     totals: { ...totals, screenshots: screenshotCount?.count ?? 0 },
@@ -184,6 +224,7 @@ export async function userStats(userId: string) {
     topPlayed: topPlayed.map((row) => ({ ...row, coverUrl: gameCoverUrl(row, "cover_small") })),
     backlog: backlog[0] ?? { count: 0, estimated: 0, timeToBeatMin: 0 },
     heatmap,
+    heatmapYears: years,
   };
 }
 
@@ -329,89 +370,102 @@ export async function compareUsers(aId: string, bId: string) {
   };
 }
 
-/** Yıl özeti: bitirilenler, oturumlardan oynama süresi, en çok oynananlar, türler, en yoğun ay. */
+/**
+ * Yıl özeti: bitirilenler, oynama süresi, en çok oynananlar, türler, en yoğun ay. Süreler gerçek oturumlar
+ * ile takipten önceki tahminin toplamıdır; tahmin olan kısım `estimatedMinutes` alanlarında ayrıca döner.
+ */
 export async function wrapped(userId: string, year: number) {
   const start = `${year}-01-01`;
   const end = `${year + 1}-01-01`;
   const inYear = sql`${e.finishedAt} >= ${start} and ${e.finishedAt} < ${end}`;
-  const sessionsInYear = and(
-    eq(playSessions.userId, userId),
-    sql`${playSessions.endedAt} >= ${start}::date and ${playSessions.endedAt} < ${end}::date`,
+  // Gerçek oturumlar ve tahmini günler tek akışta: gün, oyun, süre, tahmin olan süre.
+  const plays = sql`(
+    select date_trunc('day', ${playSessions.endedAt})::date as day, ${playSessions.gameId} as game_id,
+      ${playSessions.durationMin} as minutes, 0 as estimated
+    from ${playSessions}
+    where ${playSessions.userId} = ${userId}
+      and ${playSessions.endedAt} >= ${start}::date and ${playSessions.endedAt} < ${end}::date
+    union all
+    select ${playEstimateDays.day}, ${e.gameId}, ${playEstimateDays.minutes}, ${playEstimateDays.minutes}
+    from ${playEstimateDays} join ${e} on ${e.id} = ${playEstimateDays.entryId}
+    where ${playEstimateDays.userId} = ${userId}
+      and ${playEstimateDays.day} >= ${start}::date and ${playEstimateDays.day} < ${end}::date
+  ) plays`;
+  type GameMinutes = {
+    name: string;
+    slug: string;
+    coverImageId: string | null;
+    coverUrl: string | null;
+    heroUrl: string | null;
+    logoUrl: string | null;
+    accentColor: string | null;
+    minutes: number;
+    estimatedMinutes: number;
+  };
+
+  const [finished, [added], totalsResult, topGamesResult, monthsResult, genres] = await Promise.all(
+    [
+      db
+        .select({
+          entryId: e.id,
+          name: g.name,
+          slug: g.slug,
+          coverImageId: g.coverImageId,
+          coverUrl: g.coverUrl,
+          heroUrl: g.heroUrl,
+          logoUrl: g.logoUrl,
+          accentColor: g.accentColor,
+          rating: e.rating,
+          finishedAt: e.finishedAt,
+          playtimeMin: sql<number>`${playtime}::int`,
+        })
+        .from(e)
+        .innerJoin(g, eq(g.id, e.gameId))
+        .where(and(eq(e.userId, userId), eq(e.status, "completed"), inYear))
+        .orderBy(desc(sql`coalesce(${e.rating}, -1)`), e.finishedAt),
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(e)
+        .where(
+          and(
+            eq(e.userId, userId),
+            sql`${e.createdAt} >= ${start}::date and ${e.createdAt} < ${end}::date`,
+          ),
+        ),
+      db.execute<{ minutes: number; estimatedMinutes: number; days: number; games: number }>(sql`
+      select coalesce(sum(minutes), 0)::int as minutes, coalesce(sum(estimated), 0)::int as "estimatedMinutes",
+        count(distinct day)::int as days, count(distinct game_id)::int as games
+      from ${plays}
+    `),
+      db.execute<GameMinutes>(sql`
+      select g.name, g.slug, g.cover_image_id as "coverImageId", g.cover_url as "coverUrl",
+        g.hero_url as "heroUrl", g.logo_url as "logoUrl", g.accent_color as "accentColor",
+        sum(plays.minutes)::int as minutes, sum(plays.estimated)::int as "estimatedMinutes"
+      from ${plays} join ${g} g on g.id = plays.game_id
+      group by g.id order by sum(plays.minutes) desc, g.name limit 5
+    `),
+      db.execute<{ month: number; minutes: number; estimatedMinutes: number }>(sql`
+      select extract(month from day)::int as month, sum(minutes)::int as minutes,
+        sum(estimated)::int as "estimatedMinutes"
+      from ${plays} group by 1 order by 1
+    `),
+      db
+        .select({ key: terms.name, count: sql<number>`count(distinct ${e.id})::int` })
+        .from(e)
+        .innerJoin(gameTerms, eq(gameTerms.gameId, e.gameId))
+        .innerJoin(terms, eq(terms.id, gameTerms.termId))
+        .where(
+          and(eq(e.userId, userId), eq(terms.kind, "genre"), eq(e.status, "completed"), inYear),
+        )
+        .groupBy(terms.name)
+        .orderBy(desc(sql`count(distinct ${e.id})`))
+        .limit(5),
+    ],
   );
 
-  const [finished, [added], [sessionTotals], topGames, months, genres] = await Promise.all([
-    db
-      .select({
-        entryId: e.id,
-        name: g.name,
-        slug: g.slug,
-        coverImageId: g.coverImageId,
-        coverUrl: g.coverUrl,
-        heroUrl: g.heroUrl,
-        logoUrl: g.logoUrl,
-        accentColor: g.accentColor,
-        rating: e.rating,
-        finishedAt: e.finishedAt,
-        playtimeMin: sql<number>`${playtime}::int`,
-      })
-      .from(e)
-      .innerJoin(g, eq(g.id, e.gameId))
-      .where(and(eq(e.userId, userId), eq(e.status, "completed"), inYear))
-      .orderBy(desc(sql`coalesce(${e.rating}, -1)`), e.finishedAt),
-    db
-      .select({ count: sql<number>`count(*)::int` })
-      .from(e)
-      .where(
-        and(
-          eq(e.userId, userId),
-          sql`${e.createdAt} >= ${start}::date and ${e.createdAt} < ${end}::date`,
-        ),
-      ),
-    db
-      .select({
-        minutes: sql<number>`coalesce(sum(${playSessions.durationMin}), 0)::int`,
-        days: sql<number>`count(distinct date_trunc('day', ${playSessions.endedAt}))::int`,
-        games: sql<number>`count(distinct ${playSessions.gameId})::int`,
-      })
-      .from(playSessions)
-      .where(sessionsInYear),
-    db
-      .select({
-        name: g.name,
-        slug: g.slug,
-        coverImageId: g.coverImageId,
-        coverUrl: g.coverUrl,
-        heroUrl: g.heroUrl,
-        logoUrl: g.logoUrl,
-        accentColor: g.accentColor,
-        minutes: sql<number>`sum(${playSessions.durationMin})::int`,
-      })
-      .from(playSessions)
-      .innerJoin(g, eq(g.id, playSessions.gameId))
-      .where(sessionsInYear)
-      .groupBy(g.id)
-      .orderBy(desc(sql`sum(${playSessions.durationMin})`))
-      .limit(5),
-    db
-      .select({
-        month: sql<number>`extract(month from ${playSessions.endedAt})::int`,
-        minutes: sql<number>`sum(${playSessions.durationMin})::int`,
-      })
-      .from(playSessions)
-      .where(sessionsInYear)
-      .groupBy(sql`1`)
-      .orderBy(sql`1`),
-    db
-      .select({ key: terms.name, count: sql<number>`count(distinct ${e.id})::int` })
-      .from(e)
-      .innerJoin(gameTerms, eq(gameTerms.gameId, e.gameId))
-      .innerJoin(terms, eq(terms.id, gameTerms.termId))
-      .where(and(eq(e.userId, userId), eq(terms.kind, "genre"), eq(e.status, "completed"), inYear))
-      .groupBy(terms.name)
-      .orderBy(desc(sql`count(distinct ${e.id})`))
-      .limit(5),
-  ]);
-
+  const [sessionTotals] = totalsResult.rows;
+  const topGames = topGamesResult.rows;
+  const months = monthsResult.rows;
   const rated = finished.filter((row) => row.rating !== null);
   const busiest = [...months].sort((a, b) => b.minutes - a.minutes)[0] ?? null;
   return {
@@ -422,6 +476,8 @@ export async function wrapped(userId: string, year: number) {
       : null,
     addedCount: added?.count ?? 0,
     playedMinutes: sessionTotals?.minutes ?? 0,
+    /** `playedMinutes`'ın takipten önceki tahmin olan kısmı. */
+    estimatedMinutes: sessionTotals?.estimatedMinutes ?? 0,
     playedDays: sessionTotals?.days ?? 0,
     playedGames: sessionTotals?.games ?? 0,
     finished: finished.map((row) => ({ ...row, coverUrl: gameCoverUrl(row, "cover_small") })),
@@ -438,6 +494,8 @@ export async function wrappedYears(userId: string) {
     select distinct extract(year from finished_at)::int as year from ${e} where user_id = ${userId} and finished_at is not null
     union
     select distinct extract(year from ended_at)::int from ${playSessions} where user_id = ${userId}
+    union
+    select distinct extract(year from day)::int from ${playEstimateDays} where user_id = ${userId}
     order by year desc
   `);
   return rows.rows.map((row) => row.year);

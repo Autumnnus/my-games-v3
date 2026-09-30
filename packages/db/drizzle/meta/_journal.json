@@ -113,6 +113,27 @@
       "when": 1790697665149,
       "tag": "0015_social_cleanup",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1790701862370,
+      "tag": "0016_ai_assistant",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1790759232174,
+      "tag": "0017_admin_panel",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1790768001936,
+      "tag": "0018_play_estimates",
+      "breakpoints": true
     }
   ]
 }

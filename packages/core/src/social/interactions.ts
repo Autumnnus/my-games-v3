@@ -61,7 +61,7 @@ async function gameName(tx: Tx, gameId: string | null) {
 export async function react(userId: string, targetType: SocialTarget, targetId: string) {
   await db.transaction(async (tx) => {
     const target = await resolveTarget(tx, targetType, targetId);
-    if (!target) notFound("İçerik bulunamadı");
+    if (!target) notFound("İçerik bulunamadı", "content_not_found");
     const inserted = await tx
       .insert(reactions)
       .values({ userId, targetType, targetId })
@@ -117,19 +117,20 @@ export async function addComment(
   input: { targetType: SocialTarget; targetId: string; body: string; parentId?: string | null },
 ) {
   const body = input.body.trim();
-  if (!body) throw new AppError("invalid", "Yorum boş olamaz");
-  if (body.length > MAX_COMMENT_LENGTH) throw new AppError("invalid", "Yorum çok uzun");
+  if (!body) throw new AppError("invalid", "Yorum boş olamaz", "comment_empty");
+  if (body.length > MAX_COMMENT_LENGTH)
+    throw new AppError("invalid", "Yorum çok uzun", "comment_too_long");
 
   return db.transaction(async (tx) => {
     const target = await resolveTarget(tx, input.targetType, input.targetId);
-    if (!target) notFound("İçerik bulunamadı");
+    if (!target) notFound("İçerik bulunamadı", "content_not_found");
 
     // Tek seviye yanıt: yanıtın yanıtı kök yoruma bağlanır.
     let parentId: string | null = null;
     if (input.parentId) {
       const [parent] = await tx.select().from(comments).where(eq(comments.id, input.parentId));
       if (!parent || parent.targetId !== input.targetId || parent.deletedAt)
-        notFound("Yanıtlanan yorum yok");
+        notFound("Yanıtlanan yorum yok", "comment_not_found");
       parentId = parent.parentId ?? parent.id;
     }
 
@@ -183,7 +184,8 @@ export async function listComments(targetType: SocialTarget, targetId: string) {
 
 export async function editComment(authorId: string, commentId: string, body: string) {
   const text = body.trim();
-  if (!text || text.length > MAX_COMMENT_LENGTH) throw new AppError("invalid", "Geçersiz yorum");
+  if (!text || text.length > MAX_COMMENT_LENGTH)
+    throw new AppError("invalid", "Geçersiz yorum", "comment_empty");
   const [row] = await db
     .update(comments)
     .set({ body: text, editedAt: new Date() })
@@ -191,13 +193,13 @@ export async function editComment(authorId: string, commentId: string, body: str
       and(eq(comments.id, commentId), eq(comments.authorId, authorId), isNull(comments.deletedAt)),
     )
     .returning();
-  if (!row) notFound("Yorum bulunamadı");
+  if (!row) notFound("Yorum bulunamadı", "comment_not_found");
   return row;
 }
 
 export async function deleteComment(userId: string, commentId: string, asAdmin = false) {
   const [row] = await db.select().from(comments).where(eq(comments.id, commentId));
-  if (!row || row.deletedAt) notFound("Yorum bulunamadı");
+  if (!row || row.deletedAt) notFound("Yorum bulunamadı", "comment_not_found");
   if (row.authorId !== userId && !asAdmin) forbidden();
   await db.update(comments).set({ deletedAt: new Date() }).where(eq(comments.id, commentId));
 }

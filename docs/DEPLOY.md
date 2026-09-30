@@ -42,7 +42,7 @@ sıkıştırma ayarları: `docs/notes/storage.md`.
 
 **Kota:** varsayılan kullanıcı kotası `STORAGE_DEFAULT_QUOTA_MB` (250), sistem bütçesi `STORAGE_BUDGET_GB` (8).
 Bütçe dolunca yükleme herkese kapanır; %80 ve %95'te adminlere bildirim düşer. Varsayılan kota ve kişi bazında
-kota admin API'siyle (`/api/v1/admin/storage…`) deploy'suz değişir.
+kota yönetim panelinden (`/admin/storage`, kullanıcı sayfası) deploy'suz değişir.
 
 Ek güvenlik (önerilir): CDN alan adına Cloudflare'de bir **Transform Rule → Response Header** ile
 `X-Content-Type-Options: nosniff` ekle. Mümkünse bucket'ı uygulamadan farklı bir kayıtlı alan adından sun (ör.
@@ -102,7 +102,7 @@ Opsiyonel olanlar boşsa ilgili özellik kapalı olur (UI `/api/v1/meta` ile ö�
 | `DISCORD_CLIENT_ID` / `_SECRET` | opsiyonel | | Discord OAuth |
 | `RESEND_API_KEY`, `EMAIL_FROM` | ✓ | | Doğrulama/şifre e-postaları (yoksa e-posta gönderilmez) |
 | `S3_*` | ✓ | ✓ | R2 (bkz. 2. bölüm); worker dosya silme ve yarım yükleme temizliği için kullanır |
-| `STORAGE_DEFAULT_QUOTA_MB` | opsiyonel | | Varsayılan kullanıcı kotası (250); admin API'siyle de değişir |
+| `STORAGE_DEFAULT_QUOTA_MB` | opsiyonel | | Varsayılan kullanıcı kotası (250); yönetim panelinden de değişir |
 | `STORAGE_BUDGET_GB` | opsiyonel | | Tüm yüklemelerin üst sınırı (8); dolunca yükleme kapanır |
 | `IGDB_CLIENT_ID` / `_SECRET` | ✓ | ✓ | Twitch uygulaması; oyun arama ve metadata |
 | `STEAM_API_KEY` | ✓ | ✓ | https://steamcommunity.com/dev/apikey — Steam girişi, sync, başarımlar, ekran görüntüleri |
@@ -110,9 +110,13 @@ Opsiyonel olanlar boşsa ilgili özellik kapalı olur (UI `/api/v1/meta` ile ö�
 | `PSN_DISABLED` | opsiyonel | opsiyonel | `true` ise PlayStation bağlantısı kapalı (anahtar gerekmez) |
 | `CREDENTIALS_SECRET` | opsiyonel | ✓ | PSN/Xbox token'larını şifreler; yoksa `BETTER_AUTH_SECRET` (o zaman worker'a da ver) |
 | `VAPID_PUBLIC_KEY` / `_PRIVATE_KEY` / `VAPID_SUBJECT` | ✓ | ✓ | Web Push; `npx web-push generate-vapid-keys` |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | ✓ | | Gemini (asistan) |
-| `AI_MODEL` | opsiyonel | | Varsayılan `gemini-3.5-flash` |
+| `GOOGLE_GENERATIVE_AI_API_KEYS` | ✓ | | My games AI (Gemini) anahtar havuzu, virgülle ayrılmış; tek anahtar için `GOOGLE_GENERATIVE_AI_API_KEY` de olur |
+| `AI_KEY_STRATEGY` | opsiyonel | | `round_robin` (varsayılan, yükü dağıtır) ya da `failover` (sıradakine yalnızca önceki dolunca) |
+| `AI_MODEL` | opsiyonel | | Başlangıç sohbet modeli (yönetim panelinden seçilen önceliklidir); varsayılan `gemini-3.5-flash` (`sağlayıcı:model` biçimi de olur) |
+| `AI_FALLBACK_MODELS` | opsiyonel | | Panelde seçim yoksa: ana modelin bütün anahtarları dolunca denenecek modeller (ör. `gemini-3.5-flash-lite`) |
+| `AI_LIGHT_MODEL` | opsiyonel | | Panelde seçim yoksa: başlık, öneri gerekçesi, taslak, özet; varsayılan `gemini-3.5-flash-lite` |
 | `AI_DAILY_TOKEN_LIMIT` | opsiyonel | | Kullanıcı başına günlük token (varsayılan 200.000) |
+| `AI_MAX_STEPS` | opsiyonel | | Agent döngüsünün adım sınırı (varsayılan 10) |
 | `TURNSTILE_SITE_KEY` / `_SECRET_KEY` | opsiyonel | | Kayıt/giriş bot koruması |
 
 ## 6. GitHub → Coolify otomatik deploy
@@ -141,8 +145,16 @@ uygulama API'sini kullanır (resmî değil); Sony değiştirirse kırılabilir.
 
 ## 8. İlk kurulum sonrası
 
-1. Kendi hesabınla kayıt ol, sonra kendini admin yap:
-   `update "user" set role = 'admin' where email = '<e-posta>';` (Coolify'ın Postgres terminalinden).
+1. Kendi hesabınla kayıt ol (e-postanı doğrula), sonra kendini admin yap. Coolify'da **app** container'ının
+   terminalinden:
+   ```sh
+   node db/dist/admin.mjs grant <e-posta ya da kullanıcı adı>
+   node db/dist/admin.mjs list      # adminleri listeler
+   node db/dist/admin.mjs revoke …  # yetkiyi alır
+   ```
+   Admin yetkisi yalnızca bu komutla verilir; web arayüzünde rol değiştirme yok. Panel: `/admin` (ayrıntı:
+   `docs/notes/admin.md`). İstersen Cloudflare Access ile `/admin*` ve `/api/v1/admin*` yollarına ikinci bir
+   kapı (e-posta doğrulaması) ekleyebilirsin.
 2. Eski verileri aktar (Kadir ve Mustafa hesap açtıktan sonra). App container'ında değil, repo'yu klonladığın bir
    makineden, production `DATABASE_URL` ile:
    ```sh

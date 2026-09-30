@@ -1,4 +1,6 @@
 import { refreshGameArt, refreshStaleGames, refreshSteamCovers } from "@my-games/core/catalog";
+import { rebuildPlayEstimates, usersNeedingEstimates } from "@my-games/core/estimates/build";
+import { errorInfo, errorMessageOf, logger, pruneLogs } from "@my-games/core/log";
 import { matchUnlinkedGames } from "@my-games/core/matching";
 import { cleanupPendingAssets } from "@my-games/core/media";
 import { pruneOutbox } from "@my-games/core/outbox";
@@ -66,6 +68,13 @@ export const jobs: JobDefinition[] = [
     policy: "stately",
   },
   {
+    // Takipten önceki oynama geçmişi tahmini. `stately`: kullanıcı başına bir aktif, bir bekleyen iş.
+    name: "estimates.rebuild-user",
+    run: (data) => rebuildPlayEstimates(String(data.userId)),
+    concurrency: 1,
+    policy: "stately",
+  },
+  {
     name: "push.send",
     run: (data) => sendPushForNotification(String(data.notificationId)),
     concurrency: 2,
@@ -96,6 +105,11 @@ export const jobs: JobDefinition[] = [
     cron: "30 3 * * *",
     run: () => pruneOutbox(7),
   },
+  {
+    name: "maintenance.prune-logs",
+    cron: "40 3 * * *",
+    run: () => pruneLogs(30),
+  },
 ];
 
 /** Kuyrukların ve zamanlanmış işlerin tek kayıt noktası. */
@@ -123,6 +137,17 @@ export async function registerJobs(boss: PgBoss) {
         return { queued: accounts.length };
       },
     },
+    {
+      // Kütüphanesi/kanıtları son derlemeden sonra değişen kullanıcıların tahminleri (elle düzenleme,
+      // onaylanan öneri, eski sistemden aktarım, üretici sürümü) güncellenir.
+      name: "estimates.rebuild-stale",
+      cron: "*/20 * * * *",
+      run: async () => {
+        const userIds = await usersNeedingEstimates(25);
+        for (const userId of userIds) await enqueueEstimates(boss, userId);
+        return { queued: userIds.length };
+      },
+    },
   ];
   for (const job of [...jobs, ...withBoss]) {
     const policy = job.policy ?? "standard";
@@ -142,8 +167,22 @@ export async function registerJobs(boss: PgBoss) {
       async (batch) => {
         for (const item of batch) {
           const started = Date.now();
-          const result = await job.run(item.data ?? {});
-          console.info(`[job] ${job.name} ${Date.now() - started}ms`, result ?? "");
+          try {
+            const result = await job.run(item.data ?? {});
+            console.info(`[job] ${job.name} ${Date.now() - started}ms`, result ?? "");
+          } catch (error) {
+            // pg-boss yeniden dener; her başarısız deneme loglara düşer (yönetim paneli › Sistem).
+            logger.error("worker", "job_failed", `${job.name}: ${errorMessageOf(error)}`, {
+              context: {
+                job: job.name,
+                jobId: item.id,
+                ms: Date.now() - started,
+                data: item.data ?? null,
+                error: errorInfo(error),
+              },
+            });
+            throw error;
+          }
         }
       },
     );
@@ -156,6 +195,11 @@ export type { JobDefinition };
 /** Kullanıcı için senkronizasyon ister; zaten bekleyen varsa yenisi eklenmez. */
 export function enqueueSteamSync(boss: PgBoss, userId: string) {
   return boss.send("steam.sync-user", { userId }, { singletonKey: userId });
+}
+
+/** Tahmin derlemesi ister; peş peşe gelen istekler (sync + düzenleme) tek derlemede birleşir. */
+export function enqueueEstimates(boss: PgBoss, userId: string) {
+  return boss.send("estimates.rebuild-user", { userId }, { singletonKey: userId, startAfter: 30 });
 }
 
 export function enqueuePlatformSync(boss: PgBoss, userId: string, provider: "psn" | "xbox") {

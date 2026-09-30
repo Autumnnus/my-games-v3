@@ -1,3 +1,4 @@
+import { isAdmin } from "@my-games/core/admin/access";
 import { findGameIdBySlug } from "@my-games/core/catalog";
 import { AppError } from "@my-games/core/errors";
 import { listFeed } from "@my-games/core/social/activities";
@@ -10,7 +11,7 @@ import {
   reactionSummary,
   unreact,
 } from "@my-games/core/social/interactions";
-import { createReport, listReports, resolveReport } from "@my-games/core/social/moderation";
+import { createReport } from "@my-games/core/social/moderation";
 import {
   getPreferences,
   listNotifications,
@@ -25,15 +26,7 @@ import { notificationTypes, socialTargets } from "@my-games/shared";
 import { Hono } from "hono";
 import { streamSSE } from "hono/streaming";
 import { z } from "zod";
-import { auth } from "../auth";
-import {
-  type AppEnv,
-  currentUser,
-  rateLimit,
-  requireAdmin,
-  requireUser,
-  withSession,
-} from "../middleware";
+import { type AppEnv, currentUser, rateLimit, requireUser, withSession } from "../middleware";
 import { subscribe } from "../realtime";
 import { uuidParam, validate } from "../validation";
 
@@ -118,7 +111,11 @@ export const socialRoutes = new Hono<AppEnv>()
   )
   .delete("/comments/:id", withSession, requireUser, validate("param", uuidParam), async (c) => {
     const user = currentUser(c);
-    await deleteComment(user.id, c.req.valid("param").id, user.role === "admin");
+    await deleteComment(
+      user.id,
+      c.req.valid("param").id,
+      user.role === "admin" && (await isAdmin(user.id)),
+    );
     return c.json({ ok: true });
   })
 
@@ -231,60 +228,4 @@ export const socialRoutes = new Hono<AppEnv>()
     ),
     async (c) =>
       c.json({ report: await createReport(currentUser(c).id, c.req.valid("json")) }, 201),
-  )
-  .get(
-    "/admin/reports",
-    withSession,
-    requireUser,
-    requireAdmin,
-    validate("query", z.object({ status: z.enum(["open", "resolved", "dismissed"]).optional() })),
-    async (c) => c.json({ reports: await listReports(c.req.valid("query").status ?? "open") }),
-  )
-  .post(
-    "/admin/reports/:id/resolve",
-    withSession,
-    requireUser,
-    requireAdmin,
-    validate("param", uuidParam),
-    validate(
-      "json",
-      z.object({
-        outcome: z.enum(["resolved", "dismissed"]),
-        removeContent: z.boolean().optional(),
-      }),
-    ),
-    async (c) => {
-      const { outcome, removeContent } = c.req.valid("json");
-      await resolveReport(currentUser(c).id, c.req.valid("param").id, outcome, removeContent);
-      return c.json({ ok: true });
-    },
-  )
-  .post(
-    "/admin/users/:id/ban",
-    withSession,
-    requireUser,
-    requireAdmin,
-    validate(
-      "json",
-      z.object({
-        reason: z.string().max(500).optional(),
-        days: z.number().int().positive().max(3650).optional(),
-      }),
-    ),
-    async (c) => {
-      const { reason, days } = c.req.valid("json");
-      await auth.api.banUser({
-        body: {
-          userId: c.req.param("id"),
-          banReason: reason,
-          banExpiresIn: days ? days * 86_400 : undefined,
-        },
-        headers: c.req.raw.headers,
-      });
-      return c.json({ ok: true });
-    },
-  )
-  .post("/admin/users/:id/unban", withSession, requireUser, requireAdmin, async (c) => {
-    await auth.api.unbanUser({ body: { userId: c.req.param("id") }, headers: c.req.raw.headers });
-    return c.json({ ok: true });
-  });
+  );

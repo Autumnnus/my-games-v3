@@ -147,7 +147,7 @@ describe("stats", () => {
       playedDays: 2,
       playedGames: 1,
     });
-    expect(result.busiestMonth).toEqual({ month: 11, minutes: 120 });
+    expect(result.busiestMonth).toEqual({ month: 11, minutes: 120, estimatedMinutes: 0 });
     expect(await wrappedYears(owner.id)).toEqual([2025]);
   });
 });

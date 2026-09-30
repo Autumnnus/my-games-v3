@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { type FormEvent, useRef, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { type FormEvent, useRef } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 import { FormField } from "@/components/auth-card";
+import { LanguagePicker } from "@/components/language-picker";
 import { NotificationSettings } from "@/components/notification-settings";
 import { PsnCard, XboxCard } from "@/components/platform-cards";
 import { SteamCard } from "@/components/steam-card";
@@ -42,10 +43,8 @@ function SettingsPage() {
   const { user } = Route.useRouteContext();
   const search = Route.useSearch();
   const refreshSession = useRefreshSession();
-  const navigate = useNavigate();
   const meta = useQuery(metaQuery);
   const avatarInput = useRef<HTMLInputElement>(null);
-  const [confirmName, setConfirmName] = useState("");
 
   const saveProfile = useMutation({
     mutationFn: async (values: { name: string; username: string; bio: string }) => {
@@ -101,18 +100,6 @@ function SettingsPage() {
     mutationFn: () => unwrap(api.me.avatar.$delete()),
     onSuccess: avatarDone,
     onError: (error) => toast.error(errorMessage(error)),
-  });
-
-  const deleteAccount = useMutation({
-    mutationFn: async () => {
-      const { error } = await authClient.deleteUser({ callbackURL: "/" });
-      if (error) throw new Error(authErrorMessage(error));
-    },
-    onSuccess: async () => {
-      await refreshSession();
-      await navigate({ to: "/" });
-    },
-    onError: (error) => toast.error(error.message),
   });
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -192,8 +179,14 @@ function SettingsPage() {
                     pattern="[A-Za-z0-9_.]+"
                   />
                 </FormField>
-                <FormField label={m.field_bio()}>
-                  <Textarea name="bio" rows={3} maxLength={500} defaultValue={user.bio ?? ""} />
+                <FormField label={m.field_bio()} optional>
+                  <Textarea
+                    name="bio"
+                    rows={3}
+                    maxLength={500}
+                    showCount
+                    defaultValue={user.bio ?? ""}
+                  />
                 </FormField>
                 <FormField label={m.field_email()}>
                   <Input
@@ -201,10 +194,20 @@ function SettingsPage() {
                     disabled
                   />
                 </FormField>
-                <Button type="submit" className="w-fit" disabled={saveProfile.isPending}>
+                <Button type="submit" size="lg" className="w-fit" disabled={saveProfile.isPending}>
                   {m.action_save()}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{m.settings_language()}</CardTitle>
+              <CardDescription>{m.settings_language_description()}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LanguagePicker signedIn />
             </CardContent>
           </Card>
 
@@ -220,28 +223,6 @@ function SettingsPage() {
                 <a href="/api/v1/me/export" download>
                   {m.settings_export()}
                 </a>
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="border-destructive/50">
-            <CardHeader>
-              <CardTitle>{m.settings_danger()}</CardTitle>
-              <CardDescription>{m.settings_delete_confirm()}</CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-2">
-              <Input
-                className="max-w-xs"
-                value={confirmName}
-                onChange={(event) => setConfirmName(event.target.value)}
-                placeholder={user.displayUsername ?? ""}
-              />
-              <Button
-                variant="destructive"
-                disabled={confirmName !== user.displayUsername || deleteAccount.isPending}
-                onClick={() => deleteAccount.mutate()}
-              >
-                {m.settings_delete_account()}
               </Button>
             </CardContent>
           </Card>

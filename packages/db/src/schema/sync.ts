@@ -191,6 +191,13 @@ export const platformSnapshots = pgTable(
     /** Başlık listesinin bildirdiği açılan başarım sayısı; değişince ayrıntı çekilir. */
     achievementsUnlocked: integer(),
     achievementsCheckedAt: tstz(),
+    /**
+     * Sürenin ilk gözlendiği an. O andaki süre hiçbir oturuma yazılmadı; tahmini geçmiş bu andan öncesine
+     * dağıtılır (bkz. core/estimates).
+     */
+    baselineAt: tstz(),
+    /** İlk gözlemde platformun bildirdiği son oynama; sonraki sync'ler kayıttakini ezdiği için dondurulur. */
+    baselineLastPlayedAt: tstz(),
     updatedAt: updatedAt(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.provider, t.externalId] })],

@@ -89,7 +89,8 @@ function PushToggle() {
   return (
     <Button
       variant="outline"
-      className="w-fit"
+      size="sm"
+      className="mt-1 w-fit"
       disabled={state === "loading" || toggle.isPending}
       onClick={() => toggle.mutate(state !== "on")}
     >
@@ -115,14 +116,21 @@ export function NotificationSettings() {
         <CardDescription>{m.notification_prefs_description()}</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <div className="grid grid-cols-[1fr_auto_auto] items-center gap-x-6 gap-y-3 text-sm">
-          <span />
-          <span className="text-muted-foreground text-xs">{m.pref_in_app()}</span>
-          <span className="text-muted-foreground text-xs">{m.pref_push()}</span>
+        {/* Satırlar ortak sütunları paylaşsın diye alt ızgara: başlıklar anahtarların tam üstünde. */}
+        <div className="grid grid-cols-[1fr_auto_auto] gap-x-5 overflow-hidden rounded-2xl border border-white/8 text-sm">
+          <div className="text-foreground/45 col-span-3 grid grid-cols-subgrid items-center bg-white/[0.03] px-4 py-2.5 text-[11px] font-bold tracking-[0.12em] uppercase">
+            <span />
+            <span className="text-center">{m.pref_in_app()}</span>
+            <span className="text-center">{m.pref_push()}</span>
+          </div>
           {data?.preferences.map((pref) => (
-            <div key={pref.type} className="contents">
-              <span>{typeLabels[pref.type]()}</span>
+            <div
+              key={pref.type}
+              className="col-span-3 grid grid-cols-subgrid items-center border-t border-white/6 px-4 py-3 transition-colors hover:bg-white/[0.02]"
+            >
+              <span className="font-medium">{typeLabels[pref.type]()}</span>
               <Switch
+                className="justify-self-center"
                 checked={pref.inApp}
                 onCheckedChange={(inApp) =>
                   update.mutate({ type: pref.type, inApp, push: pref.push })
@@ -130,6 +138,7 @@ export function NotificationSettings() {
                 aria-label={`${typeLabels[pref.type]()} ${m.pref_in_app()}`}
               />
               <Switch
+                className="justify-self-center"
                 checked={pref.push}
                 onCheckedChange={(push) =>
                   update.mutate({ type: pref.type, inApp: pref.inApp, push })
@@ -139,9 +148,9 @@ export function NotificationSettings() {
             </div>
           ))}
         </div>
-        <div className="grid gap-2 border-t pt-4">
-          <div className="text-sm font-medium">{m.push_title()}</div>
-          <p className="text-muted-foreground text-xs">{m.push_description()}</p>
+        <div className="grid gap-2 rounded-2xl border border-white/8 bg-white/[0.03] px-4 py-3.5">
+          <div className="text-sm font-semibold">{m.push_title()}</div>
+          <p className="text-foreground/55 text-xs leading-snug">{m.push_description()}</p>
           <PushToggle />
         </div>
       </CardContent>

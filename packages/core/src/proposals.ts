@@ -6,6 +6,7 @@ import { type DbOrTx, db, type Tx } from "./db";
 import { AppError, notFound } from "./errors";
 import { emit } from "./events";
 import { addEntry, type EntryFields, findEntryByGame, updateEntry } from "./library";
+import { errorInfo, errorMessageOf, logger } from "./log";
 import { type MatchCandidate, mergeGameInto } from "./matching";
 
 const { changeProposals, syncRules, syncIgnores, games, libraryEntries } = schema;
@@ -237,7 +238,7 @@ async function applyInTx(tx: Tx, proposal: ProposalRow, choice?: string) {
 
   switch (payload.op) {
     case "update": {
-      if (!proposal.entryId) throw new AppError("conflict", "Önerinin kaydı yok");
+      if (!proposal.entryId) throw new AppError("conflict", "Önerinin kaydı yok", "proposal_stale");
       const patch = Object.fromEntries(
         payload.changes.map((change) => [change.field, reviveValue(change.field, change.to)]),
       ) as Partial<EntryFields>;
@@ -246,7 +247,7 @@ async function applyInTx(tx: Tx, proposal: ProposalRow, choice?: string) {
     }
     case "create": {
       const gameId = proposal.gameId ?? payload.game.gameId;
-      if (!gameId) throw new AppError("conflict", "Önerinin oyunu yok");
+      if (!gameId) throw new AppError("conflict", "Önerinin oyunu yok", "proposal_stale");
       if (await findEntryByGame(proposal.userId, gameId, tx)) return;
       // Payload jsonb'den gelir: tarih alanları string olarak döner.
       const fields = Object.fromEntries(
@@ -256,7 +257,7 @@ async function applyInTx(tx: Tx, proposal: ProposalRow, choice?: string) {
       return;
     }
     case "conflict": {
-      if (!proposal.entryId) throw new AppError("conflict", "Önerinin kaydı yok");
+      if (!proposal.entryId) throw new AppError("conflict", "Önerinin kaydı yok", "proposal_stale");
       // "use_platform" (eski adı "use_steam"): elle girilen süre platform süresinin içinde kabul edilir
       // ve sıfırlanır. "keep_both": elle girilen süre başka bir yerdeki oynamadır; ikisi toplanır.
       const field = PLAYTIME_FIELDS[payload.provider ?? "steam"];
@@ -271,7 +272,7 @@ async function applyInTx(tx: Tx, proposal: ProposalRow, choice?: string) {
       return;
     }
     case "screenshots": {
-      if (!proposal.entryId) throw new AppError("conflict", "Önerinin kaydı yok");
+      if (!proposal.entryId) throw new AppError("conflict", "Önerinin kaydı yok", "proposal_stale");
       const { insertPlatformScreenshots } = await import("./screenshots");
       await insertPlatformScreenshots(tx, {
         userId: proposal.userId,
@@ -316,8 +317,8 @@ async function claim(tx: Tx, userId: string, id: string, status: "approved" | "r
     .select({ userId: changeProposals.userId })
     .from(changeProposals)
     .where(eq(changeProposals.id, id));
-  if (!existing || existing.userId !== userId) notFound("Öneri bulunamadı");
-  throw new AppError("conflict", "Öneri zaten sonuçlandı");
+  if (!existing || existing.userId !== userId) notFound("Öneri bulunamadı", "proposal_not_found");
+  throw new AppError("conflict", "Öneri zaten sonuçlandı", "proposal_resolved");
 }
 
 /** Reddedilince bir daha sorulmayan türler: aynı cevap her sync'te tekrar sorulmasın. */
@@ -342,13 +343,17 @@ export async function resolveProposal(
   if (action === "approve" && peekPayload?.op === "match") {
     const igdbId = Number(options.choice ?? peekPayload.candidates[0]?.igdbId);
     if (!peekPayload.candidates.some((candidate) => candidate.igdbId === igdbId)) {
-      throw new AppError("invalid", "Önerilen adaylardan biri seçilmeli");
+      throw new AppError(
+        "invalid",
+        "Önerilen adaylardan biri seçilmeli",
+        "proposal_pick_candidate",
+      );
     }
     // IGDB çağrısı transaction dışında; oyun zaten içe aktarılmışsa ağa çıkmaz.
     const target = await importIgdbGame(igdbId);
     await db.transaction(async (tx) => {
       const proposal = await claim(tx, userId, id, "approved");
-      if (!proposal.gameId) throw new AppError("conflict", "Önerinin oyunu yok");
+      if (!proposal.gameId) throw new AppError("conflict", "Önerinin oyunu yok", "proposal_stale");
       // Katalog oyunu herkesin; kullanıcının onayı yalnızca kendi kaydını taşır.
       await mergeGameInto(tx, proposal.gameId, target.id, { userId });
     });
@@ -374,16 +379,24 @@ export async function resolveProposal(
 }
 
 export async function resolveMany(userId: string, ids: string[], action: "approve" | "reject") {
-  const results: Array<{ id: string; ok: boolean; error?: string }> = [];
+  // Başarısızlar istemciye API hatasıyla aynı biçimde döner (kod + sebep); mesajı istemci kendi dilinde yazar.
+  const results: Array<{ id: string; ok: boolean; error?: string; reason?: string }> = [];
   for (const id of ids.slice(0, 200)) {
     try {
       await resolveProposal(userId, id, action);
       results.push({ id, ok: true });
     } catch (error) {
+      if (!(error instanceof AppError)) {
+        logger.error("inbox", "bulk_resolve_failed", errorMessageOf(error), {
+          userId,
+          context: { proposalId: id, error: errorInfo(error) },
+        });
+      }
       results.push({
         id,
         ok: false,
-        error: error instanceof Error ? error.message : String(error),
+        error: error instanceof AppError ? error.code : "internal_error",
+        reason: error instanceof AppError ? error.reason : undefined,
       });
     }
   }

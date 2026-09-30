@@ -8,8 +8,10 @@ import { Turnstile, useTurnstileRequired } from "@/components/turnstile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-errors";
+import { needsLocaleReload } from "@/lib/locale";
 import { metaQuery } from "@/lib/meta";
 import { safeRedirect, useRefreshSession } from "@/lib/session";
 import { steamErrorMessage } from "@/lib/steam";
@@ -58,7 +60,13 @@ function LoginPage() {
       if (error.code === "EMAIL_NOT_VERIFIED") setUnverifiedEmail(email);
       return;
     }
-    await refreshSession();
+    const user = await refreshSession();
+    // Hesabın dili bu cihazdakinden farklıysa (ya da burada dil seçildiyse) sayfa baştan yüklenir; eşitleme
+    // sunucuda yapılır ve sayfa ilk karede doğru dilde gelir.
+    if (needsLocaleReload(user?.locale)) {
+      window.location.assign(redirectTo);
+      return;
+    }
     await navigate({ to: redirectTo });
   }
 
@@ -85,12 +93,24 @@ function LoginPage() {
       }
     >
       <SocialButtons callbackURL={redirectTo} />
-      <form className="grid gap-4" onSubmit={onSubmit}>
+      {/* method="post": sayfa henüz etkileşimli değilken (hydration öncesi) Enter'a basılırsa tarayıcı formu
+          kendisi gönderir; GET olsaydı şifre adres çubuğuna ve geçmişe yazılırdı. */}
+      <form method="post" className="grid gap-4" onSubmit={onSubmit}>
         <FormField label={m.field_email()}>
           <Input name="email" type="email" autoComplete="email" required />
         </FormField>
-        <FormField label={m.field_password()}>
-          <Input name="password" type="password" autoComplete="current-password" required />
+        <FormField
+          label={m.field_password()}
+          aside={
+            <Link
+              to="/forgot-password"
+              className="text-foreground/60 hover:text-foreground text-xs font-semibold transition-colors"
+            >
+              {m.sign_in_forgot()}
+            </Link>
+          }
+        >
+          <PasswordInput name="password" autoComplete="current-password" required />
         </FormField>
         {error && (
           <Alert variant="destructive">
@@ -110,15 +130,9 @@ function LoginPage() {
           </Alert>
         )}
         <Turnstile onToken={onCaptcha} />
-        <Button type="submit" disabled={pending || (captchaRequired && !captcha)}>
+        <Button type="submit" size="lg" disabled={pending || (captchaRequired && !captcha)}>
           {m.sign_in_submit()}
         </Button>
-        <Link
-          to="/forgot-password"
-          className="text-muted-foreground text-center text-sm underline-offset-4 hover:underline"
-        >
-          {m.sign_in_forgot()}
-        </Link>
       </form>
     </AuthCard>
   );

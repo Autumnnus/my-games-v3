@@ -8,12 +8,47 @@ export type LibraryFilters = {
   sort?: "updated" | "name" | "rating" | "playtime" | "last_played" | "finished";
   order?: "asc" | "desc";
   favorites?: boolean;
+  /** Akıllı liste kimliği: kayıtlı filtresi uygulanır. */
+  list?: string;
 };
 
 export const profileQuery = (username: string) =>
   queryOptions({
     queryKey: ["profile", username.toLowerCase()],
     queryFn: () => unwrap(api.users[":username"].$get({ param: { username } })),
+  });
+
+/** Profil genel bakışı: oynananlar, favoriler, son bitirilenler, en iyiler, dağılımlar. */
+export const profileOverviewQuery = (username: string) =>
+  queryOptions({
+    queryKey: ["profile", username.toLowerCase(), "overview"],
+    queryFn: () => unwrap(api.users[":username"].overview.$get({ param: { username } })),
+  });
+
+export type UserDirectorySort = "active" | "games" | "new";
+type UserFilters = { q?: string; sort?: UserDirectorySort };
+
+const fetchUsers = (filters: UserFilters, offset: number) =>
+  unwrap(
+    api.users.$get({
+      query: {
+        q: filters.q || undefined,
+        sort: filters.sort,
+        offset: offset ? String(offset) : undefined,
+      },
+    }),
+  );
+
+export type DirectoryUser = Awaited<ReturnType<typeof fetchUsers>>["users"][number];
+
+/** Oyuncular dizini (sayfa sayfa). */
+export const usersQuery = (filters: UserFilters = {}) =>
+  infiniteQueryOptions({
+    queryKey: ["users", filters],
+    queryFn: ({ pageParam }) => fetchUsers(filters, pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (last) => last.nextOffset ?? undefined,
+    placeholderData: keepPreviousData,
   });
 
 export const libraryQuery = (username: string, filters: LibraryFilters = {}) =>
@@ -29,6 +64,7 @@ export const libraryQuery = (username: string, filters: LibraryFilters = {}) =>
             sort: filters.sort,
             order: filters.order,
             favorites: filters.favorites ? "1" : undefined,
+            list: filters.list,
             limit: "500",
           },
         }),
@@ -192,12 +228,6 @@ export const notificationPrefsQuery = queryOptions({
   queryFn: () => unwrap(api.notifications.preferences.$get()),
 });
 
-export const reportsQuery = (status: "open" | "resolved" | "dismissed" = "open") =>
-  queryOptions({
-    queryKey: ["admin", "reports", status],
-    queryFn: () => unwrap(api.admin.reports.$get({ query: { status } })),
-  });
-
 export type FeedItem = Awaited<
   ReturnType<NonNullable<ReturnType<typeof feedQuery>["queryFn"]>>
 >["items"][number];
@@ -212,6 +242,36 @@ export const userStatsQuery = (username: string) =>
   queryOptions({
     queryKey: ["stats", "user", username.toLowerCase()],
     queryFn: () => unwrap(api.users[":username"].stats.$get({ param: { username } })),
+  });
+
+/** Kaydın ay ay oynama geçmişi (gerçek + takipten önceki tahmin) ve tahminin kaynağı. */
+export const entryPlayHistoryQuery = (entryId: string) =>
+  queryOptions({
+    queryKey: ["play-history", entryId],
+    queryFn: () => unwrap(api.library[":id"]["play-history"].$get({ param: { id: entryId } })),
+  });
+
+export type EntryPlayHistory = Awaited<
+  ReturnType<NonNullable<ReturnType<typeof entryPlayHistoryQuery>["queryFn"]>>
+>;
+
+/** "Geçmişini netleştir" destesi: sorulmaya değer oyunlar (yalnızca kendi kütüphanen). */
+export const estimateQuestionsQuery = queryOptions({
+  queryKey: ["play-history", "questions"],
+  queryFn: () => unwrap(api.me["play-history"].questions.$get()),
+});
+
+/** Isı haritası: yıl verilmezse son 12 ay. Takipten önceki tahmin günleri `estimatedMinutes` ile işaretli. */
+export const heatmapQuery = (username: string, year: number | null) =>
+  queryOptions({
+    queryKey: ["stats", "heatmap", username.toLowerCase(), year ?? "recent"],
+    queryFn: () =>
+      unwrap(
+        api.users[":username"].heatmap.$get({
+          param: { username },
+          query: year ? { year: String(year) } : {},
+        }),
+      ),
   });
 
 export const globalStatsQuery = queryOptions({

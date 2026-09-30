@@ -8,7 +8,8 @@
   },
   "scripts": {
     "typecheck": "tsc",
-    "auth:schema": "node scripts/auth-schema.mjs"
+    "auth:schema": "node scripts/auth-schema.mjs",
+    "test": "vitest run"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.7.6",
@@ -25,6 +26,7 @@
   },
   "devDependencies": {
     "auth": "^1.7.6",
-    "@types/pg": "catalog:"
+    "@types/pg": "catalog:",
+    "vitest": "^5.0.2"
   }
 }

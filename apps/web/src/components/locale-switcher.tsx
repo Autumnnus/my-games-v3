@@ -1,4 +1,3 @@
-import { useRouteContext } from "@tanstack/react-router";
 import { LanguagesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,27 +7,16 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { authClient } from "@/lib/auth-client";
+import { changeLocale, localeLabels } from "@/lib/locale";
 import { m } from "@/paraglide/messages";
-import { getLocale, type Locale, locales, setLocale } from "@/paraglide/runtime";
+import { getLocale, type Locale, locales } from "@/paraglide/runtime";
 
-const labels: Record<Locale, string> = { en: "English", tr: "Türkçe" };
-
+/**
+ * Oturum açmamış ziyaretçiler için başlıktaki dil menüsü. Oturum açıkken dil Ayarlar'dan (ve ⌘K'dan) değişir.
+ */
 export function LocaleSwitcher() {
-  const { user } = useRouteContext({ from: "__root__" });
-
-  async function change(locale: Locale) {
-    // Push/e-posta bildirimleri de bu dilde gelsin.
-    if (user) {
-      await authClient
-        .updateUser({ locale } as Parameters<typeof authClient.updateUser>[0])
-        .catch(() => {});
-    }
-    setLocale(locale);
-  }
-
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="sm" aria-label={m.language()}>
           <LanguagesIcon />
@@ -38,11 +26,11 @@ export function LocaleSwitcher() {
       <DropdownMenuContent align="end">
         <DropdownMenuRadioGroup
           value={getLocale()}
-          onValueChange={(value) => void change(value as Locale)}
+          onValueChange={(value) => void changeLocale(value as Locale, { signedIn: false })}
         >
           {locales.map((locale) => (
-            <DropdownMenuRadioItem key={locale} value={locale}>
-              {labels[locale]}
+            <DropdownMenuRadioItem key={locale} value={locale} lang={locale}>
+              {localeLabels[locale]}
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>

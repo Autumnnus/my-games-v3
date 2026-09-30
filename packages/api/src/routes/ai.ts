@@ -1,10 +1,10 @@
-import {
-  deleteThread,
-  getThread,
-  listThreads,
-  streamChat,
-  usageToday,
-} from "@my-games/core/ai/chat";
+import { deleteThread, getThread, listThreads, streamChat } from "@my-games/core/ai/chat";
+import { pageContextSchema } from "@my-games/core/ai/context";
+import { pickGames, pickInputSchema } from "@my-games/core/ai/pick";
+import { entryRecap } from "@my-games/core/ai/recap";
+import { draftReview, reviewDraftSchema } from "@my-games/core/ai/review";
+import { assistantSuggestions, mentionCandidates } from "@my-games/core/ai/suggestions";
+import { usageToday } from "@my-games/core/ai/usage";
 import type { UIMessage } from "ai";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -14,16 +14,30 @@ import { uuidParam, validate } from "../validation";
 
 const chatBody = z.object({
   id: z.uuid(),
-  // Mesajın içeriği core'da ayrıntılı doğrulanır (rol, uzunluk, parça türleri).
+  // İçerik core'da ayrıntılı doğrulanır: kullanıcı mesajında rol/uzunluk/parça türleri; onay turunda
+  // yalnızca kararlar alınır, geri kalanı sunucudaki kayıttan gelir.
   message: z.object({
     id: z.string().min(1).max(100),
-    role: z.literal("user"),
+    role: z.enum(["user", "assistant"]),
     parts: z
       .array(z.object({ type: z.string() }).passthrough())
       .min(1)
-      .max(10),
+      .max(60),
+    metadata: z.record(z.string(), z.unknown()).optional(),
   }),
 });
+
+/** `?type=game&slug=…` biçimindeki sayfa bağlamı (GET istekleri için). */
+const pageQuery = z.object({
+  type: z.enum(["game", "entry", "profile", "stats", "inbox", "home"]).optional(),
+  slug: z.string().max(200).optional(),
+  id: z.string().max(100).optional(),
+  username: z.string().max(40).optional(),
+});
+
+function localeOf(c: { req: { raw: Request } }, user: { locale?: string | null }) {
+  return user.locale === "tr" || user.locale === "en" ? user.locale : localeFromRequest(c.req.raw);
+}
 
 export const aiRoutes = new Hono<AppEnv>()
   .post(
@@ -39,8 +53,7 @@ export const aiRoutes = new Hono<AppEnv>()
         userId: user.id,
         threadId: id,
         message: message as unknown as UIMessage,
-        locale:
-          user.locale === "tr" || user.locale === "en" ? user.locale : localeFromRequest(c.req.raw),
+        locale: localeOf(c, user),
         abortSignal: c.req.raw.signal,
       });
     },
@@ -57,4 +70,51 @@ export const aiRoutes = new Hono<AppEnv>()
   })
   .get("/ai/usage", withSession, requireUser, async (c) =>
     c.json(await usageToday(currentUser(c).id)),
+  )
+  .get("/ai/suggestions", withSession, requireUser, validate("query", pageQuery), async (c) => {
+    const page = pageContextSchema.safeParse(c.req.valid("query"));
+    return c.json(
+      await assistantSuggestions(currentUser(c).id, page.success ? page.data : undefined),
+    );
+  })
+  .get(
+    "/ai/mentions",
+    withSession,
+    requireUser,
+    rateLimit("ai-mentions", 120, 60_000),
+    validate("query", z.object({ q: z.string().max(100).optional() })),
+    async (c) => c.json(await mentionCandidates(currentUser(c).id, c.req.valid("query").q ?? "")),
+  )
+  .post(
+    "/ai/pick",
+    withSession,
+    requireUser,
+    rateLimit("ai-pick", 10, 60_000),
+    validate("json", pickInputSchema),
+    async (c) => {
+      const user = currentUser(c);
+      return c.json(await pickGames(user.id, c.req.valid("json"), localeOf(c, user)));
+    },
+  )
+  .post(
+    "/ai/review-draft",
+    withSession,
+    requireUser,
+    rateLimit("ai-review", 10, 60_000),
+    validate("json", reviewDraftSchema),
+    async (c) => {
+      const user = currentUser(c);
+      return c.json(await draftReview(user.id, c.req.valid("json"), localeOf(c, user)));
+    },
+  )
+  .get(
+    "/ai/recap/:id",
+    withSession,
+    requireUser,
+    rateLimit("ai-recap", 30, 60_000),
+    validate("param", uuidParam),
+    async (c) => {
+      const user = currentUser(c);
+      return c.json(await entryRecap(user.id, c.req.valid("param").id, localeOf(c, user)));
+    },
   );

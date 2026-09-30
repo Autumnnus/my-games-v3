@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+import { SwitchField } from "@/components/ui/field";
 import { api, unwrap } from "@/lib/api";
 import { errorMessage } from "@/lib/format";
 import { metaQuery } from "@/lib/meta";
@@ -43,7 +43,7 @@ export function SteamCard({ error }: { error?: string }) {
   });
   const link = useMutation({
     mutationFn: () => startSteamSignIn({ callbackURL: "/settings", link: true }),
-    onError: (err) => toast.error(err.message),
+    onError: (err) => toast.error(errorMessage(err)),
   });
 
   const linkError = steamErrorMessage(error);
@@ -111,15 +111,13 @@ export function SteamCard({ error }: { error?: string }) {
               </Alert>
             )}
             <div className="flex flex-wrap items-center justify-between gap-3">
-              {/* biome-ignore lint/a11y/noLabelWithoutControl: Switch label içinde */}
-              <label className="flex items-center gap-2 text-sm">
-                <Switch
-                  checked={account.syncEnabled}
-                  onCheckedChange={(value) => toggle.mutate(value)}
-                  disabled={toggle.isPending}
-                />
-                {m.steam_enabled()}
-              </label>
+              <SwitchField
+                className="min-w-60 flex-1"
+                label={m.steam_enabled()}
+                checked={account.syncEnabled}
+                onCheckedChange={(value) => toggle.mutate(value)}
+                disabled={toggle.isPending}
+              />
               <Button
                 size="sm"
                 variant="ghost"

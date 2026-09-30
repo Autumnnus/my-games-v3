@@ -1,12 +1,21 @@
 import type { EntryStatus, Platform, Store } from "@my-games/shared";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CalendarRangeIcon, UsersIcon } from "lucide-react";
-import { BarList, ChartCard, ColumnChart, Heatmap, StatTile } from "@/components/charts";
+import { CalendarRangeIcon, SparklesIcon, UsersIcon } from "lucide-react";
+import { useState } from "react";
+import {
+  BarList,
+  ChartCard,
+  ColumnChart,
+  Heatmap,
+  type HeatmapDay,
+  StatTile,
+} from "@/components/charts";
 import { GameCover } from "@/components/game-cover";
+import { PlayHistoryDeck } from "@/components/play-history-deck";
 import { Button } from "@/components/ui/button";
 import { formatPlaytime, formatRating, platformLabel, statusLabel, storeLabel } from "@/lib/format";
-import { userStatsQuery } from "@/lib/queries";
+import { estimateQuestionsQuery, heatmapQuery, userStatsQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/u/$username/stats")({
@@ -72,15 +81,13 @@ function UserStatsPage() {
         <StatTile label={m.stats_perfect()} value={totals.perfect} />
       </div>
 
-      {data.heatmap.length > 0 && (
-        <ChartCard title={m.stats_heatmap()} hint={m.stats_heatmap_hint()}>
-          <Heatmap
-            days={data.heatmap}
-            format={formatPlaytime}
-            lessLabel={m.stats_heatmap_less()}
-            moreLabel={m.stats_heatmap_more()}
-          />
-        </ChartCard>
+      {(data.heatmap.length > 0 || data.heatmapYears.length > 0) && (
+        <ActivityCard
+          username={username}
+          recent={data.heatmap}
+          years={data.heatmapYears}
+          isOwner={!!me && me.toLowerCase() === username.toLowerCase()}
+        />
       )}
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -173,5 +180,94 @@ function UserStatsPage() {
         </ChartCard>
       </div>
     </div>
+  );
+}
+
+/** Oynama takvimi: son 12 ay ya da seçilen yıl. Takipten önceki tahmini günler işaretli gösterilir. */
+function ActivityCard(props: {
+  username: string;
+  recent: HeatmapDay[];
+  years: number[];
+  isOwner: boolean;
+}) {
+  const [refining, setRefining] = useState(false);
+  const questions = useQuery({ ...estimateQuestionsQuery, enabled: props.isOwner });
+  const pending = questions.data?.total ?? 0;
+  // Son 12 ayda hiç veri yoksa (yalnızca eski yıllar tahmin edildiyse) en yakın yıldan başlanır.
+  const [year, setYear] = useState<number | null>(
+    props.recent.length > 0 ? null : (props.years[0] ?? null),
+  );
+  const selected = useQuery({
+    ...heatmapQuery(props.username, year),
+    enabled: year !== null,
+    placeholderData: keepPreviousData,
+  });
+  const days = year === null ? props.recent : (selected.data?.days ?? []);
+  const hasEstimates = days.some((day) => (day.estimatedMinutes ?? 0) > 0);
+  const chip =
+    "text-foreground/75 data-[active=true]:bg-foreground data-[active=true]:text-background rounded-full border px-3 py-0.5 text-xs font-semibold tabular-nums";
+
+  return (
+    <ChartCard
+      title={m.stats_heatmap()}
+      hint={hasEstimates ? m.stats_heatmap_estimated_hint() : m.stats_heatmap_hint()}
+    >
+      {props.isOwner && pending > 0 && (
+        <>
+          <Button
+            variant="glass"
+            size="sm"
+            className="justify-self-start"
+            onClick={() => setRefining(true)}
+          >
+            <SparklesIcon />
+            {m.play_history_deck_open()}
+            <span className="text-muted-foreground tabular-nums">{pending}</span>
+          </Button>
+          <PlayHistoryDeck open={refining} onOpenChange={setRefining} />
+        </>
+      )}
+      {props.years.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          <button
+            type="button"
+            className={chip}
+            data-active={year === null}
+            onClick={() => setYear(null)}
+          >
+            {m.stats_heatmap_recent()}
+          </button>
+          {props.years.map((item) => (
+            <button
+              key={item}
+              type="button"
+              className={chip}
+              data-active={year === item}
+              onClick={() => setYear(item)}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      )}
+      <Heatmap
+        days={days}
+        year={year}
+        format={formatPlaytime}
+        lessLabel={m.stats_heatmap_less()}
+        moreLabel={m.stats_heatmap_more()}
+        estimatedLabel={m.estimated()}
+        describe={({ date, minutes, estimatedMinutes }) => {
+          const time = formatPlaytime(minutes);
+          if (estimatedMinutes === 0) return m.stats_heatmap_cell({ date, time });
+          if (estimatedMinutes >= minutes) return m.stats_heatmap_cell_estimated({ date, time });
+          return m.stats_heatmap_cell_partly({
+            date,
+            time,
+            estimated: formatPlaytime(estimatedMinutes),
+          });
+        }}
+      />
+    </ChartCard>
   );
 }

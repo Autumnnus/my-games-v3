@@ -1,26 +1,11 @@
-import {
-  adminStorageOverview,
-  adminUserStorage,
-  cancelPendingAssets,
-  setDefaultQuota,
-  setUploadQuality,
-  setUserQuota,
-  storageUsage,
-} from "@my-games/core/media";
+import { cancelPendingAssets, setUploadQuality, storageUsage } from "@my-games/core/media";
 import { confirmScreenshotUploads, createScreenshotUploads } from "@my-games/core/screenshots";
 import { confirmAvatar, createAvatarUpload, removeAvatar } from "@my-games/core/users";
 import { MAX_UPLOAD_BATCH, mediaVariantNames, uploadQualities } from "@my-games/shared";
 import { type Context, Hono } from "hono";
 import { z } from "zod";
 import { auth } from "../auth";
-import {
-  type AppEnv,
-  currentUser,
-  rateLimit,
-  requireAdmin,
-  requireUser,
-  withSession,
-} from "../middleware";
+import { type AppEnv, currentUser, rateLimit, requireUser, withSession } from "../middleware";
 import { uuidParam, validate } from "../validation";
 
 const variantSchema = z.object({
@@ -31,13 +16,6 @@ const variantSchema = z.object({
   height: z.number().int().positive().max(20_000).optional(),
 });
 const variantsSchema = z.array(variantSchema).min(1).max(mediaVariantNames.length);
-
-/** 10 TB'a kadar; `null` = varsayılana dön. */
-const quotaBytes = z
-  .number()
-  .int()
-  .min(0)
-  .max(10 * 1024 ** 4);
 
 /**
  * Oturum 5 dakika imzalı cookie'de önbelleklenir; avatar değişince cookie'yi tazeleriz ki yeni adres hemen
@@ -154,36 +132,4 @@ export const mediaRoutes = new Hono<AppEnv>()
         },
         201,
       ),
-  )
-  // --- Admin (arayüzü sonra) ---
-  .get("/admin/storage", withSession, requireUser, requireAdmin, async (c) =>
-    c.json(await adminStorageOverview()),
-  )
-  .put(
-    "/admin/storage/default-quota",
-    withSession,
-    requireUser,
-    requireAdmin,
-    validate("json", z.object({ quotaBytes })),
-    async (c) => c.json(await setDefaultQuota(c.req.valid("json").quotaBytes)),
-  )
-  .get("/admin/users/:id/storage", withSession, requireUser, requireAdmin, async (c) =>
-    c.json(await adminUserStorage(c.req.param("id"))),
-  )
-  .put(
-    "/admin/users/:id/storage-quota",
-    withSession,
-    requireUser,
-    requireAdmin,
-    validate(
-      "json",
-      z.object({
-        quotaBytes: quotaBytes.nullable(),
-        note: z.string().max(500).nullable().optional(),
-      }),
-    ),
-    async (c) => {
-      const { quotaBytes: value, note } = c.req.valid("json");
-      return c.json(await setUserQuota(currentUser(c).id, c.req.param("id"), value, note));
-    },
   );

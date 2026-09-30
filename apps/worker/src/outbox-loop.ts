@@ -1,5 +1,6 @@
 import { databaseConfig } from "@my-games/core/config";
 import { OUTBOX_CHANNEL } from "@my-games/core/events";
+import { errorInfo, errorMessageOf, logger } from "@my-games/core/log";
 import { type OutboxHandlers, processOutbox } from "@my-games/core/outbox";
 import pg from "pg";
 
@@ -29,7 +30,9 @@ export function startOutboxLoop(handlers: OutboxHandlers) {
         if (processed === 100) again = true;
       } while (again && !stopped);
     } catch (error) {
-      console.error("[outbox] tur başarısız", error);
+      logger.error("outbox", "loop_failed", `outbox turu başarısız: ${errorMessageOf(error)}`, {
+        context: { error: errorInfo(error) },
+      });
     } finally {
       running = false;
     }

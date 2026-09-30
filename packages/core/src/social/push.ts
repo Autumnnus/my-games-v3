@@ -42,9 +42,10 @@ export async function subscribePush(
   subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
   userAgent?: string | null,
 ) {
-  if (!pushConfig()) throw new AppError("unavailable", "Push bildirimleri yapılandırılmamış");
+  if (!pushConfig())
+    throw new AppError("unavailable", "Push bildirimleri yapılandırılmamış", "push_disabled");
   if (!isPushServiceEndpoint(subscription.endpoint)) {
-    throw new AppError("invalid", "Geçersiz push adresi");
+    throw new AppError("invalid", "Geçersiz push adresi", "push_invalid");
   }
   // Kullanıcı başına sınırlı abonelik: en eskiler düşer (her tarayıcı/cihaz bir abonelik).
   const existing = await db

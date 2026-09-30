@@ -27,6 +27,8 @@ export type WrappedData = {
   finishedCount: number;
   averageRating: number | null;
   playedMinutes: number;
+  /** `playedMinutes`'ın takip başlamadan önceki tahmin olan kısmı. */
+  estimatedMinutes?: number;
   playedDays: number;
   finished: StoryGame[];
   genres: Array<{ key: string; count: number }>;
@@ -87,8 +89,11 @@ function buildSlides(data: WrappedData, name: string): Slide[] {
       key: "time",
       color: "#2a1f5c",
       kicker: m.wrapped_s_time_kicker(),
-      big: formatPlaytime(minutes),
-      sub: data.playedMinutes ? `${m.wrapped_days()}: ${data.playedDays}` : m.wrapped_s_time_sub(),
+      // Tahmin içeren süre işaretli: "~" ve alt satırda "Tahmini".
+      big: `${data.estimatedMinutes ? "~" : ""}${formatPlaytime(minutes)}`,
+      sub: data.playedMinutes
+        ? `${m.wrapped_days()}: ${data.playedDays}${data.estimatedMinutes ? ` · ${m.estimated()}` : ""}`
+        : m.wrapped_s_time_sub(),
     });
   }
 

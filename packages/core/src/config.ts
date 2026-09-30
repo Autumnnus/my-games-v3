@@ -119,17 +119,56 @@ export function pushConfig() {
   };
 }
 
+/** Virgül ya da satır sonuyla ayrılmış liste (boşlar atılır). */
+function readList(name: string) {
+  return (read(name) ?? "")
+    .split(/[\s,]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+/**
+ * Sağlayıcının API anahtarları. Her sağlayıcı kendi havuzunu kullanır; anahtarlar şu değişkenlerden
+ * toplanır (tekrarlar atılır): `<ÖNEK>_API_KEYS` (liste), `<ÖNEK>_API_KEY` (tek) ve varsayılan sağlayıcı
+ * için `AI_API_KEYS`. Önek AI SDK geleneğini izler: `google` → `GOOGLE_GENERATIVE_AI`, diğerleri adın
+ * büyük harfli hâli (`openai` → `OPENAI`).
+ */
+export function aiProviderKeys(provider: string) {
+  const prefix = provider === "google" ? "GOOGLE_GENERATIVE_AI" : provider.toUpperCase();
+  const keys = [
+    ...readList(`${prefix}_API_KEYS`),
+    ...readList(`${prefix}_API_KEY`),
+    ...(provider === aiProvider() ? readList("AI_API_KEYS") : []),
+  ];
+  return [...new Set(keys)];
+}
+
+/** Varsayılan sağlayıcı. `mock`: yerel geliştirmede anahtarsız sahte model (bkz. ai/dev-model). */
+function aiProvider() {
+  return read("AI_PROVIDER")?.toLowerCase() || "google";
+}
+
+/**
+ * AI ayarları. Model adları `sağlayıcı:model` ya da yalnızca `model` (varsayılan sağlayıcı) olabilir;
+ * boş bırakılanlar sağlayıcının varsayılanını kullanır (bkz. ai/providers).
+ * - `AI_MODEL`: sohbet agent'ı.
+ * - `AI_FALLBACK_MODELS`: ana modelin bütün anahtarları dolunca sırayla denenen modeller.
+ * - `AI_LIGHT_MODEL`: başlık, öneri gerekçesi, taslak gibi kısa işler (daha ucuz, daha hızlı).
+ * - `AI_KEY_STRATEGY`: `round_robin` (yükü anahtarlara dağıtır) ya da `failover` (sıradaki anahtara
+ *   yalnızca öncekiler dolunca geçer).
+ */
 export function aiConfig() {
-  // `mock`: yerel geliştirmede anahtarsız sahte model (bkz. ai/dev-model).
-  const provider = read("AI_PROVIDER") === "mock" ? "mock" : "google";
-  const apiKey = read("GOOGLE_GENERATIVE_AI_API_KEY");
-  if (provider === "google" && !apiKey) return null;
+  const provider = aiProvider();
+  if (provider !== "mock" && aiProviderKeys(provider).length === 0) return null;
   return {
     provider,
-    apiKey: apiKey ?? "",
-    model: read("AI_MODEL") ?? "gemini-3.5-flash",
+    model: read("AI_MODEL"),
+    fallbackModels: readList("AI_FALLBACK_MODELS"),
+    lightModel: read("AI_LIGHT_MODEL"),
+    keyStrategy:
+      read("AI_KEY_STRATEGY") === "failover" ? ("failover" as const) : ("round_robin" as const),
     dailyTokenLimit: readNumber("AI_DAILY_TOKEN_LIMIT", 200_000),
-    maxSteps: readNumber("AI_MAX_STEPS", 8),
+    maxSteps: readNumber("AI_MAX_STEPS", 10),
   };
 }
 

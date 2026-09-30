@@ -5,7 +5,7 @@ import * as z from "zod/mini";
 import { AuthCard, FormField } from "@/components/auth-card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { authClient } from "@/lib/auth-client";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { m } from "@/paraglide/messages";
@@ -62,15 +62,11 @@ function ResetPasswordPage() {
 
   return (
     <AuthCard title={m.reset_title()} footer={footer}>
-      <form className="grid gap-4" onSubmit={onSubmit}>
+      {/* method="post": sayfa henüz etkileşimli değilken (hydration öncesi) Enter'a basılırsa tarayıcı formu
+          kendisi gönderir; GET olsaydı şifre adres çubuğuna ve geçmişe yazılırdı. */}
+      <form method="post" className="grid gap-4" onSubmit={onSubmit}>
         <FormField label={m.field_new_password()} hint={m.field_password_hint()}>
-          <Input
-            name="password"
-            type="password"
-            autoComplete="new-password"
-            required
-            minLength={8}
-          />
+          <PasswordInput name="password" autoComplete="new-password" required minLength={8} />
         </FormField>
         {error && (
           <Alert variant="destructive">

@@ -11,10 +11,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "migrate:legacy": "tsx --env-file-if-exists=../../.env scripts/migrate-legacy.ts",
-    "art:refresh": "tsx --env-file-if-exists=../../.env scripts/refresh-art.ts"
+    "art:refresh": "tsx --env-file-if-exists=../../.env scripts/refresh-art.ts",
+    "estimates:rebuild": "tsx --env-file-if-exists=../../.env scripts/rebuild-estimates.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.82",
+    "@ai-sdk/provider": "^4.0.18",
     "@my-games/db": "workspace:*",
     "@my-games/shared": "workspace:*",
     "ai": "^7.0.118",

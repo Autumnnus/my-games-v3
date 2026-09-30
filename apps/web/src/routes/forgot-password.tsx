@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { MailIcon } from "lucide-react";
 import { type FormEvent, useCallback, useState } from "react";
 import { AuthCard, FormField } from "@/components/auth-card";
 import { Turnstile, useTurnstileRequired } from "@/components/turnstile";
@@ -51,7 +52,7 @@ function ForgotPasswordPage() {
       ) : (
         <form className="grid gap-4" onSubmit={onSubmit}>
           <FormField label={m.field_email()}>
-            <Input name="email" type="email" autoComplete="email" required />
+            <Input name="email" type="email" autoComplete="email" required leading={<MailIcon />} />
           </FormField>
           <Turnstile onToken={onCaptcha} />
           <Button type="submit" disabled={pending || (captchaRequired && !captcha)}>

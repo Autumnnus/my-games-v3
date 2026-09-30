@@ -1,8 +1,9 @@
 import { defineConfig } from "tsdown";
 
-// Production imajında migration'ı node_modules olmadan çalıştırabilmek için tek dosyaya paketlenir.
+// Production imajında migration'ı ve admin komutunu node_modules olmadan çalıştırabilmek için tek dosyaya
+// paketlenir.
 export default defineConfig({
-  entry: { migrate: "src/migrate.ts" },
+  entry: { migrate: "src/migrate.ts", admin: "src/admin-cli.ts" },
   format: "esm",
   platform: "node",
   target: "node22",

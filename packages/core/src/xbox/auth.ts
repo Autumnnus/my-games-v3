@@ -24,7 +24,8 @@ type XboxCredentials = { refreshToken: string; xsts: (XboxAuth & { notAfter: num
 
 function config() {
   const value = xboxConfig();
-  if (!value) throw new AppError("unavailable", "Xbox bağlantısı yapılandırılmamış");
+  if (!value)
+    throw new AppError("unavailable", "Xbox bağlantısı yapılandırılmamış", "xbox_disabled");
   return value;
 }
 
@@ -172,17 +173,19 @@ export function authorizationHeader(auth: XboxAuth) {
 
 /** OAuth dönüşü: kodu token'a çevirir, Xbox hesabını bağlar. */
 export async function completeXboxLink(userId: string, code: string, state: string) {
-  if (!verifyXboxState(state, userId)) throw new AppError("forbidden", "Geçersiz Xbox dönüşü");
+  if (!verifyXboxState(state, userId))
+    throw new AppError("forbidden", "Geçersiz Xbox dönüşü", "xbox_state_invalid");
   const tokens = await tokenRequest({
     grant_type: "authorization_code",
     code,
     redirect_uri: xboxRedirectUri(),
   });
-  if (!tokens.ok) throw new AppError("invalid", "Microsoft girişi doğrulanamadı");
+  if (!tokens.ok)
+    throw new AppError("invalid", "Microsoft girişi doğrulanamadı", "xbox_auth_failed");
   const xsts = await xstsFromAccessToken(tokens.accessToken);
   if (!xsts) {
     // Xbox profili olmayan Microsoft hesapları burada düşer.
-    throw new AppError("invalid", "Bu Microsoft hesabının Xbox profili yok");
+    throw new AppError("invalid", "Bu Microsoft hesabının Xbox profili yok", "xbox_no_profile");
   }
   await savePlatformAccount({
     userId,

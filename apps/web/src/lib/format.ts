@@ -1,7 +1,6 @@
 import type { EntryStatus, Platform, Store } from "@my-games/shared";
 import { m } from "@/paraglide/messages";
 import { getLocale } from "@/paraglide/runtime";
-import { ApiError } from "./api";
 
 const statusMessages: Record<EntryStatus, () => string> = {
   playing: m.status_playing,
@@ -78,6 +77,15 @@ export function formatDate(
   ).format(date);
 }
 
+/** "Eylül 2026": saat diliminden bağımsız (UTC) ay ve yıl; sunucu ile tarayıcı aynı metni üretir. */
+export function formatMonthYear(value: string | Date) {
+  return new Intl.DateTimeFormat(getLocale(), {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(value));
+}
+
 export function formatRelative(value: string | Date) {
   const diffSeconds = (new Date(value).getTime() - Date.now()) / 1000;
   const units: Array<[Intl.RelativeTimeFormatUnit, number]> = [
@@ -96,20 +104,6 @@ export function formatRelative(value: string | Date) {
   return format.format(Math.round(diffSeconds), "second");
 }
 
-/** API hatasını kullanıcıya gösterilecek mesaja çevirir. */
-export function errorMessage(error: unknown) {
-  if (error instanceof ApiError) {
-    if (error.code === "conflict")
-      return error.message !== "conflict" ? error.message : m.error_conflict();
-    if (error.code === "rate_limited") return m.error_rate_limited();
-    if (error.code === "storage_quota") return m.storage_error_quota();
-    if (error.code === "storage_full") return m.storage_system_full();
-    if (error.code === "unavailable") return m.error_unavailable();
-    if (error.message && error.message !== error.code) return error.message;
-  }
-  return m.error_generic();
-}
-
 /** 1536 → "1,5 KB" / "1.5 KB". Depolama göstergelerinde. */
 export function formatBytes(bytes: number) {
   const units = ["B", "KB", "MB", "GB", "TB"];
@@ -122,3 +116,6 @@ export function formatBytes(bytes: number) {
   const digits = unit === 0 || value >= 100 ? 0 : 1;
   return `${value.toLocaleString(getLocale(), { maximumFractionDigits: digits })} ${units[unit]}`;
 }
+
+// Eski içe aktarmalar bozulmasın; hata metinleri `lib/errors.ts`te.
+export { errorMessage } from "./errors";

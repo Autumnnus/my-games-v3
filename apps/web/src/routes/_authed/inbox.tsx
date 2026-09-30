@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { api, unwrap } from "@/lib/api";
+import { apiErrorText } from "@/lib/errors";
 import { errorMessage } from "@/lib/format";
 import { proposalsQuery, syncIgnoresQuery, syncRulesQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
@@ -130,7 +131,7 @@ function ProposalList({ status, deck }: { status: "pending" | "resolved"; deck: 
       unwrap(api.proposals.bulk.$post({ json: { ids: [...selected], action } })),
     onSuccess: async ({ results }) => {
       const failed = results.filter((result) => !result.ok);
-      if (failed.length) toast.error(failed[0]?.error ?? m.error_generic());
+      if (failed.length) toast.error(apiErrorText(failed[0]?.error, failed[0]?.reason));
       else toast.success(m.inbox_done());
       setSelected(new Set());
       await refresh();
@@ -272,7 +273,7 @@ function Rules() {
                   })
                 }
               >
-                <SelectTrigger className="w-52">
+                <SelectTrigger size="sm" className="w-52">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>

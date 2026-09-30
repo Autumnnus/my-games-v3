@@ -157,16 +157,17 @@ function validateVariants(purpose: MediaPurpose, quality: UploadQuality, variant
     const rule = rules[variant.name];
     if (!rule) throw new AppError("invalid", "Geçersiz varyant");
     if (!rule.types.includes(variant.contentType)) {
-      throw new AppError("invalid", "Desteklenmeyen dosya türü");
+      throw new AppError("invalid", "Desteklenmeyen dosya türü", "upload_unsupported");
     }
     if (!Number.isInteger(variant.bytes) || variant.bytes <= 0) {
       throw new AppError("invalid", "Geçersiz dosya boyutu");
     }
-    if (variant.bytes > rule.maxBytes) throw new AppError("invalid", "Dosya çok büyük");
+    if (variant.bytes > rule.maxBytes)
+      throw new AppError("invalid", "Dosya çok büyük", "upload_too_large");
     // Boyutları istemci bildirir; sınır aşılıyorsa istemci küçültmemiş demektir.
     const side = Math.max(variant.width ?? 0, variant.height ?? 0);
     if (rule.maxSide !== null && side > rule.maxSide) {
-      throw new AppError("invalid", "Görsel boyutu sınırı aşıyor");
+      throw new AppError("invalid", "Görsel boyutu sınırı aşıyor", "upload_too_large");
     }
   }
 }
@@ -186,7 +187,11 @@ export async function reserveUploads(
 ) {
   const storage = storageFor(null);
   if (input.files.length === 0 || input.files.length > MAX_UPLOAD_BATCH) {
-    throw new AppError("invalid", `Tek seferde 1–${MAX_UPLOAD_BATCH} görsel yüklenebilir`);
+    throw new AppError(
+      "invalid",
+      `Tek seferde 1–${MAX_UPLOAD_BATCH} görsel yüklenebilir`,
+      "upload_batch_limit",
+    );
   }
   if (input.purpose === "avatar" && input.files.length !== 1) {
     throw new AppError("invalid", "Tek avatar yüklenebilir");
@@ -305,7 +310,8 @@ export async function verifyPendingAssets(userId: string, purpose: MediaPurpose,
         eq(mediaAssets.status, "pending"),
       ),
     );
-  if (rows.length !== unique.length) notFound("Yükleme bulunamadı ya da süresi doldu");
+  if (rows.length !== unique.length)
+    notFound("Yükleme bulunamadı ya da süresi doldu", "upload_expired");
 
   await Promise.all(
     rows.map(async (asset) => {
@@ -317,7 +323,11 @@ export async function verifyPendingAssets(userId: string, purpose: MediaPurpose,
       });
       if (!valid) {
         await db.transaction((tx) => discardAssets(tx, [asset]));
-        throw new AppError("invalid", "Yüklenen dosya bulunamadı ya da bildirilenden farklı");
+        throw new AppError(
+          "invalid",
+          "Yüklenen dosya bulunamadı ya da bildirilenden farklı",
+          "upload_mismatch",
+        );
       }
     }),
   );
@@ -331,7 +341,8 @@ export async function markReady(tx: Tx, ids: string[]) {
     .set({ status: "ready", confirmedAt: new Date() })
     .where(and(inArray(mediaAssets.id, ids), eq(mediaAssets.status, "pending")))
     .returning({ id: mediaAssets.id });
-  if (rows.length !== ids.length) throw new AppError("conflict", "Yükleme zaten onaylandı");
+  if (rows.length !== ids.length)
+    throw new AppError("conflict", "Yükleme zaten onaylandı", "upload_confirmed");
 }
 
 // --- Silme ve temizlik ---
@@ -456,7 +467,7 @@ export async function adminStorageOverview(limit = 20) {
 
 export async function adminUserStorage(userId: string) {
   const [found] = await db.select({ id: user.id }).from(user).where(eq(user.id, userId));
-  if (!found) notFound("Kullanıcı bulunamadı");
+  if (!found) notFound("Kullanıcı bulunamadı", "user_not_found");
   const [usage, settings] = await Promise.all([storageUsage(userId), settingsOf(db, userId)]);
   return {
     ...usage,
@@ -475,7 +486,7 @@ export async function setUserQuota(
   note?: string | null,
 ) {
   const [found] = await db.select({ id: user.id }).from(user).where(eq(user.id, userId));
-  if (!found) notFound("Kullanıcı bulunamadı");
+  if (!found) notFound("Kullanıcı bulunamadı", "user_not_found");
   const values = {
     quotaBytes,
     quotaNote: note?.trim() || null,
