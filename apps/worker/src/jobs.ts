@@ -1,5 +1,6 @@
 import { refreshGameArt, refreshStaleGames, refreshSteamCovers } from "@my-games/core/catalog";
 import { rebuildPlayEstimates, usersNeedingEstimates } from "@my-games/core/estimates/build";
+import { suggestFinishDates } from "@my-games/core/estimates/finish";
 import { errorInfo, errorMessageOf, logger, pruneLogs } from "@my-games/core/log";
 import { matchUnlinkedGames } from "@my-games/core/matching";
 import { cleanupPendingAssets } from "@my-games/core/media";
@@ -70,7 +71,13 @@ export const jobs: JobDefinition[] = [
   {
     // Takipten önceki oynama geçmişi tahmini. `stately`: kullanıcı başına bir aktif, bir bekleyen iş.
     name: "estimates.rebuild-user",
-    run: (data) => rebuildPlayEstimates(String(data.userId)),
+    run: async (data) => {
+      const userId = String(data.userId);
+      const estimates = await rebuildPlayEstimates(userId);
+      // Yeni başarımlar ve kanıtlar bitirme tarihi önerisi de doğurabilir (onay kutusuna düşer).
+      const finish = await suggestFinishDates(userId);
+      return { estimates, finish };
+    },
     concurrency: 1,
     policy: "stately",
   },

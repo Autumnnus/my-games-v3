@@ -36,7 +36,7 @@ export const chatMessages = pgTable(
   (t) => [index().on(t.threadId, t.createdAt)],
 );
 
-export type AiPurpose = "chat" | "title" | "pick" | "review" | "recap" | "estimates";
+export type AiPurpose = "chat" | "title" | "pick" | "review" | "recap" | "estimates" | "endings";
 export type AiRunStatus = "ok" | "error" | "aborted";
 
 /** Bir model çağrısının adımı (izleme ekranı). İçerik tutulmaz; içerik sohbet mesajlarındadır. */

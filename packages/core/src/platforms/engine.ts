@@ -15,6 +15,7 @@ import {
   type UnlockedAchievement,
 } from "../achievements";
 import { type DbOrTx, db, type Tx } from "../db";
+import { AppError } from "../errors";
 import { emit } from "../events";
 import { ignoreKey, notifyPending, type ProposalResult, propose } from "../proposals";
 
@@ -436,11 +437,18 @@ export async function applyPlatformTitles(input: {
 
   if (spec.fetchAchievements) {
     for (const { entry, title } of achievementChecks.slice(0, spec.maxAchievementChecks)) {
-      const fetched = await spec.fetchAchievements(title).catch((error: unknown) => {
+      let fetched: AchievementFetch | null;
+      try {
+        fetched = await spec.fetchAchievements(title);
+      } catch (error) {
+        // Geçici hata (istek sınırı, ağ): başlık "kontrol edildi" sayılmaz, sonraki sync yeniden dener. Steam
+        // başarım sayısını önceden bildirmediği için işaretlenen başlık bir daha hiç denenmezdi.
         console.warn(`[${provider}] başarımlar alınamadı`, title.externalId, error);
-        return null;
-      });
+        if (error instanceof AppError && error.code === "rate_limited") break;
+        continue;
+      }
       const checkedAt = new Date();
+      // `null`: başlığın başarımı yok ya da gizli; tekrar sorulmaz.
       if (!fetched) {
         await saveSnapshot(db, snapshotKey(title), { checkedAt });
         continue;

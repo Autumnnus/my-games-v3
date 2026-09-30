@@ -2,6 +2,7 @@
  * Takipten önceki oynama geçmişi tahminini hemen üretir (worker bunu sync sonrasında ve 20 dakikada bir
  * kendisi yapar). Kullanım:
  *   pnpm --filter @my-games/core estimates:rebuild -- --user kadir [--no-ai] [--force] [--ask-ai]
+ * `--finish`: bitirme tarihi önerilerini de üretir (onay kutusuna düşer).
  * `--force`: planları yeniden kurar (saklanan AI ipuçlarıyla); `--ask-ai`: belirsiz oyunları AI'ya yeniden sorar.
  *   pnpm --filter @my-games/core estimates:rebuild -- --all
  */
@@ -9,6 +10,7 @@ import { schema } from "@my-games/db";
 import { desc, eq, sql } from "drizzle-orm";
 import { closeDb, db } from "../src/db";
 import { rebuildPlayEstimates } from "../src/estimates/build";
+import { suggestFinishDates } from "../src/estimates/finish";
 
 const args = process.argv.slice(2);
 const flag = (name: string) => args.includes(`--${name}`);
@@ -40,6 +42,9 @@ for (const user of users) {
     askAgain: flag("ask-ai"),
   });
   console.log(`\n[estimates] ${user.username}: ${Date.now() - started} ms`, stats);
+  if (flag("finish")) {
+    console.log("[finish]", await suggestFinishDates(user.id, { ai: !flag("no-ai") }));
+  }
   const plans = await db
     .select({
       name: schema.games.name,

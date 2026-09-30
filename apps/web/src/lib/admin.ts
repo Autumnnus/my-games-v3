@@ -208,6 +208,7 @@ export const purposeLabels: Record<string, () => string> = {
   review: m.admin_purpose_review,
   recap: m.admin_purpose_recap,
   estimates: m.admin_purpose_estimates,
+  endings: m.admin_purpose_endings,
 };
 
 export const purgeLabels = {

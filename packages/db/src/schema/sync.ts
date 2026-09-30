@@ -245,6 +245,12 @@ export const achievementSets = pgTable(
     gameId: uuid().references(() => games.id, { onDelete: "set null" }),
     total: integer().notNull(),
     fetchedAt: tstz().notNull(),
+    /**
+     * Ana hikâyeyi bitirince açılan başarımlar (herhangi bir son). AI oyun başına bir kez sınıflandırır, tüm
+     * kullanıcılar için ortaktır. Boş dizi: oyunun bir sonu yok (çok oyunculu, sandbox); `null`: sınıflandırılmadı.
+     */
+    endingApiNames: jsonb().$type<string[]>(),
+    endingsCheckedAt: tstz(),
   },
   (t) => [primaryKey({ columns: [t.provider, t.gameKey] }), index().on(t.gameId)],
 );

@@ -134,6 +134,20 @@
       "when": 1790768001936,
       "tag": "0018_play_estimates",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790774807358,
+      "tag": "0019_achievement_recheck",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790775089666,
+      "tag": "0020_achievement_endings",
+      "breakpoints": true
     }
   ]
 }

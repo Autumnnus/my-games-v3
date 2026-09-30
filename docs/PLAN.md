@@ -193,6 +193,14 @@ eski yılları da gösterir. İlke: **AI bilgi verir, kod hesaplar.**
   sorulur: "bir kerede" (yıl, biliniyorsa ay), "yıllara yayarak" (yıllar), "tahmin doğru", "oyun değil", "atla". Cevap
   kullanıcı planı olarak kilitlenir; geometriyi kod kurar (`planFromAnswer`). API: `GET /me/play-history/questions`,
   `POST /library/:id/play-history/answer`. AI gerekmez; asistan sohbetine araç olarak bağlanması sonraki iş.
+- **Bitirme tarihi önerisi** (`estimates/finish.ts`, her tahmin derlemesinden sonra): AI oyun başına bir kez "ana hikâyeyi
+  bitirince açılan başarımları" (herhangi bir son; çoğu gizli olduğundan anahtar kelime işe yaramaz) seçer, sonuç
+  `achievement_sets.ending_api_names`'te herkes için ortak saklanır. Bitirme tarihi boş kayıtlara sonun en erken açıldığı gün
+  önerilir (kayıt "bitirildi" değilse durum da); aynı dakikadaki toplu açılımlar tarih sayılmaz. Başarımı olmayan
+  kayıtlarda yalnızca "bitirdim" denmiş ama tarihi girilmemişse son oynama günü (`system`). Öneri türü `finish_date`,
+  varsayılan kural "sor", kayıt başına bir kez; 7 günden eski bitirmeler onaylanınca akışa düşmez.
+- Başarım çekiminde düzeltme: geçici hata (istek sınırı) alan başlık artık "kontrol edildi" işaretlenmez (Steam başarım
+  sayısını önceden bildirmediği için bir daha denenmiyordu); 0019 mevcut başlıkları yeniden denetir.
 - Sonraki adımlar: görünürlük tercihi (herkese / yalnızca ben / kapalı), asistan sohbetinde "Witcher 3'ü 2016 yazında
   bitirdim" gibi cümlelerden aynı cevabı üreten onaylı araç, gerçek oturumlarla geriye dönük doğruluk ölçümü.
 

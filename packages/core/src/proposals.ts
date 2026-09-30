@@ -19,6 +19,8 @@ const { changeProposals, syncRules, syncIgnores, games, libraryEntries } = schem
  * - new_game: Steam kütüphanesinde, bizim kütüphanede olmayan oyun.
  * - playtime_conflict: elle girilmiş süre ile Steam süresi ilk bağlantıda çakışıyor.
  * - match: IGDB'siz oyun için IGDB eşleşme adayları.
+ * - finish_date: bitirme tarihi (ve gerekirse "bitirildi" durumu); oyunun sonunu veren başarımdan ya da
+ *   "bitirdim" denmiş ama tarihi girilmemiş kayıtta son oynamadan (`system`).
  */
 export const DEFAULT_RULES: Record<string, SyncAction> = {
   "steam:playtime": "auto",
@@ -37,6 +39,10 @@ export const DEFAULT_RULES: Record<string, SyncAction> = {
   "xbox:status": "ask",
   "xbox:new_game": "ask",
   "xbox:playtime_conflict": "ask",
+  "steam:finish_date": "ask",
+  "psn:finish_date": "ask",
+  "xbox:finish_date": "ask",
+  "system:finish_date": "ask",
   "migration:match": "ask",
   "igdb:match": "ask",
   "ai:entry_update": "ask",
@@ -46,11 +52,18 @@ export const DEFAULT_RULES: Record<string, SyncAction> = {
 /** Kullanıcının değiştirebildiği kurallar (UI bu listeyi gösterir). */
 export const CONFIGURABLE_RULES = Object.keys(DEFAULT_RULES);
 
+/** Bitirme tarihi önerisinin dayanağı. */
+export type FinishEvidence =
+  | { kind: "achievement"; name: string; at: string }
+  | { kind: "last_played"; at: string };
+
 export type ProposalPayload =
   | {
       op: "update";
       changes: Array<{ field: string; from: unknown; to: unknown }>;
       summary?: string;
+      /** Önerinin dayanağı (arayüzde gösterilir): ör. bitirme tarihi için açılan son başarımı. */
+      evidence?: FinishEvidence;
     }
   | {
       op: "create";

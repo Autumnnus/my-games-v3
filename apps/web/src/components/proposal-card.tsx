@@ -6,13 +6,19 @@ import { RelativeTime } from "@/components/time";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { formatPlaytime } from "@/lib/format";
+import { formatDate, formatPlaytime } from "@/lib/format";
 import { describeChange } from "@/lib/history";
 import type { Proposal } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
 
 type Payload =
-  | { op: "update"; changes: Array<{ field: string; from: unknown; to: unknown }> }
+  | {
+      op: "update";
+      changes: Array<{ field: string; from: unknown; to: unknown }>;
+      evidence?:
+        | { kind: "achievement"; name: string; at: string }
+        | { kind: "last_played"; at: string };
+    }
   | {
       op: "create";
       game: { name: string; provider?: string };
@@ -55,6 +61,7 @@ export const kindLabels: Record<string, () => string> = {
   entry_update: m.proposal_kind_entry_update,
   entry_create: m.proposal_kind_entry_create,
   screenshots: m.proposal_kind_screenshots,
+  finish_date: m.proposal_kind_finish_date,
 };
 
 const platformNames: Record<string, () => string> = {
@@ -275,6 +282,18 @@ export function ProposalDetails(props: {
             <li key={change.field}>{describeChange(change)}</li>
           ))}
         </ul>
+      )}
+      {payload.op === "update" && payload.evidence && (
+        <p className="text-foreground/75 text-sm">
+          {payload.evidence.kind === "achievement"
+            ? m.proposal_finish_evidence_achievement({
+                name: payload.evidence.name,
+                date: formatDate(payload.evidence.at, "long") ?? payload.evidence.at,
+              })
+            : m.proposal_finish_evidence_last_played({
+                date: formatDate(payload.evidence.at, "long") ?? payload.evidence.at,
+              })}
+        </p>
       )}
       {payload.op === "create" && <NewGameHint payload={payload} source={proposal.source} />}
       {payload.op === "conflict" && (
