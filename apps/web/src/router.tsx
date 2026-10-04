@@ -27,6 +27,12 @@ export function getRouter() {
     },
     // Kendi `onError`'u olmayan her işlem hatası kullanıcıya anlaşılır bir bildirimle döner; sessizce yutulmaz.
     mutationCache: new MutationCache({
+      // Yeni üye listesinin adımları veriden hesaplanır (oyun ekledi, öneri onayladı…); her başarılı işlemden
+      // sonra tazelenir. Rehberi olmayanlarda bu sorgu hiç çalışmadığı için bedeli yok.
+      onSuccess: (_data, _variables, _context, mutation) => {
+        if (mutation.options.mutationKey?.[0] === "onboarding") return;
+        void queryClient.invalidateQueries({ queryKey: ["onboarding"] });
+      },
       onError: (error, _variables, _context, mutation) => {
         if (mutation.options.onError || mutation.meta?.errorToast === false) return;
         toast.error(errorMessage(error));

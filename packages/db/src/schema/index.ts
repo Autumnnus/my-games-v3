@@ -6,6 +6,7 @@ export * from "./enums";
 export * from "./estimates";
 export * from "./library";
 export * from "./media";
+export * from "./onboarding";
 export * from "./relations";
 export * from "./social";
 export * from "./sync";

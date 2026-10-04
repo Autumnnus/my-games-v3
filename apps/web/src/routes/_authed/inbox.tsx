@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
+import { CoachMark } from "@/components/onboarding/coach-mark";
 import {
   isBulkable,
   ProposalCard,
@@ -144,12 +145,15 @@ function ProposalList({ status, deck }: { status: "pending" | "resolved"; deck: 
 
   if (deck && data) {
     return (
-      <ProposalDeck
-        proposals={proposals}
-        onResolve={(proposal, action, options) =>
-          resolve.mutateAsync({ id: proposal.id, action, options })
-        }
-      />
+      <div data-tour="inbox-deck">
+        <CoachMark tip="inbox_deck" anchor="inbox-deck" when={proposals.length > 0} side="top" />
+        <ProposalDeck
+          proposals={proposals}
+          onResolve={(proposal, action, options) =>
+            resolve.mutateAsync({ id: proposal.id, action, options })
+          }
+        />
+      </div>
     );
   }
 

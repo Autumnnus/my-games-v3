@@ -1,0 +1,42 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web-3301",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@my-games/web",
+        "exec",
+        "vite",
+        "dev",
+        "--port",
+        "3301",
+        "--strictPort"
+      ],
+      "env": {
+        "APP_URL": "http://localhost:3301"
+      },
+      "port": 3301
+    },
+    {
+      "name": "web-3301-mock",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--filter",
+        "@my-games/web",
+        "exec",
+        "vite",
+        "dev",
+        "--port",
+        "3301",
+        "--strictPort"
+      ],
+      "env": {
+        "APP_URL": "http://localhost:3301",
+        "AI_PROVIDER": "mock"
+      },
+      "port": 3301
+    }
+  ]
+}

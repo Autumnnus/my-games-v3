@@ -347,7 +347,7 @@ async function runAgent(input: {
       locale: input.locale,
       mode,
       context: input.contextLines,
-      maxSteps: aiConfig()?.maxSteps ?? 10,
+      maxSteps: aiConfig().maxSteps,
     },
     onStepEnd: (step) => {
       steps.push(step as StepLike);

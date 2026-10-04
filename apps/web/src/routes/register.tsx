@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { type FormEvent, useCallback, useState } from "react";
+import { toast } from "sonner";
 import { AuthCard, FormField } from "@/components/auth-card";
-import { SocialButtons } from "@/components/social-buttons";
+import { LegalLinks, SocialButtons } from "@/components/social-buttons";
 import { Turnstile, useTurnstileRequired } from "@/components/turnstile";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { authClient } from "@/lib/auth-client";
@@ -31,6 +33,7 @@ function RegisterPage() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  const [accepted, setAccepted] = useState(false);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -44,7 +47,8 @@ function RegisterPage() {
       username: String(form.get("username")),
       email,
       password: String(form.get("password")),
-      callbackURL: "/",
+      // Doğrulama bağlantısı buraya döner (başarı ya da "süresi doldu, yeniden gönder").
+      callbackURL: "/verify-email",
       fetchOptions: { headers: captcha ? { "x-captcha-response": captcha } : {} },
     });
     setPending(false);
@@ -78,6 +82,7 @@ function RegisterPage() {
         <Alert>
           <AlertDescription>{m.sign_up_success({ email: sentTo })}</AlertDescription>
         </Alert>
+        <ResendVerification email={sentTo} />
       </AuthCard>
     );
   }
@@ -112,11 +117,49 @@ function RegisterPage() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+        {/* <label> değil: içindeki şart bağlantılarına tıklamak kutuyu da işaretlemesin. */}
+        <div className="flex items-start gap-3 text-sm leading-relaxed">
+          <Checkbox
+            name="consent"
+            aria-labelledby="sign-up-consent"
+            required
+            checked={accepted}
+            onCheckedChange={(value) => setAccepted(value === true)}
+            className="mt-0.5"
+          />
+          <span id="sign-up-consent">
+            <LegalLinks before={m.sign_up_consent_before()} after={m.sign_up_consent_after()} />
+          </span>
+        </div>
         <Turnstile onToken={onCaptcha} />
-        <Button type="submit" size="lg" disabled={pending || (captchaRequired && !captcha)}>
+        <Button
+          type="submit"
+          size="lg"
+          disabled={pending || !accepted || (captchaRequired && !captcha)}
+        >
           {m.sign_up_submit()}
         </Button>
       </form>
     </AuthCard>
+  );
+}
+
+/** Kayıttan sonra e-posta gelmediyse; Better Auth IP başına dakikada en fazla 3 istek kabul eder. */
+function ResendVerification({ email }: { email: string }) {
+  const [pending, setPending] = useState(false);
+  async function resend() {
+    setPending(true);
+    const { error } = await authClient.sendVerificationEmail({
+      email,
+      callbackURL: "/verify-email",
+    });
+    setPending(false);
+    if (error) toast.error(authErrorMessage(error));
+    else toast.success(m.verify_sent());
+  }
+  return (
+    <Button variant="outline" disabled={pending} onClick={() => void resend()}>
+      {m.sign_up_resend()}
+    </Button>
   );
 }

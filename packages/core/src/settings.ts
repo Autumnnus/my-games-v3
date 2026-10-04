@@ -18,6 +18,8 @@ export const SETTING_KEYS = {
   aiDailyTokens: "ai.daily_token_limit",
   /** Model seçimi (sohbet, yedekler, kısa işler); `AI_MODEL` vb. ortam değişkenlerini ezer. */
   aiModels: "ai.models",
+  /** Anahtar dağıtımı: `round_robin` ya da `failover` (`AI_KEY_STRATEGY`'yi ezer). */
+  aiKeyStrategy: "ai.key_strategy",
   /** Model fiyat tablosu (USD / 1M token). */
   aiPrices: "ai.prices",
   /** Worker'ın son yaşam belirtisi (bellek, çalışma süresi). */

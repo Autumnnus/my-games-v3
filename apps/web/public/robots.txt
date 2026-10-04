@@ -1,0 +1,12 @@
+# Herkese açık sayfalar (profiller, oyunlar, kayıtlar) taranabilir; yönetim, API ve oturum gerektiren sayfalar
+# taranmaz (zaten giriş sayfasına yönlenirler).
+User-agent: *
+Disallow: /admin
+Disallow: /api/
+Disallow: /settings
+Disallow: /inbox
+Disallow: /notifications
+Disallow: /history
+Disallow: /ai
+Disallow: /chat
+Disallow: /reset-password

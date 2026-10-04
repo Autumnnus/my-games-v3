@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import * as z from "zod/mini";
 import { useAddGame } from "@/components/add-game";
 import { LibraryGrid, LibraryTable } from "@/components/library-view";
+import { CoachMark } from "@/components/onboarding/coach-mark";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import {
@@ -185,7 +186,11 @@ function LibraryPage() {
           })}
         </div>
       )}
-      <div className="glass flex gap-1 overflow-x-auto rounded-2xl border border-white/8 p-1.5 [scrollbar-width:none]">
+      <CoachMark tip="library_lists" anchor="library-filters" when={isOwner && total > 0} />
+      <div
+        data-tour="library-filters"
+        className="glass flex gap-1 overflow-x-auto rounded-2xl border border-white/8 p-1.5 [scrollbar-width:none]"
+      >
         <StatusChip
           active={!search.status}
           label={`${m.status_all()} ${total}`}

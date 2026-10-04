@@ -224,6 +224,7 @@ export type PurgeCategory = keyof typeof purgeLabels;
 const auditActions: Record<string, () => string> = {
   "user.ban": m.admin_action_ban,
   "user.unban": m.admin_action_unban,
+  "user.onboarding_reset": m.admin_action_onboarding_reset,
   "user.sessions_revoke": m.admin_action_sessions,
   "user.storage_quota": m.admin_action_quota,
   "user.ai_limits": m.admin_action_ai_limits,

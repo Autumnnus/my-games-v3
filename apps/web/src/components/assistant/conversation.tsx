@@ -4,14 +4,52 @@ import { RotateCcwIcon } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { ApiError } from "@/lib/api";
-import { type AssistantUIMessage, assistantErrorText, suggestionsQuery } from "@/lib/assistant";
+import {
+  type AssistantUIMessage,
+  assistantErrorText,
+  isToolPart,
+  suggestionsQuery,
+  toolNameOf,
+  toolRunningLabel,
+} from "@/lib/assistant";
 import { chatThreadQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
-import { getChat } from "./chat-store";
+import { focusMood, getChat } from "./chat-store";
 import { Composer } from "./composer";
 import { Greeting } from "./greeting";
+import { LivePati, Pati } from "./mascot";
+import { usePatiMood } from "./mascot-store";
 import { MessageView, TypingDots } from "./message";
 import { useAssistant } from "./provider";
+
+/**
+ * Pati'nin çalışma sahnesi: sohbet bir şey yaparken (düşünüyor, araç çalıştırıyor, yazıyor, onay bekliyor,
+ * az önce uyguladı) mesajların altında büyük Pati ve ne yaptığı. Mesaj başlığındaki küçük Pati hareketsizdir;
+ * hareketler burada okunur.
+ */
+function PatiStage({ tool, glow }: { tool: string | null; glow: string | null }) {
+  const mood = usePatiMood();
+  const label =
+    mood === "working"
+      ? `${tool ? toolRunningLabel(tool) : m.ai_thinking().replace(/…$/, "")}…`
+      : mood === "talking"
+        ? m.ai_mascot_talking()
+        : mood === "approval"
+          ? m.ai_mascot_waiting()
+          : mood === "success"
+            ? m.ai_mascot_done()
+            : m.ai_thinking();
+  const dots = mood === "thinking" || mood === "working" || mood === "talking";
+  return (
+    <div className="animate-pop flex items-center gap-3" role="status">
+      <LivePati size={68} glow={glow} />
+      <span className="text-foreground/75 grid gap-0.5 text-[13px]">
+        <span className="text-foreground text-sm font-bold">{m.ai_name()}</span>
+        {dots ? <TypingDots label={label} /> : <span>{label}</span>}
+      </span>
+    </div>
+  );
+}
 
 /**
  * Bir sohbet: mesajlar (ya da boşsa karşılama) ve mesaj kutusu. Panel de tam ekran görünüm de bunu kullanır;
@@ -46,8 +84,6 @@ export function Conversation({
     ...chatThreadQuery(threadId),
     enabled: existing && messages.length === 0 && !busy,
   });
-  const accent = useQuery({ ...suggestionsQuery(assistant.page), enabled: assistant.enabled }).data
-    ?.pageGame?.accentColor;
 
   // Kayıtlı sohbet açılınca geçmiş yüklenir (yeni sohbette ilk mesaj henüz kaydedilmemiş olabilir).
   useEffect(() => {
@@ -55,6 +91,9 @@ export function Conversation({
       setMessages(history.data.messages as AssistantUIMessage[]);
     }
   }, [history.data, chat, setMessages]);
+
+  // Pati açık sohbetin hâlini gösterir (başka bir sohbette akış sürüyorsa da ona geçer).
+  useEffect(() => focusMood(threadId), [threadId]);
 
   // Silinmiş/başkasının sohbeti: temiz bir sohbetle devam.
   useEffect(() => {
@@ -71,8 +110,24 @@ export function Conversation({
   }, [messages, status]);
 
   const last = messages.at(-1);
-  const waiting = status === "submitted" && last?.role === "user";
   const errorText = assistantErrorText(error);
+  const glow = useQuery({ ...suggestionsQuery(assistant.page), enabled: assistant.enabled }).data
+    ?.pageGame?.accentColor;
+  const mood = usePatiMood();
+
+  // Sahnedeki yazı için son çalışan araç; araç bitip Pati bir an daha "çalışıyor"da kalsa da adı kaybolmasın.
+  const lastTool = useRef<string | null>(null);
+  const tools = last?.role === "assistant" ? last.parts.filter(isToolPart) : [];
+  const running = tools.find(
+    (part) => part.state === "input-streaming" || part.state === "input-available",
+  );
+  if (running) lastTool.current = toolNameOf(running);
+  const pendingApproval = tools.some(
+    (part) =>
+      part.state === "approval-requested" &&
+      !(part as { approval?: { isAutomatic?: boolean } }).approval?.isAutomatic,
+  );
+  const staged = !errorText && (busy || pendingApproval || mood === "success");
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -92,21 +147,17 @@ export function Conversation({
               <MessageView
                 key={message.id}
                 message={message}
-                streaming={busy && message.id === last?.id}
+                live={message.id === last?.id}
                 wide={wide}
-                accent={accent}
                 onRespond={(id, approved) => void addToolApprovalResponse({ id, approved })}
                 onOpenDeck={assistant.openPick}
               />
             ))
           )}
-          {waiting && (
-            <div className="text-foreground/62 flex items-center gap-2 text-xs">
-              <TypingDots label={m.ai_thinking()} />
-            </div>
-          )}
+          {staged && <PatiStage tool={lastTool.current} glow={glow ?? null} />}
           {errorText && (
             <div className="border-destructive/35 bg-destructive/8 flex items-center gap-3 rounded-2xl border p-3 text-sm">
+              <Pati mood="error" size={44} />
               <span className="flex-1">{errorText}</span>
               <Button
                 variant="ghost"

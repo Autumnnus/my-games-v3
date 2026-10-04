@@ -4,6 +4,7 @@ import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalRespons
 import { type AssistantUIMessage, isToolPart, toolNameOf, WRITE_TOOLS } from "@/lib/assistant";
 import { aiUsageQuery, chatThreadsQuery } from "@/lib/queries";
 import { getLocale } from "@/paraglide/runtime";
+import { flashSuccess, type PatiMood, setChatMood } from "./mascot-store";
 
 /**
  * Sohbet örnekleri (AI SDK `Chat`). Modül düzeyinde tutulur: panel, tam ekran görünüm ve karşılama kartları
@@ -57,9 +58,75 @@ export function getChat(id: string, queryClient: QueryClient) {
           for (const queryKey of WRITE_KEYS) void queryClient.invalidateQueries({ queryKey });
       },
     });
-    if (cache) chats.set(id, chat);
+    if (cache) {
+      chats.set(id, chat);
+      watchMood(chat);
+    }
   }
   return chat;
+}
+
+/** Sohbetin o anki hâli Pati'nin hangi ruh hâlinde olacağını belirler. */
+function moodOf(chat: Chat<AssistantUIMessage>): PatiMood {
+  if (chat.error) return "error";
+  if (chat.status === "submitted") return "thinking";
+  const last = chat.messages.at(-1);
+  if (last?.role !== "assistant") return "idle";
+  const tools = last.parts.filter(isToolPart);
+  if (chat.status === "streaming") {
+    if (tools.some((part) => part.state === "input-streaming" || part.state === "input-available"))
+      return "working";
+    const tail = last.parts.at(-1);
+    return tail?.type === "text" && tail.text.trim() ? "talking" : "thinking";
+  }
+  const waiting = tools.some(
+    (part) =>
+      part.state === "approval-requested" &&
+      !(part as { approval?: { isAutomatic?: boolean } }).approval?.isAutomatic,
+  );
+  return waiting ? "approval" : "idle";
+}
+
+/** Uygulanmış yazma araçlarının sayısı; akış sırasında artınca Pati sevinir. */
+function writesOf(chat: Chat<AssistantUIMessage>) {
+  let count = 0;
+  for (const message of chat.messages)
+    for (const part of message.parts)
+      if (
+        isToolPart(part) &&
+        WRITE_TOOLS.has(toolNameOf(part)) &&
+        part.state === "output-available"
+      )
+        count++;
+  return count;
+}
+
+/** Ruh hâlini son hareket eden sohbet belirler (panel kapalıyken de başlık düğmesindeki Pati çalışır). */
+let moodOwner: string | null = null;
+
+function watchMood(chat: Chat<AssistantUIMessage>) {
+  let writes = writesOf(chat);
+  const sync = () => {
+    const mood = moodOf(chat);
+    if (mood !== "idle" || moodOwner === chat.id) {
+      moodOwner = chat.id;
+      setChatMood(mood);
+    }
+    const next = writesOf(chat);
+    // Geçmiş yüklenince sayı da artar; yalnızca canlı akışta (onaydan sonra araç çalışınca) sevinir.
+    if (next > writes && chat.status !== "ready") flashSuccess();
+    writes = next;
+  };
+  chat["~registerStatusCallback"](sync);
+  chat["~registerErrorCallback"](sync);
+  chat["~registerMessagesCallback"](sync, 120);
+}
+
+/** Açık sohbet değişince Pati onun hâline geçer (yeni, boş sohbette boşta). */
+export function focusMood(id: string) {
+  moodOwner = id;
+  const chat = chats.get(id);
+  setChatMood(chat ? moodOf(chat) : "idle");
 }
 
 /** Sohbet şu an cevap bekliyor/akıyor mu, içinde mesaj var mı (yeni sohbet açma kararı için). */

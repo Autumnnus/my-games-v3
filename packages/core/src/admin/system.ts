@@ -251,7 +251,7 @@ export async function adminSettings() {
     ai: {
       dailyTokens: typeof stored === "number" ? stored : null,
       effectiveDailyTokens: effective,
-      envDailyTokens: aiConfig()?.dailyTokenLimit ?? null,
+      envDailyTokens: aiConfig().dailyTokenLimit,
       prices,
       pricesCustomized: storedPrices !== null,
       defaultPrices: DEFAULT_PRICES,

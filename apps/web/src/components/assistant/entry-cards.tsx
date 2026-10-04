@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { recapQuery } from "@/lib/assistant";
 import { formatDate, formatPlaytime } from "@/lib/format";
 import { m } from "@/paraglide/messages";
-import { Orb } from "./orb";
+import { Pati } from "./mascot";
 import { useOptionalAssistant } from "./provider";
 
 /** Bu kadar gündür açılmayan oyunda "kaldığın yer" kartı kendiliğinden görünür. */
@@ -30,7 +30,7 @@ function readCollapsed(key: string) {
 
 /**
  * "Kaldığın yer": kaydın sahibi bir oyuna uzun aradan sonra döndüğünde sayfanın içinde (sohbette değil) son
- * oturumunu, o sıralar açtığı başarımları ve notunu gösterir; My games AI bunlardan iki cümlelik bir
+ * oturumunu, o sıralar açtığı başarımları ve notunu gösterir; Pati bunlardan iki cümlelik bir
  * hatırlatma yazar. Küçültülünce son oynama tarihine kadar kapalı kalır.
  */
 export function RecapCard({
@@ -81,7 +81,7 @@ export function RecapCard({
         className="animate-pop flex h-14 w-full max-w-md items-center gap-2.5 rounded-full border bg-[#16130f] pr-4 pl-2.5 text-left"
         style={{ borderColor: `${accent ?? "#d08a5a"}59` }}
       >
-        <Orb color={accent} size={32} />
+        <Pati size={32} still />
         <span className="grid min-w-0 flex-1">
           <span className="text-sm font-bold">{m.ai_recap_expand()}</span>
           {data?.headline && (
@@ -101,7 +101,7 @@ export function RecapCard({
       style={{ borderColor: `${accent ?? "#d08a5a"}59` }}
     >
       <div className="flex items-center gap-2.5">
-        <Orb color={accent} size={28} />
+        <Pati size={32} mood={recap.isPending ? "thinking" : "idle"} glow={accent} />
         <span className="text-foreground/70 flex-1 text-[11px] font-bold tracking-[0.16em]">
           {m.ai_recap_kicker()}
         </span>
@@ -206,7 +206,7 @@ export function RecapCard({
 }
 
 /** Bitirilmiş ama incelemesi olmayan kayıtta röportaj daveti. */
-export function ReviewInvite({ entryId, accent }: { entryId: string; accent: string | null }) {
+export function ReviewInvite({ entryId }: { entryId: string }) {
   const assistant = useOptionalAssistant();
   if (!assistant?.enabled) return null;
   return (
@@ -216,7 +216,7 @@ export function ReviewInvite({ entryId, accent }: { entryId: string; accent: str
       </span>
       <span className="grid min-w-0 flex-1 gap-0.5">
         <span className="flex items-center gap-2 text-[15px] font-bold">
-          <Orb color={accent} size={18} />
+          <Pati size={18} still />
           {m.ai_review_cta_title()}
         </span>
         <span className="text-foreground/68 text-[13px]">{m.ai_review_cta_sub()}</span>

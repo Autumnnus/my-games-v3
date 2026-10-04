@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useRouteContext, useRouterState } from "@tanstack/react-router";
+import { Link, useRouteContext } from "@tanstack/react-router";
 import {
   BarChart3Icon,
   HouseIcon,
@@ -11,7 +11,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AssistantButton } from "@/components/assistant/header-button";
+import { BrandMark } from "@/components/brand-mark";
 import { NotificationBell } from "@/components/notification-bell";
+import { CoachMark } from "@/components/onboarding/coach-mark";
+import { useOnboarding } from "@/components/onboarding/provider";
 import { useSpotlight } from "@/components/spotlight";
 import { Button } from "@/components/ui/button";
 import { proposalCountQuery } from "@/lib/queries";
@@ -22,22 +25,7 @@ import { UserMenu } from "./user-menu";
 function Logo() {
   return (
     <Link to="/" className="flex min-w-0 items-center gap-3" aria-label={m.app_name()}>
-      <span className="bg-foreground text-background flex size-9 shrink-0 items-center justify-center rounded-[10px]">
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-          aria-hidden="true"
-        >
-          <path d="M5 7h14" />
-          <path d="M5 12h10" />
-          <path d="M5 17h6" />
-        </svg>
-      </span>
+      <BrandMark />
       {/* Başlığın kendi genişliğine göre (asistan paneli sabitlenince daralır), ekrana göre değil. */}
       <span className="font-display hidden truncate text-lg font-medium whitespace-nowrap @min-[1060px]/header:inline">
         {m.app_name()}
@@ -81,20 +69,27 @@ function InboxButton({ count, className }: { count: number; className?: string }
 
 function SearchButton() {
   const spotlight = useSpotlight();
+  const onboarding = useOnboarding();
+  // ⌘K ipucu ilk oyun eklendikten sonra anlamlı (kütüphanede arayacak bir şey olunca).
+  const hasGame = !!onboarding.state?.steps.some((step) => step.id === "game" && step.done);
   return (
-    <button
-      type="button"
-      onClick={spotlight.open}
-      aria-label={`${m.action_search()} (⌘K)`}
-      title={`${m.action_search()} (⌘K)`}
-      className="glass text-foreground/85 hover:text-foreground flex h-11 shrink-0 items-center gap-2 rounded-full border border-white/12 pr-2 pl-3.5 transition-colors hover:bg-white/12"
-    >
-      <SearchIcon className="size-[18px] shrink-0" />
-      {/* Kısayol her zaman düğmenin yanında görünür (asistanın ⌘J'si gibi). */}
-      <kbd className="text-foreground/80 rounded-md bg-white/12 px-1.5 py-0.5 text-[11px] font-semibold">
-        ⌘K
-      </kbd>
-    </button>
+    <>
+      <CoachMark tip="spotlight" anchor="spotlight" when={hasGame} align="end" />
+      <button
+        type="button"
+        data-tour="spotlight"
+        onClick={spotlight.open}
+        aria-label={`${m.action_search()} (⌘K)`}
+        title={`${m.action_search()} (⌘K)`}
+        className="glass text-foreground/85 hover:text-foreground flex h-11 shrink-0 items-center gap-2 rounded-full border border-white/12 pr-2 pl-3.5 transition-colors hover:bg-white/12"
+      >
+        <SearchIcon className="size-[18px] shrink-0" />
+        {/* Kısayol her zaman düğmenin yanında görünür (asistanın ⌘J'si gibi). */}
+        <kbd className="text-foreground/80 rounded-md bg-white/12 px-1.5 py-0.5 text-[11px] font-semibold">
+          ⌘K
+        </kbd>
+      </button>
+    </>
   );
 }
 
@@ -110,18 +105,12 @@ function useScrolled(offset = 8) {
   return scrolled;
 }
 
-const authRoutes = new Set(["/login", "/register", "/forgot-password", "/reset-password"]);
-
 export function SiteHeader() {
   const { user } = useRouteContext({ from: "__root__" });
   const scrolled = useScrolled();
   const username = user?.displayUsername ?? user?.username;
   const pending = useQuery({ ...proposalCountQuery, enabled: !!user });
   const pendingCount = pending.data?.count ?? 0;
-  // Giriş/kayıt kartının kendi dil seçicisi var; orada başlıkta ikincisi gösterilmez.
-  const onAuthPage = useRouterState({
-    select: (state) => state.matches.some((match) => authRoutes.has(match.routeId)),
-  });
 
   return (
     <header
@@ -171,7 +160,7 @@ export function SiteHeader() {
               </div>
             )}
             {user && <AssistantButton compact />}
-            {!user && !onAuthPage && <LocaleSwitcher />}
+            {!user && <LocaleSwitcher />}
             {user && <NotificationBell />}
             {user ? (
               <UserMenu user={user} />

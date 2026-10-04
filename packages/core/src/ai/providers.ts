@@ -20,7 +20,17 @@ export type ProviderAdapter = {
   classifyError?(error: unknown): FailureVerdict | undefined;
   /** Amaca göre sağlayıcı ayarları (ör. düşünme seviyesi). */
   providerOptions?(purpose: ModelPurpose, modelId: string): SharedV4ProviderOptions | undefined;
+  /**
+   * Anahtarı token harcamadan dener (yönetim panelinde ekleme ve "Test et"). Yoksa anahtar denenmeden kabul
+   * edilir.
+   */
+  verifyKey?(apiKey: string): Promise<KeyCheck>;
 };
+
+/** `ok`: anahtar çalışıyor; `limited`: geçerli ama şu an kotası dolu; `invalid`: reddedildi. */
+export type KeyCheck =
+  | { status: "ok" | "limited"; message?: string }
+  | { status: "invalid" | "error"; message: string };
 
 /** `41s`, `1.5s`, `500ms` → ms. */
 function parseDuration(value: unknown) {
@@ -93,6 +103,28 @@ const google: ProviderAdapter = {
     }
     return undefined;
   },
+  async verifyKey(apiKey) {
+    // Model listesi: kota ve token harcamaz, geçersiz anahtarı Gemini çağrısıyla aynı hatayla reddeder.
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models?pageSize=1",
+      { headers: { "x-goog-api-key": apiKey }, signal: AbortSignal.timeout(10_000) },
+    ).catch((error: unknown) => error as Error);
+    if (response instanceof Error) return { status: "error", message: response.message };
+    if (response.ok) return { status: "ok" };
+    const body = googleErrorBody(await response.text());
+    const message = body?.message ?? `HTTP ${response.status}`;
+    if (response.status === 429) return { status: "limited", message };
+    const reasons = (body?.details ?? []).map((detail) => detail.reason);
+    if (
+      reasons.includes("API_KEY_INVALID") ||
+      response.status === 401 ||
+      response.status === 403 ||
+      /api key/i.test(message)
+    ) {
+      return { status: "invalid", message };
+    }
+    return { status: "error", message };
+  },
   providerOptions(_purpose, modelId) {
     // Gemini 3 ailesi düşünme seviyesini destekler. Asistan hızlı cevap vermeli; araç kullanımında
     // "low" yeterince isabetli.
@@ -105,6 +137,11 @@ const adapters = new Map<string, ProviderAdapter>([[google.id, google]]);
 
 export function providerAdapter(id: string) {
   return adapters.get(id) ?? null;
+}
+
+/** Anahtar eklenebilecek sağlayıcılar (yönetim paneli). */
+export function providerIds() {
+  return [...adapters.keys()];
 }
 
 /** Testler ve ileride eklenecek sağlayıcılar için. */

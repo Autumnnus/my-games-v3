@@ -5,6 +5,7 @@ import { db } from "../db";
 import { AppError, forbidden, notFound } from "../errors";
 import { exportUserData } from "../export";
 import { adminUserStorage, discardAssets, setUserQuota } from "../media";
+import { onboardingOf, resetOnboarding } from "../onboarding";
 import { aiCostByUser, listTraces, userAiSummary } from "./ai";
 import { type AdminActor, audit, listAudit } from "./audit";
 
@@ -187,46 +188,58 @@ async function dataCounts(userId: string): Promise<DataCounts> {
 export async function adminUserDetail(userId: string) {
   const [row] = await db.select().from(user).where(eq(user.id, userId));
   if (!row) notFound("Kullanıcı bulunamadı");
-  const [accounts, sessions, counts, storage, [limits], quota, ai, threads, runs, history] =
-    await Promise.all([
-      db
-        .select({ providerId: account.providerId, createdAt: account.createdAt })
-        .from(account)
-        .where(eq(account.userId, userId)),
-      db
-        .select({
-          id: session.id,
-          createdAt: session.createdAt,
-          updatedAt: session.updatedAt,
-          expiresAt: session.expiresAt,
-          ipAddress: session.ipAddress,
-          userAgent: session.userAgent,
-        })
-        .from(session)
-        .where(eq(session.userId, userId))
-        .orderBy(desc(session.updatedAt))
-        .limit(20),
-      dataCounts(userId),
-      adminUserStorage(userId),
-      db.select().from(userLimits).where(eq(userLimits.userId, userId)),
-      usageToday(userId),
-      userAiSummary(userId),
-      db
-        .select({
-          id: chatThreads.id,
-          title: chatThreads.title,
-          createdAt: chatThreads.createdAt,
-          updatedAt: chatThreads.updatedAt,
-          // Alt sorguda sütunlar elle nitelenir (drizzle `sql` içinde tablo adını yazmaz).
-          messages: sql<number>`(select count(*)::int from chat_messages m where m.thread_id = "chat_threads"."id")`,
-        })
-        .from(chatThreads)
-        .where(eq(chatThreads.userId, userId))
-        .orderBy(desc(chatThreads.updatedAt))
-        .limit(30),
-      listTraces({ userId, limit: 8 }),
-      listAudit({ targetType: "user", targetId: userId, limit: 20 }),
-    ]);
+  const [
+    accounts,
+    sessions,
+    counts,
+    storage,
+    [limits],
+    quota,
+    ai,
+    threads,
+    runs,
+    history,
+    onboarding,
+  ] = await Promise.all([
+    db
+      .select({ providerId: account.providerId, createdAt: account.createdAt })
+      .from(account)
+      .where(eq(account.userId, userId)),
+    db
+      .select({
+        id: session.id,
+        createdAt: session.createdAt,
+        updatedAt: session.updatedAt,
+        expiresAt: session.expiresAt,
+        ipAddress: session.ipAddress,
+        userAgent: session.userAgent,
+      })
+      .from(session)
+      .where(eq(session.userId, userId))
+      .orderBy(desc(session.updatedAt))
+      .limit(20),
+    dataCounts(userId),
+    adminUserStorage(userId),
+    db.select().from(userLimits).where(eq(userLimits.userId, userId)),
+    usageToday(userId),
+    userAiSummary(userId),
+    db
+      .select({
+        id: chatThreads.id,
+        title: chatThreads.title,
+        createdAt: chatThreads.createdAt,
+        updatedAt: chatThreads.updatedAt,
+        // Alt sorguda sütunlar elle nitelenir (drizzle `sql` içinde tablo adını yazmaz).
+        messages: sql<number>`(select count(*)::int from chat_messages m where m.thread_id = "chat_threads"."id")`,
+      })
+      .from(chatThreads)
+      .where(eq(chatThreads.userId, userId))
+      .orderBy(desc(chatThreads.updatedAt))
+      .limit(30),
+    listTraces({ userId, limit: 8 }),
+    listAudit({ targetType: "user", targetId: userId, limit: 20 }),
+    onboardingOf(userId),
+  ]);
   return {
     user: {
       id: row.id,
@@ -256,7 +269,27 @@ export async function adminUserDetail(userId: string) {
     },
     ai: { today: quota, last30d: ai, threads, runs: runs.traces },
     audit: history.entries,
+    onboarding: onboarding && {
+      welcomedAt: onboarding.welcomedAt,
+      dismissedAt: onboarding.dismissedAt,
+      completedAt: onboarding.completedAt,
+      seenTips: onboarding.seenTips,
+      startedAt: onboarding.createdAt,
+    },
   };
+}
+
+/** Yeni üye rehberini baştan başlatır (destek ya da admin'in kendi hesabında denemesi için). */
+export async function resetUserOnboarding(actor: AdminActor, userId: string) {
+  const target = await targetUser(actor, userId, { allowAdmin: true, allowSelf: true });
+  await db.transaction(async (tx) => {
+    await resetOnboarding(userId, tx);
+    await audit(tx, actor, "user.onboarding_reset", {
+      type: "user",
+      id: userId,
+      label: labelOf(target),
+    });
+  });
 }
 
 export async function exportUserForAdmin(actor: AdminActor, userId: string) {

@@ -111,7 +111,7 @@ function EntryPage() {
     onSuccess: async (_, values) => {
       setEditing(false);
       // "Bitirdim" anı: kayıt yeni bitirildiyse damga vurulur, yoksa sade bir bildirim yeter. İncelemesi
-      // yoksa damgadan sonra My games AI röportaja çağırır.
+      // yoksa damgadan sonra Pati röportaja çağırır.
       if (values.status === "completed" && entry.status !== "completed") {
         setStamp((n) => n + 1);
         if (!values.review && !entry.review && assistant?.enabled) {
@@ -285,7 +285,7 @@ function EntryPage() {
       <section className="grid gap-3">
         <h2 className="text-lg font-bold">{m.field_review()}</h2>
         {!entry.review && isOwner && entry.status === "completed" && (
-          <ReviewInvite entryId={entry.id} accent={entry.game.accentColor} />
+          <ReviewInvite entryId={entry.id} />
         )}
         {entry.review ? (
           <p className="text-foreground/90 max-w-3xl text-lg leading-relaxed whitespace-pre-line">

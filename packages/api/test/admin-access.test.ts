@@ -3,7 +3,7 @@ import { db } from "@my-games/core/db";
 import { writeSetting } from "@my-games/core/settings";
 import { schema } from "@my-games/db";
 import { eq } from "drizzle-orm";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { auth } from "../src/auth";
 import { app } from "../src/index";
 
@@ -235,5 +235,83 @@ describe("admin actions", () => {
     expect(rows).toEqual([]);
     const meta = await (await call("/api/v1/meta")).json();
     expect(meta.signupsOpen).toBe(false);
+  });
+});
+
+describe("AI key pool management", () => {
+  it("adds, renames, disables, tests and deletes keys without ever returning the secret", async () => {
+    const admin = await account("admin");
+    const secret = "AIzaSyADMIN-panel-secret-0042";
+    const fetchMock = vi.fn(
+      async () => new Response(JSON.stringify({ models: [] }), { status: 200 }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const added = await call("/api/v1/admin/ai/keys", {
+        method: "POST",
+        cookie: admin.cookie,
+        body: JSON.stringify({ provider: "google", key: secret, name: "Proje 1" }),
+      });
+      expect(added.status).toBe(201);
+      const { id } = (await added.json()) as { id: string };
+
+      const overview = await call("/api/v1/admin/ai", { cookie: admin.cookie });
+      const text = await overview.text();
+      expect(text).not.toContain(secret);
+      const body = JSON.parse(text) as {
+        status: { enabled: boolean; pools: Array<{ keys: Array<{ ref: string; label: string }> }> };
+        keys: { stored: Array<{ id: string; hint: string; name: string }> };
+      };
+      expect(body.status.enabled).toBe(true);
+      expect(body.keys.stored).toEqual([
+        expect.objectContaining({ id, hint: "AIza…0042", name: "Proje 1" }),
+      ]);
+      expect(body.status.pools[0]?.keys[0]).toMatchObject({ ref: `db:${id}` });
+
+      const duplicate = await call("/api/v1/admin/ai/keys", {
+        method: "POST",
+        cookie: admin.cookie,
+        body: JSON.stringify({ provider: "google", key: secret }),
+      });
+      expect(duplicate.status).toBe(409);
+      expect(await duplicate.json()).toMatchObject({ reason: "ai_key_duplicate" });
+
+      const patched = await call(`/api/v1/admin/ai/keys/${id}`, {
+        method: "PATCH",
+        cookie: admin.cookie,
+        body: JSON.stringify({ enabled: false }),
+      });
+      expect(patched.status).toBe(200);
+      const tested = await call(`/api/v1/admin/ai/keys/${id}/test`, {
+        method: "POST",
+        cookie: admin.cookie,
+      });
+      expect(await tested.json()).toEqual({ status: "ok" });
+      expect(fetchMock).toHaveBeenLastCalledWith(
+        expect.stringContaining("generativelanguage.googleapis.com"),
+        expect.objectContaining({ headers: { "x-goog-api-key": secret } }),
+      );
+
+      const strategy = await call("/api/v1/admin/ai/strategy", {
+        method: "PUT",
+        cookie: admin.cookie,
+        body: JSON.stringify({ strategy: "failover" }),
+      });
+      expect(await strategy.json()).toEqual({ value: "failover", source: "setting" });
+
+      const removed = await call(`/api/v1/admin/ai/keys/${id}`, {
+        method: "DELETE",
+        cookie: admin.cookie,
+      });
+      expect(removed.status).toBe(200);
+
+      const audits = await db.select().from(schema.adminAudit);
+      expect(audits.map((row) => row.action)).toEqual(
+        expect.arrayContaining(["ai.key.add", "ai.key.update", "ai.key.strategy", "ai.key.delete"]),
+      );
+      expect(JSON.stringify(audits)).not.toContain(secret);
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });

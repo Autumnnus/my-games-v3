@@ -7,6 +7,8 @@ import { Feed, NowPlaying } from "@/components/feed";
 import { GameCover } from "@/components/game-cover";
 import { GameLogo } from "@/components/game-logo";
 import { RollingText } from "@/components/motion";
+import { OnboardingChecklist } from "@/components/onboarding/checklist";
+import { useOnboarding } from "@/components/onboarding/provider";
 import { Stage } from "@/components/stage";
 import { Button } from "@/components/ui/button";
 import {
@@ -87,7 +89,11 @@ function SignedInHome({ username }: { username: string }) {
 
       <section className="grid min-h-[480px] items-start gap-8 pt-6 lg:grid-cols-[minmax(0,1fr)_340px] lg:pt-14">
         {current ? <Spotlight key={current.id} item={current} /> : <EmptyStage />}
-        <NowPlaying className="hidden lg:grid" />
+        {/* Yeni üyenin başlangıç listesi sağ sütunda "şimdi oynayanlar"ın üstünde; telefonda sahnenin altında. */}
+        <div className="grid content-start gap-4">
+          <OnboardingChecklist />
+          <NowPlaying className="hidden lg:grid" />
+        </div>
       </section>
 
       {shelf.length > 1 && (
@@ -269,6 +275,7 @@ function Chip({ children }: { children: ReactNode }) {
 
 function EmptyStage() {
   const addGame = useAddGame();
+  const onboarding = useOnboarding();
   return (
     <div className="animate-rise grid max-w-xl content-start gap-5">
       <h1 className="font-display m-0 text-4xl font-semibold tracking-tight sm:text-5xl">
@@ -280,9 +287,15 @@ function EmptyStage() {
           <PlusIcon />
           {m.action_add_game()}
         </Button>
-        <Button asChild size="lg" variant="glass">
-          <Link to="/settings">{m.nav_settings()}</Link>
-        </Button>
+        {onboarding.state ? (
+          <Button size="lg" variant="glass" onClick={onboarding.openPlatforms}>
+            {m.onboarding_step_platform()}
+          </Button>
+        ) : (
+          <Button asChild size="lg" variant="glass">
+            <Link to="/settings">{m.nav_settings()}</Link>
+          </Button>
+        )}
       </div>
     </div>
   );

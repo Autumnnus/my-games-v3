@@ -148,6 +148,20 @@
       "when": 1790775089666,
       "tag": "0020_achievement_endings",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791073482190,
+      "tag": "0021_ai_api_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791103928632,
+      "tag": "0022_user_onboarding",
+      "breakpoints": true
     }
   ]
 }

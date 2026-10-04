@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { type KeyboardEvent, useEffect, useMemo, useRef, useState } from "react";
 import { GameCover } from "@/components/game-cover";
+import { CoachMark } from "@/components/onboarding/coach-mark";
 import {
   type AssistantCommand,
   COMMANDS,
@@ -23,7 +24,8 @@ import {
 } from "@/lib/assistant";
 import { formatRating, statusLabel } from "@/lib/format";
 import { m } from "@/paraglide/messages";
-import { Orb } from "./orb";
+import { Pati } from "./mascot";
+import { setTyping } from "./mascot-store";
 import { useAssistant } from "./provider";
 
 type MenuItem =
@@ -142,6 +144,11 @@ export function Composer({
     setCommand(undefined);
     setWithoutPage(false);
   }, [threadId]);
+
+  // Kutuda yazı varken Pati mesaj kutusuna bakar (dinler).
+  const typing = text.trim().length > 0;
+  useEffect(() => setTyping(typing), [typing]);
+  useEffect(() => () => setTyping(false), []);
 
   const suggestions = useQuery({ ...suggestionsQuery(assistant.page), enabled: assistant.enabled });
   const pageLabel =
@@ -386,7 +393,7 @@ export function Composer({
                 <MenuRow active={index === active} onPick={() => choose(item)}>
                   {item.kind === "ask" ? (
                     <>
-                      <Orb color={suggestions.data?.pageGame?.accentColor} size={30} />
+                      <Pati size={30} still />
                       <span className="grid min-w-0 gap-0.5">
                         <span className="text-sm font-bold">{m.ai_quick_ask()}</span>
                         <span className="text-foreground/72 truncate text-xs">“{quickText}”</span>
@@ -515,7 +522,11 @@ export function Composer({
         </label>
 
         <div className="flex items-center gap-1.5">
-          <fieldset className="m-0 flex gap-0.5 rounded-xl border-0 bg-white/6 p-[3px]">
+          <CoachMark tip="ai_modes" anchor="ai-modes" side="top" align="start" />
+          <fieldset
+            data-tour="ai-modes"
+            className="m-0 flex gap-0.5 rounded-xl border-0 bg-white/6 p-[3px]"
+          >
             <legend className="sr-only">{m.ai_mode_label()}</legend>
             <button
               type="button"

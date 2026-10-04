@@ -1,0 +1,21 @@
+{
+  "tool": "Built-in image_gen",
+  "color": "#A78BFA",
+  "assets": [
+    {
+      "key": "purpleIcon",
+      "file": "app-icon.png",
+      "prompt": "Precise color edit. Edit the supplied My Games application icon. Change ONLY the mint-green controller-and-library-card symbol to a consistent vivid lavender PURPLE, target #A78BFA. Preserve every contour, card position, spacing, size, exact composition, large cross-shaped cutout and two round button cutouts. Preserve the original opaque charcoal background and all dark cutouts exactly. Keep the same square canvas and margins. No green pixels should remain in the symbol. No new shapes, no text, no added effects, no shadow, no gradient. Same design, purple color only."
+    },
+    {
+      "key": "purpleWhite",
+      "file": "logo-on-white.png",
+      "prompt": "Precise color edit. Edit the supplied My Games horizontal logo. Change ONLY the mint-green controller-and-library-card symbol to a consistent vivid lavender PURPLE, target #A78BFA. Preserve every symbol contour, card position, spacing, size, exact composition and white controller cutouts. Preserve the original charcoal \"My Games\" wordmark, its exact typography and spacing, and the white background unchanged. Keep same landscape canvas. No green pixels should remain. No added effects or new design details. Same logo, purple symbol color only."
+    },
+    {
+      "key": "purpleDark",
+      "file": "logo-on-dark.png",
+      "prompt": "Precise color edit. Edit the supplied My Games horizontal logo. Change ONLY the mint-green controller-and-library-card symbol to a consistent vivid lavender PURPLE, target #A78BFA. Preserve every symbol contour, card position, spacing, size, exact composition and dark controller cutouts. Preserve original off-white \"My Games\" wordmark, its exact typography and spacing, and charcoal background unchanged. Keep same landscape canvas. No green pixels should remain. No added effects or new design details. Same logo, purple symbol color only."
+    }
+  ]
+}

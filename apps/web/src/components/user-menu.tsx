@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
+  CompassIcon,
   HistoryIcon,
   InboxIcon,
   LayoutGridIcon,
@@ -9,6 +10,7 @@ import {
   UserRoundIcon,
   UsersIcon,
 } from "lucide-react";
+import { useOnboarding } from "@/components/onboarding/provider";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,6 +30,9 @@ export function UserMenu({ user }: { user: CurrentUser }) {
   const refreshSession = useRefreshSession();
   const navigate = useNavigate();
   const username = user.displayUsername ?? user.username;
+  const onboarding = useOnboarding();
+  // Gizlenen başlangıç listesi rehber süresince buradan geri getirilebilir.
+  const hidden = onboarding.state?.dismissed ? onboarding.state : null;
 
   async function signOut() {
     await authClient.signOut();
@@ -101,6 +106,21 @@ export function UserMenu({ user }: { user: CurrentUser }) {
             {m.nav_settings()}
           </Link>
         </DropdownMenuItem>
+        {hidden && (
+          <DropdownMenuItem
+            onSelect={() => {
+              void navigate({ to: "/" });
+              // Menü önce kapansın: öğe aynı anda kaybolursa menü açık kalıyordu.
+              window.setTimeout(onboarding.restore, 0);
+            }}
+          >
+            <CompassIcon />
+            {m.onboarding_menu_restore({
+              done: hidden.steps.filter((step) => step.done).length,
+              total: hidden.steps.length,
+            })}
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => void signOut()}>
           <LogOutIcon />

@@ -149,8 +149,11 @@ function aiProvider() {
 }
 
 /**
- * AI ayarları. Model adları `sağlayıcı:model` ya da yalnızca `model` (varsayılan sağlayıcı) olabilir;
- * boş bırakılanlar sağlayıcının varsayılanını kullanır (bkz. ai/providers).
+ * AI ayarları (ortam değişkenleri). Anahtarların varlığına bakmaz: anahtarlar yönetim panelinden de
+ * eklenebildiği için AI'nin açık olup olmadığını `ai/keys.ts` `aiEnabled()` söyler.
+ * Model adları `sağlayıcı:model` ya da yalnızca `model` (varsayılan sağlayıcı) olabilir;
+ * boş bırakılanlar sağlayıcının varsayılanını kullanır (bkz. ai/providers). Model seçimi ve strateji panelden
+ * ezilebilir; buradakiler başlangıç değeridir.
  * - `AI_MODEL`: sohbet agent'ı.
  * - `AI_FALLBACK_MODELS`: ana modelin bütün anahtarları dolunca sırayla denenen modeller.
  * - `AI_LIGHT_MODEL`: başlık, öneri gerekçesi, taslak gibi kısa işler (daha ucuz, daha hızlı).
@@ -159,7 +162,6 @@ function aiProvider() {
  */
 export function aiConfig() {
   const provider = aiProvider();
-  if (provider !== "mock" && aiProviderKeys(provider).length === 0) return null;
   return {
     provider,
     model: read("AI_MODEL"),
@@ -178,6 +180,11 @@ export function turnstileConfig() {
   return secretKey && siteKey ? { secretKey, siteKey } : null;
 }
 
+/** Gizlilik/şartlar sayfalarında ve hesap silme talebinde gösterilen iletişim adresi (KVKK başvuruları). */
+export function contactEmail() {
+  return read("CONTACT_EMAIL") ?? null;
+}
+
 export function features() {
   return {
     igdb: igdbConfig() !== null,
@@ -186,7 +193,6 @@ export function features() {
     xbox: xboxConfig() !== null,
     uploads: storageConfig() !== null,
     push: pushConfig() !== null,
-    ai: aiConfig() !== null,
     turnstileSiteKey: turnstileConfig()?.siteKey ?? null,
   };
 }

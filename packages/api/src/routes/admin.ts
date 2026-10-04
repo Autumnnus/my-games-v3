@@ -23,11 +23,22 @@ import {
   listUsers,
   purgeCategories,
   purgeUserData,
+  resetUserOnboarding,
   revokeSessions,
   setStorageQuota,
   setUserLimits,
   unbanUser,
 } from "@my-games/core/admin/users";
+import {
+  addKey,
+  deleteKey,
+  envKeys,
+  listStoredKeys,
+  reorderKeys,
+  setKeyStrategy,
+  testStoredKey,
+  updateKey,
+} from "@my-games/core/ai/keys";
 import {
   aiStatus,
   modelSettings,
@@ -35,6 +46,7 @@ import {
   setModelSettings,
 } from "@my-games/core/ai/models";
 import { priceTableSchema } from "@my-games/core/ai/pricing";
+import { providerIds } from "@my-games/core/ai/providers";
 import { usageSummaryToday } from "@my-games/core/ai/usage";
 import { db } from "@my-games/core/db";
 import { notFound } from "@my-games/core/errors";
@@ -54,6 +66,23 @@ import { uuidParam, validate } from "../validation";
 
 /** Better Auth kullanıcı kimlikleri UUID değil (32 karakterlik rastgele dizi). */
 const userParam = z.object({ id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/) });
+
+const providerName = z.string().regex(/^[a-z0-9-]{1,32}$/);
+const keyName = z.string().trim().max(40).nullable().optional();
+const newKeySchema = z.object({
+  provider: providerName,
+  // Sağlayıcı anahtarları boşluksuz, yazdırılabilir ASCII.
+  key: z
+    .string()
+    .trim()
+    .regex(/^[\x21-\x7e]{10,300}$/),
+  name: keyName,
+});
+const keyPatchSchema = z
+  .object({ name: keyName, enabled: z.boolean().optional() })
+  .refine((value) => value.name !== undefined || value.enabled !== undefined);
+const keyOrderSchema = z.object({ provider: providerName, ids: z.array(z.uuid()).min(1).max(100) });
+const strategySchema = z.object({ strategy: z.enum(["round_robin", "failover"]).nullable() });
 
 /** 10 TB'a kadar. */
 const quotaBytes = z
@@ -110,6 +139,10 @@ export const adminRoutes = new Hono<AppEnv>()
       return c.json({ ok: true });
     },
   )
+  .post("/users/:id/onboarding/reset", validate("param", userParam), async (c) => {
+    await resetUserOnboarding(adminActor(c), c.req.valid("param").id);
+    return c.json({ ok: true });
+  })
   .post("/users/:id/unban", validate("param", userParam), async (c) => {
     await unbanUser(adminActor(c), c.req.valid("param").id);
     return c.json({ ok: true });
@@ -219,7 +252,83 @@ export const adminRoutes = new Hono<AppEnv>()
   })
 
   // --- AI ---
-  .get("/ai", async (c) => c.json({ status: await aiStatus(), today: await usageSummaryToday() }))
+  .get("/ai", async (c) =>
+    c.json({
+      status: await aiStatus(),
+      today: await usageSummaryToday(),
+      keys: { stored: await listStoredKeys(), env: await envKeys(), providers: providerIds() },
+    }),
+  )
+  // Anahtar havuzu: sır yalnızca eklerken gelir; yanıtlara ve denetim kaydına yalnızca ipucu (ilk/son 4) yazılır.
+  .post("/ai/keys", validate("json", newKeySchema), async (c) => {
+    const body = c.req.valid("json");
+    const actor = adminActor(c);
+    const added = await addKey({ ...body, actorId: actor.id });
+    await audit(
+      db,
+      actor,
+      "ai.key.add",
+      { type: "ai_key", id: added.id, label: added.hint },
+      { provider: added.provider, name: added.name, check: added.check.status },
+    );
+    return c.json({ id: added.id, check: added.check }, 201);
+  })
+  .patch(
+    "/ai/keys/:id",
+    validate("param", uuidParam),
+    validate("json", keyPatchSchema),
+    async (c) => {
+      const patch = c.req.valid("json");
+      const updated = await updateKey(c.req.valid("param").id, patch);
+      await audit(
+        db,
+        adminActor(c),
+        "ai.key.update",
+        { type: "ai_key", id: c.req.valid("param").id, label: updated.hint ?? null },
+        { provider: updated.provider, ...patch },
+      );
+      return c.json({ ok: true });
+    },
+  )
+  .delete("/ai/keys/:id", validate("param", uuidParam), async (c) => {
+    const removed = await deleteKey(c.req.valid("param").id);
+    await audit(
+      db,
+      adminActor(c),
+      "ai.key.delete",
+      { type: "ai_key", id: removed.id, label: removed.hint },
+      { provider: removed.provider, name: removed.name },
+    );
+    return c.json({ ok: true });
+  })
+  .post("/ai/keys/:id/test", validate("param", uuidParam), async (c) => {
+    const result = await testStoredKey(c.req.valid("param").id);
+    return c.json(result.check);
+  })
+  .put("/ai/keys/order", validate("json", keyOrderSchema), async (c) => {
+    const { provider, ids } = c.req.valid("json");
+    await reorderKeys(provider, ids);
+    await audit(
+      db,
+      adminActor(c),
+      "ai.key.reorder",
+      { type: "settings", id: "ai" },
+      { provider, ids },
+    );
+    return c.json({ ok: true });
+  })
+  .put("/ai/strategy", validate("json", strategySchema), async (c) => {
+    const { strategy } = c.req.valid("json");
+    const result = await setKeyStrategy(strategy);
+    await audit(
+      db,
+      adminActor(c),
+      "ai.key.strategy",
+      { type: "settings", id: "ai" },
+      { strategy: strategy ?? "env" },
+    );
+    return c.json(result);
+  })
   .get("/ai/models", async (c) => c.json(await modelSettings()))
   .put("/ai/models", validate("json", modelSettingsSchema.nullable()), async (c) => {
     const value = c.req.valid("json");

@@ -4,6 +4,8 @@ import { testDatabaseUrl } from "./env";
 process.env.DATABASE_URL = testDatabaseUrl();
 process.env.DATABASE_POOL_MAX = "4";
 process.env.APP_URL = "http://localhost:3300";
+// CI'da .env yok; token şifreleme (config.ts `credentialsSecret`) bir secret ister.
+process.env.BETTER_AUTH_SECRET ??= "test-secret-that-is-at-least-32-characters-long";
 
 // Testlerde gerçek dış servislere gidilmez; testler gerekirse kendi sahte değerlerini verir. Kök .env'deki
 // gerçek anahtarlar (AI havuzu, OAuth, Turnstile) da silinir: yoksa yedek yollarını deneyen testler gerçek
@@ -32,9 +34,11 @@ process.env.SYSTEM_LOG_DB = "off";
 
 const { pool, closeDb } = await import("../src/db");
 const { clearSettingsCache } = await import("../src/settings");
+const { clearKeyCache } = await import("../src/ai/keys");
 
 beforeEach(async () => {
   clearSettingsCache();
+  clearKeyCache();
   const { rows } = await pool().query<{ tablename: string }>(
     "select tablename from pg_tables where schemaname = 'public' and tablename <> '__drizzle_migrations'",
   );

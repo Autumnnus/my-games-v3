@@ -15,10 +15,13 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CompareRouteImport } from './routes/compare'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as StatsRouteImport } from './routes/stats'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as UsersRouteImport } from './routes/users'
+import { Route as VerifyEmailRouteImport } from './routes/verify-email'
 import { Route as AuthedAiRouteImport } from './routes/_authed/ai'
 import { Route as AuthedChatRouteImport } from './routes/_authed/chat'
 import { Route as AuthedHistoryRouteImport } from './routes/_authed/history'
@@ -76,6 +79,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -91,9 +99,19 @@ const StatsRoute = StatsRouteImport.update({
   path: '/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UsersRoute = UsersRouteImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerifyEmailRoute = VerifyEmailRouteImport.update({
+  id: '/verify-email',
+  path: '/verify-email',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthedAiRoute = AuthedAiRouteImport.update({
@@ -238,10 +256,13 @@ export interface FileRoutesByFullPath {
   '/compare': typeof CompareRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
+  '/terms': typeof TermsRoute
   '/users': typeof UsersRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/ai': typeof AuthedAiRoute
   '/chat': typeof AuthedChatRoute
   '/history': typeof AuthedHistoryRoute
@@ -275,10 +296,13 @@ export interface FileRoutesByTo {
   '/compare': typeof CompareRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
+  '/terms': typeof TermsRoute
   '/users': typeof UsersRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/ai': typeof AuthedAiRoute
   '/chat': typeof AuthedChatRoute
   '/history': typeof AuthedHistoryRoute
@@ -314,10 +338,13 @@ export interface FileRoutesById {
   '/compare': typeof CompareRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
   '/register': typeof RegisterRoute
   '/reset-password': typeof ResetPasswordRoute
   '/stats': typeof StatsRoute
+  '/terms': typeof TermsRoute
   '/users': typeof UsersRoute
+  '/verify-email': typeof VerifyEmailRoute
   '/_authed/ai': typeof AuthedAiRoute
   '/_authed/chat': typeof AuthedChatRoute
   '/_authed/history': typeof AuthedHistoryRoute
@@ -354,10 +381,13 @@ export interface FileRouteTypes {
     | '/compare'
     | '/forgot-password'
     | '/login'
+    | '/privacy'
     | '/register'
     | '/reset-password'
     | '/stats'
+    | '/terms'
     | '/users'
+    | '/verify-email'
     | '/ai'
     | '/chat'
     | '/history'
@@ -391,10 +421,13 @@ export interface FileRouteTypes {
     | '/compare'
     | '/forgot-password'
     | '/login'
+    | '/privacy'
     | '/register'
     | '/reset-password'
     | '/stats'
+    | '/terms'
     | '/users'
+    | '/verify-email'
     | '/ai'
     | '/chat'
     | '/history'
@@ -429,10 +462,13 @@ export interface FileRouteTypes {
     | '/compare'
     | '/forgot-password'
     | '/login'
+    | '/privacy'
     | '/register'
     | '/reset-password'
     | '/stats'
+    | '/terms'
     | '/users'
+    | '/verify-email'
     | '/_authed/ai'
     | '/_authed/chat'
     | '/_authed/history'
@@ -469,10 +505,13 @@ export interface RootRouteChildren {
   CompareRoute: typeof CompareRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  PrivacyRoute: typeof PrivacyRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   StatsRoute: typeof StatsRoute
+  TermsRoute: typeof TermsRoute
   UsersRoute: typeof UsersRoute
+  VerifyEmailRoute: typeof VerifyEmailRoute
   EIdRoute: typeof EIdRoute
   GSlugRoute: typeof GSlugRoute
   UUsernameRoute: typeof UUsernameRouteWithChildren
@@ -522,6 +561,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -543,11 +589,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/users': {
       id: '/users'
       path: '/users'
       fullPath: '/users'
       preLoaderRoute: typeof UsersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verify-email': {
+      id: '/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof VerifyEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authed/ai': {
@@ -824,10 +884,13 @@ const rootRouteChildren: RootRouteChildren = {
   CompareRoute: CompareRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  PrivacyRoute: PrivacyRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   StatsRoute: StatsRoute,
+  TermsRoute: TermsRoute,
   UsersRoute: UsersRoute,
+  VerifyEmailRoute: VerifyEmailRoute,
   EIdRoute: EIdRoute,
   GSlugRoute: GSlugRoute,
   UUsernameRoute: UUsernameRouteWithChildren,

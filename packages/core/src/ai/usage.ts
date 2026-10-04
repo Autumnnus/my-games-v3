@@ -17,7 +17,7 @@ export type AiTraceStep = schema.AiTraceStep;
 export async function defaultDailyTokenLimit() {
   const stored = await readSetting<number>(SETTING_KEYS.aiDailyTokens);
   if (typeof stored === "number" && Number.isInteger(stored) && stored >= 0) return stored;
-  return aiConfig()?.dailyTokenLimit ?? 0;
+  return aiConfig().dailyTokenLimit;
 }
 
 async function limitsOf(userId: string) {

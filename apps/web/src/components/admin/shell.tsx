@@ -15,6 +15,7 @@ import {
   UsersIcon,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
+import { BrandMark } from "@/components/brand-mark";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
@@ -70,9 +71,7 @@ const groups: Array<{ label: () => string; items: NavItem[] }> = [
 function Brand() {
   return (
     <div className="flex items-center gap-2.5 px-2">
-      <span className="flex size-8 items-center justify-center rounded-[9px] bg-amber-300 text-[#1a1406]">
-        <ShieldCheckIcon className="size-[18px]" strokeWidth={2.4} />
-      </span>
+      <BrandMark className="size-8 rounded-[9px]" />
       <span className="grid leading-tight">
         <span className="font-display text-[15px] font-medium">{m.app_name()}</span>
         <span className="text-[11px] font-bold tracking-[0.14em] text-amber-300/90 uppercase">

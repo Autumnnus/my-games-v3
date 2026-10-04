@@ -1,4 +1,13 @@
-import { index, integer, jsonb, pgTable, text, uuid } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { createdAt, id, updatedAt } from "./_helpers";
 import { user } from "./auth";
 import { games } from "./catalog";
@@ -111,3 +120,30 @@ export const aiRecaps = pgTable("ai_recaps", {
   model: text(),
   createdAt: createdAt(),
 });
+
+/**
+ * Yönetim panelinden eklenen AI sağlayıcı anahtarları (havuz). Anahtar AES-256-GCM ile şifreli durur
+ * (`core/credentials`); istemciye ve denetim kaydına yalnızca `hint` (ilk/son 4 karakter) gider. Ortam
+ * değişkenindeki anahtarlar burada değil, havuza ayrıca eklenir.
+ */
+export const aiApiKeys = pgTable(
+  "ai_api_keys",
+  {
+    id: id(),
+    /** Sağlayıcı adaptörü (`google`…). */
+    provider: text().notNull(),
+    /** Yönetim ekranında görünen ad (ör. "Proje 2"). */
+    name: text(),
+    secret: text().notNull(),
+    /** Anahtarın SHA-256 özeti: aynı anahtar iki kez eklenmesin (anahtar çözülmeden). */
+    fingerprint: text().notNull(),
+    hint: text().notNull(),
+    enabled: boolean().notNull().default(true),
+    /** Havuzdaki sıra (`failover` stratejisinde önce gelen önce kullanılır). */
+    position: integer().notNull().default(0),
+    createdBy: text().references(() => user.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+    updatedAt: updatedAt(),
+  },
+  (t) => [uniqueIndex().on(t.provider, t.fingerprint), index().on(t.provider, t.position)],
+);

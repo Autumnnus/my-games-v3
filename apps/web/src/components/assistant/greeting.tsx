@@ -2,19 +2,24 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useRouteContext } from "@tanstack/react-router";
 import {
   ChevronRightIcon,
+  CompassIcon,
   InboxIcon,
   NotebookPenIcon,
+  PlusIcon,
   ShuffleIcon,
   TrophyIcon,
   XIcon,
 } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { GameCover } from "@/components/game-cover";
+import { useOnboarding } from "@/components/onboarding/provider";
 import { greetingFor, type Suggestion, suggestionsQuery } from "@/lib/assistant";
 import { formatPlaytime, formatRating } from "@/lib/format";
 import { useHydrated } from "@/lib/hydrated";
 import { m } from "@/paraglide/messages";
-import { Orb } from "./orb";
+import { Pati, useFlash } from "./mascot";
+import { playSound } from "./mascot-sound";
+import { usePatiMood } from "./mascot-store";
 import { useAssistant, useMediaQuery } from "./provider";
 
 const PRIVACY_KEY = "mg.ai.privacy-seen";
@@ -79,6 +84,9 @@ export function Greeting() {
   const wide = useMediaQuery("(min-width: 1280px)");
   const suggestions = useQuery({ ...suggestionsQuery(assistant.page), enabled: assistant.enabled });
   const [privacySeen, setPrivacySeen] = useState(true);
+  const mood = usePatiMood();
+  const [boops, setBoops] = useState(0);
+  const booped = useFlash(boops);
   useEffect(() => {
     try {
       setPrivacySeen(window.localStorage.getItem(PRIVACY_KEY) === "1");
@@ -87,6 +95,9 @@ export function Greeting() {
     }
   }, []);
   const pageGame = suggestions.data?.pageGame;
+  // Yeni üyeye (rehber açıkken) iki başlangıç kartı: yazarak oyun ekleme ve sitenin kısa turu.
+  const onboarding = useOnboarding();
+  const starter = !!onboarding.state && !onboarding.state.dismissed;
 
   function leave(to: () => void) {
     // Telefonda/tablette panel sayfanın üstünü kapatır; oraya giderken kapanır.
@@ -186,7 +197,18 @@ export function Greeting() {
   return (
     <div className="grid gap-6 px-1 pt-6 pb-2">
       <div className="grid justify-items-center gap-1.5 text-center">
-        <Orb color={pageGame?.accentColor} size={76} satellite />
+        {/* Dokununca sevinir; küçük bir sürpriz, başka işi yok. */}
+        <button
+          type="button"
+          aria-label={m.ai_mascot_pet()}
+          onClick={() => {
+            setBoops((count) => count + 1);
+            playSound("boop");
+          }}
+          className="rounded-full outline-offset-4"
+        >
+          <Pati mood={booped ? "success" : mood} size={92} glow={pageGame?.accentColor ?? null} />
+        </button>
         <h2 className="font-display m-0 mt-1 text-[21px] font-medium">
           {/* Selam saate bağlı: ilk karede (sunucu + hydration) saatten bağımsız metin, sonra saate göre. */}
           {hydrated
@@ -197,6 +219,29 @@ export function Greeting() {
           {pageGame ? m.ai_greeting_page({ game: pageGame.name }) : m.ai_greeting_default()}
         </p>
       </div>
+      {starter && (
+        <section className="grid gap-2">
+          <h3 className="text-foreground/60 m-0 text-[11px] font-bold tracking-[0.16em]">
+            {m.onboarding_ai_section()}
+          </h3>
+          <SuggestionCard
+            icon={<PlusIcon className="size-[18px]" />}
+            title={m.onboarding_ai_add()}
+            sub={m.onboarding_ai_add_sub()}
+            onClick={() => {
+              // Cevaplar (oyun adları) de Yap modunda gitsin diye mod kalıcı olarak değişir.
+              assistant.setMode("act");
+              assistant.ask({ text: m.onboarding_ai_add_prompt(), mode: "act" });
+            }}
+          />
+          <SuggestionCard
+            icon={<CompassIcon className="size-[18px]" />}
+            title={m.onboarding_ai_tour()}
+            sub={m.onboarding_ai_tour_sub()}
+            onClick={() => assistant.ask({ text: m.onboarding_ai_tour_prompt(), mode: "ask" })}
+          />
+        </section>
+      )}
       {!!suggestions.data?.forPage.length && (
         <section className="grid gap-2">
           <h3 className="text-foreground/60 m-0 text-[11px] font-bold tracking-[0.16em]">

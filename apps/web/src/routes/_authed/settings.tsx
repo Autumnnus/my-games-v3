@@ -1,8 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { type FormEvent, useRef } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
+import { AccountSecurityCard } from "@/components/account-security";
 import { FormField } from "@/components/auth-card";
 import { LanguagePicker } from "@/components/language-picker";
 import { NotificationSettings } from "@/components/notification-settings";
@@ -34,7 +35,12 @@ import { useRefreshSession } from "@/lib/session";
 import { m } from "@/paraglide/messages";
 
 export const Route = createFileRoute("/_authed/settings")({
-  validateSearch: z.object({ error: z.optional(z.string()), linked: z.optional(z.string()) }),
+  validateSearch: z.object({
+    error: z.optional(z.string()),
+    linked: z.optional(z.string()),
+    /** Rehberden gelince ilgili kart ekrana kaydırılır ve vurgulanır. */
+    focus: z.optional(z.enum(["profile", "steam", "psn", "xbox"])),
+  }),
   head: () => ({ meta: [{ title: `${m.settings_title()} · ${m.app_name()}` }] }),
   component: SettingsPage,
 });
@@ -45,6 +51,25 @@ function SettingsPage() {
   const refreshSession = useRefreshSession();
   const meta = useQuery(metaQuery);
   const avatarInput = useRef<HTMLInputElement>(null);
+  // Rehberden gelince kart, sayfa geçişi bittikten sonra ekrana kaydırılır ve o an parlar.
+  const [highlight, setHighlight] = useState<typeof search.focus>(undefined);
+  const focusRing = (card: NonNullable<typeof search.focus>) =>
+    highlight === card ? "animate-spotlight-ring rounded-[22px]" : undefined;
+  useEffect(() => {
+    const focus = search.focus;
+    if (!focus) return;
+    const start = window.setTimeout(() => {
+      document
+        .getElementById(`settings-${focus}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setHighlight(focus);
+    }, 400);
+    const end = window.setTimeout(() => setHighlight(undefined), 3400);
+    return () => {
+      window.clearTimeout(start);
+      window.clearTimeout(end);
+    };
+  }, [search.focus]);
 
   const saveProfile = useMutation({
     mutationFn: async (values: { name: string; username: string; bio: string }) => {
@@ -122,7 +147,7 @@ function SettingsPage() {
       </div>
       <div className="grid items-start gap-6 lg:grid-cols-2">
         <div className="grid gap-6">
-          <Card>
+          <Card id="settings-profile" className={focusRing("profile")}>
             <CardHeader>
               <CardTitle>{m.settings_profile()}</CardTitle>
               <CardDescription>{m.settings_profile_description()}</CardDescription>
@@ -188,18 +213,14 @@ function SettingsPage() {
                     defaultValue={user.bio ?? ""}
                   />
                 </FormField>
-                <FormField label={m.field_email()}>
-                  <Input
-                    value={user.email.endsWith(".placeholder.invalid") ? "—" : user.email}
-                    disabled
-                  />
-                </FormField>
                 <Button type="submit" size="lg" className="w-fit" disabled={saveProfile.isPending}>
                   {m.action_save()}
                 </Button>
               </form>
             </CardContent>
           </Card>
+
+          <AccountSecurityCard user={user} />
 
           <Card>
             <CardHeader>
@@ -226,11 +247,41 @@ function SettingsPage() {
               </Button>
             </CardContent>
           </Card>
+
+          {/* Kendi kendine silme kapalı (yanlışlıkla geri dönüşsüz kayıp olmasın); KVKK/GDPR silme hakkı talep
+              e-postasıyla kullanılır, admin panelinden silinir. */}
+          <Card>
+            <CardHeader>
+              <CardTitle>{m.settings_delete_account()}</CardTitle>
+              <CardDescription>{m.settings_delete_account_description()}</CardDescription>
+            </CardHeader>
+            {meta.data?.contactEmail && (
+              <CardContent>
+                <Button asChild variant="outline">
+                  <a
+                    href={`mailto:${meta.data.contactEmail}?subject=${encodeURIComponent(
+                      m.settings_delete_account_subject({
+                        username: user.displayUsername ?? user.username ?? user.email,
+                      }),
+                    )}`}
+                  >
+                    {m.settings_delete_account_request()}
+                  </a>
+                </Button>
+              </CardContent>
+            )}
+          </Card>
         </div>
         <div className="grid gap-6">
-          <SteamCard error={search.error} />
-          <PsnCard />
-          <XboxCard error={search.error} linked={search.linked} />
+          <div id="settings-steam" className={focusRing("steam")}>
+            <SteamCard error={search.error} />
+          </div>
+          <div id="settings-psn" className={focusRing("psn")}>
+            <PsnCard />
+          </div>
+          <div id="settings-xbox" className={focusRing("xbox")}>
+            <XboxCard error={search.error} linked={search.linked} />
+          </div>
 
           <NotificationSettings />
         </div>

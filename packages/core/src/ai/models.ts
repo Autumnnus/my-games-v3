@@ -1,10 +1,11 @@
 import type { LanguageModel } from "ai";
 import { z } from "zod";
-import { aiConfig, aiProviderKeys } from "../config";
+import { aiConfig } from "../config";
 import { AppError } from "../errors";
 import { log, logger } from "../log";
 import { readSetting, SETTING_KEYS, writeSetting } from "../settings";
 import { KeyPool } from "./key-pool";
+import { keyStrategy, providerKeys } from "./keys";
 import { createPooledModel, type PoolTarget } from "./pooled-model";
 import { type ModelPurpose, providerAdapter } from "./providers";
 
@@ -12,16 +13,23 @@ export type ResolvedModel = { model: LanguageModel; id: string };
 
 /** Sağlayıcı başına tek havuz: aynı anahtarın durumu sohbet ve kısa işler arasında paylaşılır. */
 const pools = new Map<string, { signature: string; pool: KeyPool }>();
-const resolved = new Map<ModelPurpose, { signature: string; value: ResolvedModel }>();
+const resolved = new Map<
+  ModelPurpose,
+  { signature: string; pools: KeyPool[]; value: ResolvedModel }
+>();
 
-function poolFor(provider: string) {
-  const keys = aiProviderKeys(provider);
-  const strategy = aiConfig()?.keyStrategy ?? "round_robin";
-  const signature = `${strategy}|${keys.join(",")}`;
+/**
+ * Sağlayıcının havuzu. Anahtar listesi ya da strateji değişince (panelden) yeni havuz kurulur; aynı anahtarların
+ * durumu (dinlenen anahtarlar, sayaçlar) eskisinden taşınır.
+ */
+async function poolFor(provider: string) {
+  const keys = await providerKeys(provider);
+  const { value: strategy } = await keyStrategy();
+  const signature = `${strategy}|${keys.map((entry) => `${entry.ref}=${entry.label}:${entry.key}`).join(",")}`;
   const existing = pools.get(provider);
-  // Anahtarlar değişmediyse durum (dinlenen anahtarlar, sayaçlar) korunur.
   if (existing?.signature === signature) return existing.pool;
   const pool = new KeyPool(provider, keys, { strategy });
+  if (existing) pool.inherit(existing.pool);
   pools.set(provider, { signature, pool });
   return pool;
 }
@@ -46,13 +54,13 @@ async function refreshSelection() {
 export async function modelSettings() {
   await refreshSelection();
   const config = aiConfig();
-  const adapter = config ? providerAdapter(config.provider) : null;
+  const adapter = providerAdapter(config.provider);
   return {
     selected,
     env: {
-      model: config?.model ?? null,
-      fallbackModels: config?.fallbackModels ?? [],
-      lightModel: config?.lightModel ?? null,
+      model: config.model ?? null,
+      fallbackModels: config.fallbackModels,
+      lightModel: config.lightModel ?? null,
     },
     defaults: { chat: adapter?.defaults.chat ?? null, light: adapter?.defaults.light ?? null },
   };
@@ -78,7 +86,6 @@ function parseRef(ref: string, fallbackProvider: string) {
  */
 function chainRefs(purpose: ModelPurpose) {
   const config = aiConfig();
-  if (!config) return [];
   const adapter = providerAdapter(config.provider);
   if (!adapter) return [];
   const model = selected?.model ?? config.model ?? adapter.defaults.chat;
@@ -97,7 +104,7 @@ function chainRefs(purpose: ModelPurpose) {
     });
 }
 
-function buildChain(purpose: ModelPurpose): PoolTarget[] {
+async function buildChain(purpose: ModelPurpose): Promise<PoolTarget[]> {
   const targets: PoolTarget[] = [];
   for (const ref of chainRefs(purpose)) {
     const adapter = providerAdapter(ref.provider);
@@ -109,7 +116,7 @@ function buildChain(purpose: ModelPurpose): PoolTarget[] {
       );
       continue;
     }
-    const pool = poolFor(ref.provider);
+    const pool = await poolFor(ref.provider);
     if (pool.size === 0) {
       logger.warn("ai", "no_keys", `${ref.provider} için anahtar yok (${ref.model} atlandı)`);
       continue;
@@ -125,27 +132,31 @@ function buildChain(purpose: ModelPurpose): PoolTarget[] {
 }
 
 /**
- * Amaca uygun model. Sağlayıcı değiştirmek, anahtar eklemek ya da yedek model tanımlamak yalnızca ortam
- * değişkenleriyle olur; çağıranlar hiçbir şey bilmez. Testler kendi mock modelini doğrudan verir.
+ * Amaca uygun model. Sağlayıcı ortam değişkeniyle; anahtarlar, strateji ve model zinciri yönetim panelinden
+ * (yoksa ortam değişkenlerinden) gelir; çağıranlar hiçbir şey bilmez. Testler kendi mock modelini doğrudan verir.
  */
 export async function resolveModel(purpose: ModelPurpose = "chat"): Promise<ResolvedModel> {
   await refreshSelection();
   const config = aiConfig();
-  if (!config) throw new AppError("unavailable", "AI yapılandırılmamış");
   if (config.provider === "mock") {
     const { createDevModel } = await import("./dev-model");
     return { model: await createDevModel(purpose), id: "mock" };
   }
 
-  const refs = chainRefs(purpose);
-  const signature = `${refs.map((ref) => `${ref.provider}:${ref.model}`).join(">")}|${refs
-    .map((ref) => aiProviderKeys(ref.provider).length)
-    .join(",")}`;
+  // Havuzlar her çağrıda tazelenir (önbellekli); zincir yalnızca model listesi ya da havuz nesnesi değişince
+  // yeniden kurulur.
+  const chain = await buildChain(purpose);
+  if (chain.length === 0) throw new AppError("unavailable", "AI yapılandırılmamış");
+  const signature = chain.map((target) => `${target.adapter.id}:${target.modelId}`).join(">");
   const cached = resolved.get(purpose);
-  if (cached && cached.signature === signature) return cached.value;
-
-  const chain = buildChain(purpose);
-  if (chain.length === 0) throw new AppError("unavailable", "AI modeli yapılandırılamadı");
+  if (
+    cached &&
+    cached.signature === signature &&
+    cached.pools.length === chain.length &&
+    cached.pools.every((pool, index) => pool === chain[index]?.pool)
+  ) {
+    return cached.value;
+  }
   const value = {
     model: createPooledModel(chain, {
       onFailure: ({ provider, model, key, verdict, waitMs }) => {
@@ -175,27 +186,35 @@ export async function resolveModel(purpose: ModelPurpose = "chat"): Promise<Reso
     }),
     id: chain.map((target) => target.modelId).join(" → "),
   };
-  resolved.set(purpose, { signature, value });
+  resolved.set(purpose, { signature, pools: chain.map((target) => target.pool), value });
   return value;
 }
 
-/** Yönetim ekranı: model zincirleri ve her anahtarın durumu (anahtarlar maskeli). */
+/**
+ * Yönetim ekranı: model zincirleri, strateji ve her anahtarın canlı durumu (maskeli). Havuz süreç başına
+ * tutulduğu için bu, app sürecinin görüşüdür.
+ */
 export async function aiStatus() {
   await refreshSelection();
   const config = aiConfig();
-  if (!config) return { enabled: false as const };
+  const strategy = await keyStrategy();
   const providers = new Set([config.provider, ...chainRefs("chat").map((ref) => ref.provider)]);
+  const pools =
+    config.provider === "mock"
+      ? []
+      : await Promise.all(
+          [...providers]
+            .filter((provider) => providerAdapter(provider))
+            .map(async (provider) => ({ provider, keys: (await poolFor(provider)).snapshot() })),
+        );
   return {
-    enabled: true as const,
+    enabled: config.provider === "mock" || pools.some((pool) => pool.keys.length > 0),
     provider: config.provider,
-    strategy: config.keyStrategy,
+    strategy,
     chains: {
       chat: chainRefs("chat").map((ref) => `${ref.provider}:${ref.model}`),
       light: chainRefs("light").map((ref) => `${ref.provider}:${ref.model}`),
     },
-    pools:
-      config.provider === "mock"
-        ? []
-        : [...providers].map((provider) => ({ provider, keys: poolFor(provider).snapshot() })),
+    pools,
   };
 }

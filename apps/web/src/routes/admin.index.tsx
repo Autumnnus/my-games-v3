@@ -1,3 +1,4 @@
+import type { OnboardingStep } from "@my-games/shared";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
@@ -210,6 +211,8 @@ function OverviewPage() {
         </Panel>
       </div>
 
+      <OnboardingFunnel funnel={data.onboarding} />
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel
           title={m.admin_recent_users()}
@@ -271,5 +274,73 @@ function OverviewPage() {
         </Panel>
       </div>
     </>
+  );
+}
+
+const stepLabels: Record<OnboardingStep, () => string> = {
+  platform: m.onboarding_step_platform,
+  inbox: m.onboarding_step_inbox,
+  game: m.onboarding_step_game,
+  ai: m.onboarding_step_ai,
+  profile: m.onboarding_step_profile,
+};
+
+/** Yeni üyelerin rehberde nereye kadar geldiği: her satır kayıtların yüzde kaçının o adımı geçtiğini gösterir. */
+function OnboardingFunnel({
+  funnel,
+}: {
+  funnel: {
+    days: number;
+    total: number;
+    welcomed: number;
+    dismissed: number;
+    completed: number;
+    steps: Array<{ id: OnboardingStep; done: number }>;
+  };
+}) {
+  const rows = [
+    { key: "signups", label: m.admin_onboarding_signups(), value: funnel.total },
+    { key: "welcomed", label: m.admin_onboarding_welcomed(), value: funnel.welcomed },
+    ...funnel.steps.map((step) => ({
+      key: step.id,
+      label: stepLabels[step.id](),
+      value: step.done,
+    })),
+    { key: "completed", label: m.admin_onboarding_completed(), value: funnel.completed },
+    { key: "dismissed", label: m.admin_onboarding_dismissed(), value: funnel.dismissed },
+  ];
+  return (
+    <Panel
+      title={m.admin_onboarding_funnel()}
+      description={m.admin_onboarding_funnel_sub({ days: funnel.days })}
+    >
+      {funnel.total === 0 ? (
+        <Empty>{m.admin_onboarding_none_recent()}</Empty>
+      ) : (
+        <ul className="m-0 grid list-none gap-2.5 p-0">
+          {rows.map((row) => {
+            const ratio = funnel.total ? row.value / funnel.total : 0;
+            return (
+              <li
+                key={row.key}
+                className="grid grid-cols-[minmax(0,180px)_1fr_auto] items-center gap-3 text-sm"
+              >
+                <span className="text-foreground/75 truncate">{row.label}</span>
+                <span className="h-2 overflow-hidden rounded-full bg-white/8">
+                  <span
+                    className={`block h-full rounded-full ${row.key === "dismissed" ? "bg-amber-300/70" : "bg-[#7ea7e6]"}`}
+                    style={{ width: `${Math.max(row.value > 0 ? 2 : 0, ratio * 100)}%` }}
+                  />
+                </span>
+                <span className="text-foreground/70 w-20 text-right tabular-nums">
+                  {formatNumber(row.value)}
+                  <span className="text-foreground/45"> · {Math.round(ratio * 100)}%</span>
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Panel>
   );
 }

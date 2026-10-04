@@ -12,7 +12,7 @@ import { latestHistoryId, revertHistory } from "@/lib/assistant";
 import { errorMessage, formatPlaytime, formatRating } from "@/lib/format";
 import { entryQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
-import { Orb } from "./orb";
+import { Pati } from "./mascot";
 
 type Strength = ReviewDraftInput["strengths"][number];
 type Weakness = ReviewDraftInput["weaknesses"][number];
@@ -68,7 +68,7 @@ function Chip({
 }
 
 /**
- * Oyun sonrası röportaj: puan, akılda kalanlar, eksikler ve kullanıcının kendi cümlesi; sonra My games AI bir
+ * Oyun sonrası röportaj: puan, akılda kalanlar, eksikler ve kullanıcının kendi cümlesi; sonra Pati bir
  * inceleme taslağı yazar (kullanıcının önceki incelemelerinin üslubuyla). Taslak düzenlenebilir; yayınlamak
  * normal bir düzenlemedir (akışa düşer, geri alınabilir).
  */
@@ -220,7 +220,7 @@ export function InterviewDialog({
           {step === 0 && (
             <div className="animate-rise grid gap-4">
               <div className="flex items-center gap-2.5">
-                <Orb color={data?.game.accentColor} size={26} />
+                <Pati size={44} glow={data?.game.accentColor ?? null} />
                 <span className="text-foreground/74 text-[13px]">{m.ai_review_intro()}</span>
               </div>
               <h2 className="m-0 text-[22px] font-bold">{m.ai_review_q_rating()}</h2>
@@ -306,7 +306,7 @@ export function InterviewDialog({
               >
                 <div className="flex items-center justify-between">
                   <span className="text-foreground/66 flex items-center gap-2 text-xs">
-                    <Orb color={data?.game.accentColor} size={20} />
+                    <Pati size={20} still />
                     <span className="text-foreground font-bold">{m.ai_review_draft()}</span>
                     {m.ai_review_draft_from()}
                   </span>

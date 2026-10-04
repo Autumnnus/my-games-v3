@@ -10,6 +10,8 @@ import { AddGameProvider } from "@/components/add-game";
 import { AssistantPanelSlot } from "@/components/assistant/panel-slot";
 import { AssistantProvider } from "@/components/assistant/provider";
 import { NotFound } from "@/components/not-found";
+import { OnboardingProvider } from "@/components/onboarding/provider";
+import { SiteFooter } from "@/components/site-footer";
 import { MobileTabBar, SiteHeader } from "@/components/site-header";
 import { SpotlightProvider } from "@/components/spotlight";
 import { Toaster } from "@/components/toaster";
@@ -52,12 +54,20 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#0b0c10" },
       { title: m.app_name() },
+      // Varsayılanlar; profil, oyun ve kayıt sayfaları kendi og:title/og:image'ını verir (alttaki route kazanır).
+      { name: "description", content: m.home_subtitle() },
+      { property: "og:site_name", content: m.app_name() },
+      { property: "og:type", content: "website" },
+      { property: "og:title", content: m.app_name() },
+      { property: "og:description", content: m.home_subtitle() },
+      { property: "og:locale", content: getLocale() === "tr" ? "tr_TR" : "en_US" },
+      { name: "twitter:card", content: "summary" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
-      { rel: "apple-touch-icon", href: "/icon-192.png" },
-      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "icon", href: "/favicon-purple.png", type: "image/png", sizes: "32x32" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon-purple.png", sizes: "180x180" },
+      { rel: "manifest", href: "/manifest.webmanifest?v=purple" },
     ],
   }),
   shellComponent: RootDocument,
@@ -85,22 +95,25 @@ function RootDocument({ children }: { children: ReactNode }) {
           <AddGameProvider>
             <AssistantProvider>
               <SpotlightProvider>
-                {bare ? (
-                  children
-                ) : (
-                  <>
-                    {/* Kabuk konumlanmış: sayfaların <Stage> katmanı buraya göre tam genişlikte yerleşir. Asistan
+                <OnboardingProvider>
+                  {bare ? (
+                    children
+                  ) : (
+                    <>
+                      {/* Kabuk konumlanmış: sayfaların <Stage> katmanı buraya göre tam genişlikte yerleşir. Asistan
                       paneli geniş ekranda sabitlenince kabuk sağdan daralır (bkz. styles.css `.app-shell`). */}
-                    <div className="app-shell relative isolate min-h-dvh overflow-x-clip transition-[padding] duration-300 ease-(--ease-salon)">
-                      <SiteHeader />
-                      <main className="mx-auto w-full max-w-7xl px-4 pt-2 pb-32 sm:px-6 md:pb-16 lg:px-8">
-                        {children}
-                      </main>
-                      <MobileTabBar />
-                    </div>
-                    <AssistantPanelSlot />
-                  </>
-                )}
+                      <div className="app-shell relative isolate min-h-dvh overflow-x-clip transition-[padding] duration-300 ease-(--ease-salon)">
+                        <SiteHeader />
+                        <main className="mx-auto w-full max-w-7xl px-4 pt-2 pb-12 sm:px-6 md:pb-16 lg:px-8">
+                          {children}
+                        </main>
+                        <SiteFooter />
+                        <MobileTabBar />
+                      </div>
+                      <AssistantPanelSlot />
+                    </>
+                  )}
+                </OnboardingProvider>
               </SpotlightProvider>
             </AssistantProvider>
           </AddGameProvider>

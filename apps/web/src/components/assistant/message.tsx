@@ -9,12 +9,11 @@ import {
   type ToolPart,
   toolDoneLabel,
   toolNameOf,
-  toolRunningLabel,
 } from "@/lib/assistant";
 import { statusLabel } from "@/lib/format";
 import { m } from "@/paraglide/messages";
 import { ToolCard } from "./cards/tool-card";
-import { Orb } from "./orb";
+import { Pati } from "./mascot";
 
 /** `**kalın**`, `*eğik*`, `` `kod` `` — modelin ara sıra kullandığı kadarı; geri kalanı düz metin. */
 function inline(text: string, key: string): ReactNode[] {
@@ -119,16 +118,16 @@ function UserBubble({ message }: { message: AssistantUIMessage }) {
  */
 function AssistantMessage({
   message,
-  streaming,
+  live,
   wide,
-  accent,
   onRespond,
   onOpenDeck,
 }: {
   message: AssistantUIMessage;
-  streaming: boolean;
+  /** Sohbetin son mesajı: başlıktaki Pati hafifçe süzülür; eskilerde yerinde durur. Asıl hareketler mesajların
+   * altındaki çalışma sahnesinde (`PatiStage`). */
+  live?: boolean;
   wide?: boolean;
-  accent?: string | null;
   onRespond: (approvalId: string, approved: boolean) => void;
   onOpenDeck: () => void;
 }) {
@@ -140,10 +139,6 @@ function AssistantMessage({
         .map((part) => toolDoneLabel(toolNameOf(part))),
     ),
   ];
-  const running = tools.find(
-    (part) => part.state === "input-streaming" || part.state === "input-available",
-  );
-  const hasText = message.parts.some((part) => part.type === "text" && part.text.trim());
   const pending = tools.filter(
     (part) =>
       part.state === "approval-requested" &&
@@ -153,15 +148,9 @@ function AssistantMessage({
   return (
     <div className="grid gap-2.5">
       <div className="text-foreground/62 flex items-center gap-2 text-xs">
-        <Orb color={accent} size={22} />
+        <Pati size={22} still={!live} />
         <span className="text-foreground font-bold">{m.ai_name()}</span>
-        {running && streaming ? (
-          <span>{toolRunningLabel(toolNameOf(running))}…</span>
-        ) : done.length > 0 ? (
-          <span className="truncate">{done.join(" · ")}</span>
-        ) : streaming && !hasText ? (
-          <TypingDots />
-        ) : null}
+        {done.length > 0 && <span className="truncate">{done.join(" · ")}</span>}
       </div>
       {message.parts.map((part, index) => {
         const key = `${message.id}-${index}`;
@@ -223,9 +212,8 @@ export function TypingDots({ label }: { label?: string }) {
 
 export function MessageView(props: {
   message: AssistantUIMessage;
-  streaming: boolean;
+  live?: boolean;
   wide?: boolean;
-  accent?: string | null;
   onRespond: (approvalId: string, approved: boolean) => void;
   onOpenDeck: () => void;
 }) {

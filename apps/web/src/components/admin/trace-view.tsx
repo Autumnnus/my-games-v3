@@ -1,6 +1,6 @@
 import { BrainIcon, CircleAlertIcon, KeyRoundIcon, UserIcon, WrenchIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { Orb } from "@/components/assistant/orb";
+import { Pati } from "@/components/assistant/mascot";
 import {
   formatCompact,
   formatDateTime,
@@ -335,7 +335,7 @@ function AssistantMessage({
   return (
     <div className="grid gap-2">
       <div className="text-foreground/50 flex items-center gap-1.5 text-xs">
-        <Orb size={14} />
+        <Pati size={14} still />
         {formatDateTime(message.createdAt)}
       </div>
       {runs.map((run) => (

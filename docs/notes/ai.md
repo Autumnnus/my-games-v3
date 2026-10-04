@@ -1,7 +1,26 @@
-# My games AI
+# Pati (AI asistan)
 
-> Durum (2026-09-29): uygulandı. Arayüz tasarımı: tasarım kanvasındaki "AI asistan" sayfası. Gerçek
-> Gemini anahtarıyla henüz denenmedi; bütün akışlar `AI_PROVIDER=mock` ve testlerde sahte modelle doğrulandı.
+> Durum (2026-09-29): uygulandı. Arayüz tasarımı: tasarım kanvasındaki "AI asistan" sayfası. 2026-10-04'te
+> gerçek Gemini anahtarıyla panelden eklenen anahtar üzerinden sohbet çağrısı doğrulandı.
+
+## Pati (maskot)
+
+2026-10-04: asistanın adı "My games AI" yerine **Pati** (gamepad + pati), maskotu logodaki mor kumandanın
+canlanmış hâli (yüz düğmeleri göz, koleksiyon kartları kulak). Seçilmeyen konseptler: Karto (kartuş),
+Savi (yüzlü save-point küresi, eski küre).
+
+- Bileşen `components/assistant/mascot.tsx` (`Pati`, `LivePati`), animasyonlar `styles.css` `.pati`.
+  Renk sabit marka moru; eski küre gibi sayfanın oyun rengini almaz.
+- Ruh hâlleri: `idle` (süzülür, göz kırpar, ara sıra etrafa bakar), `listening` (kutuda yazı varken),
+  `thinking` (istek gitti / metin henüz yok), `working` (araç çalışıyor; kartları karıştırır), `talking`
+  (metin akıyor), `approval` (onay kartı bekliyor), `success` (akışta bir yazma aracı uygulandı; ~2 sn),
+  `error` (sohbet hatası; iki kez silkinip üzgün kalır).
+- Ortak durum `mascot-store.ts` (AI SDK'sız; başlık düğmesi onu yüklemeden okur). `chat-store.ts` her
+  `Chat`'e AI SDK'nın `~register*Callback` kancalarıyla bağlanır; panel kapalıyken de başlıktaki Pati
+  çalışır. Bu kancalar `@ai-sdk/react`'in iç API'si (useChat da bunları kullanır); sürüm yükseltmede kontrol et.
+- Geçmiş mesajlar ve küçük simgeler `still` (hareketsiz); karşılamadaki büyük Pati'ye dokununca sevinir.
+- Sistem talimatında kısa bir persona satırı var (sıcak, oyuncu arkadaş; kısalık önce gelir).
+- Hareket azaltma tercihi global kuralla bütün animasyonları durdurur; yüz ifadeleri yine değişir.
 
 ## Arayüz
 
@@ -48,10 +67,19 @@
 - Bekleme **model başınadır** (Gemini'de kota proje × model); modelin bütün anahtarları doluysa
   `AI_FALLBACK_MODELS`'e geçilir. Hiçbiri yoksa `AiUnavailableError` (en erken yeniden deneme zamanıyla);
   istemci "yoğun, ~N dk sonra" gösterir.
-- Durum bellekte (tek app process'i). Yönetim sayfası anahtarları maskeli gösterir (`/admin/ai`);
-  anahtar hataları sistem loglarına da düşer.
-- Yeni sağlayıcı: paketini kur, `providers.ts`'e adaptör ekle (model üretici + isteğe bağlı hata yorumu),
-  `<ÖNEK>_API_KEYS` ile anahtarları ver; `AI_MODEL=openai:…` gibi karışık zincir de olur.
+- Durum bellekte (süreç başına: app ve worker'ın kendi havuzu var). Anahtar hataları sistem loglarına da düşer.
+- **Anahtarların kaynağı (`core/ai/keys.ts`, 2026-10-04):** yönetim panelinden (`/admin/ai` › Anahtar havuzu)
+  eklenenler `ai_api_keys` tablosunda AES-256-GCM ile şifreli durur (`core/credentials`, `CREDENTIALS_SECRET`).
+  Panel ekleme öncesi anahtarı sağlayıcıda dener (Gemini: model listesi, token harcamaz); reddedilen anahtar
+  eklenmez, kotası dolu olan eklenir. Panelde ad, aç/kapat, sıra, "Test et", silme ve strateji
+  (`round_robin`/`failover`, `app_config` › `ai.key_strategy`) var; her işlem denetim kaydına yalnızca ipucuyla
+  (ilk/son 4 karakter) yazılır, sır hiçbir yanıtta dönmez. Env'deki anahtarlar panel anahtarlarından sonra
+  havuza girer ve panelde salt okunurdur; aynı anahtar panele de eklendiyse env kopyası yok sayılır (açık/kapalı
+  panelden). Liste süreç başına 15 sn önbellekli; havuz yeniden kurulurken aynı anahtarların durumu taşınır
+  (`KeyPool.inherit`), kapatılıp açılan anahtar sıfırdan başlar. AI'nin açık olup olmadığını `aiEnabled()` söyler
+  (`/api/v1/meta` › `features.ai`).
+- Yeni sağlayıcı: paketini kur, `providers.ts`'e adaptör ekle (model üretici + isteğe bağlı hata yorumu ve
+  `verifyKey`), anahtarları panelden ya da `<ÖNEK>_API_KEYS` ile ver; `AI_MODEL=openai:…` gibi karışık zincir de olur.
 
 ## Yerelde deneme
 

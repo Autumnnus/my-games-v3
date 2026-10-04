@@ -3,6 +3,23 @@ import handler, { createServerEntry } from "@tanstack/react-start/server-entry";
 import { getServerAsyncLocalStorage } from "./paraglide/runtime.js";
 import { paraglideMiddleware } from "./paraglide/server.js";
 
+/**
+ * SSR sayfalarının güvenlik başlıkları (`/api/*` Hono'nun `secureHeaders`'ını alır). CSP şimdilik yalnızca
+ * çerçeveleme, `<base>` ve eklentileri kapatır: hydration betikleri satır içi, görseller birçok CDN'den
+ * (IGDB, Steam, PSN, Xbox, R2) geldiği için `script-src`/`img-src` nonce'lu ayrı bir çalışma ister.
+ */
+const pageSecurityHeaders: Record<string, string> = {
+  "Content-Security-Policy": "frame-ancestors 'none'; base-uri 'self'; object-src 'none'",
+  "X-Frame-Options": "DENY",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
+  "Cross-Origin-Opener-Policy": "same-origin-allow-popups",
+  ...(process.env.APP_URL?.startsWith("https://")
+    ? { "Strict-Transport-Security": "max-age=31536000; includeSubDomains" }
+    : {}),
+};
+
 // /api/* doğrudan Hono'ya gider; geri kalan her şey SSR. Tek process, tek port.
 export default createServerEntry({
   async fetch(request) {
@@ -19,9 +36,11 @@ export default createServerEntry({
         ? storage.run({ ...store, locale }, () => handler.fetch(request))
         : handler.fetch(request);
     });
-    if (setCookies.length === 0) return response;
     const headers = new Headers(response.headers);
     for (const cookie of setCookies) headers.append("set-cookie", cookie);
+    for (const [name, value] of Object.entries(pageSecurityHeaders)) {
+      if (!headers.has(name)) headers.set(name, value);
+    }
     return new Response(response.body, {
       status: response.status,
       statusText: response.statusText,

@@ -74,7 +74,7 @@ function LoginPage() {
     if (!unverifiedEmail) return;
     const { error } = await authClient.sendVerificationEmail({
       email: unverifiedEmail,
-      callbackURL: "/",
+      callbackURL: "/verify-email",
     });
     if (error) toast.error(authErrorMessage(error));
     else toast.success(m.verify_sent());

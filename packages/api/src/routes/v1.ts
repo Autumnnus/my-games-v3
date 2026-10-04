@@ -1,11 +1,20 @@
-import { features } from "@my-games/core/config";
+import { aiEnabled } from "@my-games/core/ai/keys";
+import { contactEmail, features } from "@my-games/core/config";
 import { pool } from "@my-games/core/db";
 import { findEntryByGame } from "@my-games/core/library";
+import {
+  dismissOnboarding,
+  getOnboarding,
+  markTipSeen,
+  markWelcomed,
+  restoreOnboarding,
+} from "@my-games/core/onboarding";
 import { signupsOpen } from "@my-games/core/settings";
+import { onboardingTips } from "@my-games/shared";
 import { Hono } from "hono";
 import { z } from "zod";
 import { enabledSocialProviders } from "../auth";
-import { type AppEnv, withSession } from "../middleware";
+import { type AppEnv, currentUser, requireUser, withSession } from "../middleware";
 import { validate } from "../validation";
 import { adminRoutes } from "./admin";
 import { aiRoutes } from "./ai";
@@ -27,8 +36,10 @@ export const v1 = new Hono<AppEnv>()
   .get("/meta", async (c) =>
     c.json({
       socialProviders: enabledSocialProviders,
-      features: features(),
+      // AI anahtarları panelden de eklenebildiği için veritabanına bakar (önbellekli).
+      features: { ...features(), ai: await aiEnabled() },
       signupsOpen: await signupsOpen(),
+      contactEmail: contactEmail(),
     }),
   )
   .get("/me", withSession, (c) => {
@@ -53,6 +64,33 @@ export const v1 = new Hono<AppEnv>()
     if (!user) return c.json({ entry: null });
     return c.json({ entry: await findEntryByGame(user.id, c.req.valid("query").gameId) });
   })
+  // --- Yeni üye rehberi (rehberi olmayan hesaplarda `onboarding: null`) ---
+  .get("/me/onboarding", withSession, requireUser, async (c) => {
+    c.header("Cache-Control", "no-store");
+    return c.json({ onboarding: await getOnboarding(currentUser(c).id) });
+  })
+  .post("/me/onboarding/welcome", withSession, requireUser, async (c) => {
+    await markWelcomed(currentUser(c).id);
+    return c.json({ ok: true });
+  })
+  .post("/me/onboarding/dismiss", withSession, requireUser, async (c) => {
+    await dismissOnboarding(currentUser(c).id);
+    return c.json({ ok: true });
+  })
+  .post("/me/onboarding/restore", withSession, requireUser, async (c) => {
+    await restoreOnboarding(currentUser(c).id);
+    return c.json({ ok: true });
+  })
+  .post(
+    "/me/onboarding/tips/:tip",
+    withSession,
+    requireUser,
+    validate("param", z.object({ tip: z.enum(onboardingTips) })),
+    async (c) => {
+      await markTipSeen(currentUser(c).id, c.req.valid("param").tip);
+      return c.json({ ok: true });
+    },
+  )
   .route("/", catalogRoutes)
   .route("/", libraryRoutes)
   .route("/", mediaRoutes)

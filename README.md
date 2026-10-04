@@ -24,7 +24,9 @@ Kurallar:
   (`packages/core/src/proposals.ts`) ve geçmişe yazılır; her değişiklik geri alınabilir.
 - Yan etkiler (akış, bildirim, sync) transactional outbox ile worker'da işlenir (`packages/core/src/events.ts`).
 - Tüm tarihler `timestamptz`, kimlikler `uuidv7()`.
-- UI metinleri `apps/web/scripts/messages.py` içinde (TR + EN tek kaynaktan); çalıştırınca `messages/*.json` üretilir.
+- UI metinleri `apps/web/messages/{en,tr}.json` içinde; yeni anahtar iki dosyaya da aynı sırada eklenir.
+  `apps/web/scripts/messages.py` eskidi, çalıştırma (800'den fazla çeviriyi siler). Gizlilik ve şartlar metinleri
+  uzun olduğu için `apps/web/src/lib/legal.ts`'te.
 
 ## Geliştirme
 

@@ -265,3 +265,11 @@ export const mediaRules: Record<
 
 /** Tek istekte en fazla kaç görsel. */
 export const MAX_UPLOAD_BATCH = 20;
+
+/** Yeni üye başlangıç listesinin adımları (sırası ekrandaki sıradır). */
+export const onboardingSteps = ["platform", "inbox", "game", "ai", "profile"] as const;
+export type OnboardingStep = (typeof onboardingSteps)[number];
+
+/** Sayfaya ilk gelişte bir kez gösterilen ipuçları. */
+export const onboardingTips = ["inbox_deck", "ai_modes", "spotlight", "library_lists"] as const;
+export type OnboardingTip = (typeof onboardingTips)[number];

@@ -7,6 +7,7 @@ import {
   ExternalLinkIcon,
   LogOutIcon,
   MessageSquareTextIcon,
+  RotateCcwIcon,
   ShieldCheckIcon,
 } from "lucide-react";
 import { useState } from "react";
@@ -69,6 +70,14 @@ function UserPage() {
     mutationFn: () => unwrap(adminApi.users[":id"].sessions.revoke.$post({ param: { id } })),
     onSuccess: async (result) => {
       toast.success(m.admin_sessions_revoked({ count: result.revoked }));
+      await refresh();
+    },
+    onError: (failure) => toast.error(errorMessage(failure)),
+  });
+  const resetOnboarding = useMutation({
+    mutationFn: () => unwrap(adminApi.users[":id"].onboarding.reset.$post({ param: { id } })),
+    onSuccess: async () => {
+      toast.success(m.admin_onboarding_reset_done());
       await refresh();
     },
     onError: (failure) => toast.error(errorMessage(failure)),
@@ -342,6 +351,43 @@ function UserPage() {
         <div className="grid content-start gap-4">
           <AiLimitsPanel key={`ai-${data.limits.updatedAt ?? "none"}`} detail={data} />
           <StoragePanel key={`storage-${data.storage.quotaUpdatedAt ?? "none"}`} detail={data} />
+
+          <Panel
+            title={m.admin_onboarding_title()}
+            actions={
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={resetOnboarding.isPending}
+                onClick={() => resetOnboarding.mutate()}
+              >
+                <RotateCcwIcon />
+                {m.admin_onboarding_reset()}
+              </Button>
+            }
+          >
+            {data.onboarding ? (
+              <dl className="m-0">
+                <Fact label={m.admin_onboarding_started()}>
+                  {formatDateTime(data.onboarding.startedAt)}
+                </Fact>
+                <Fact label={m.admin_onboarding_welcomed()}>
+                  {data.onboarding.welcomedAt ? formatDateTime(data.onboarding.welcomedAt) : "—"}
+                </Fact>
+                <Fact label={m.admin_onboarding_dismissed()}>
+                  {data.onboarding.dismissedAt ? formatDateTime(data.onboarding.dismissedAt) : "—"}
+                </Fact>
+                <Fact label={m.admin_onboarding_completed()}>
+                  {data.onboarding.completedAt ? formatDateTime(data.onboarding.completedAt) : "—"}
+                </Fact>
+                <Fact label={m.admin_onboarding_tips()}>
+                  {data.onboarding.seenTips.length ? data.onboarding.seenTips.join(", ") : "—"}
+                </Fact>
+              </dl>
+            ) : (
+              <Empty>{m.admin_onboarding_none()}</Empty>
+            )}
+          </Panel>
 
           <Panel title={m.admin_user_sessions()} description={m.admin_user_sessions_hint()}>
             {data.sessions.length === 0 ? (

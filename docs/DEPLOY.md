@@ -48,6 +48,24 @@ Ek güvenlik (önerilir): CDN alan adına Cloudflare'de bir **Transform Rule →
 `X-Content-Type-Options: nosniff` ekle. Mümkünse bucket'ı uygulamadan farklı bir kayıtlı alan adından sun (ör.
 `<domain>-cdn.com`); aynı site olduğunda o alan adındaki bir dosya uygulamanın cookie'lerine yakın durur.
 
+## 2b. E-posta (Resend)
+
+E-posta doğrulaması zorunlu olduğu için e-posta çalışmadan kimse kayıt olamaz.
+
+1. https://resend.com → **Domains → Add domain** (ör. `mail.<domain>` ya da `<domain>`).
+2. Resend'in verdiği DNS kayıtlarını Cloudflare'e ekle: SPF (`TXT`), DKIM (`TXT`), dönüş yolu (`MX`). Bu kayıtlar
+   **DNS only** (gri bulut) olmalı.
+3. Ek olarak bir DMARC kaydı ekle: `_dmarc` için `TXT v=DMARC1; p=quarantine; rua=mailto:<CONTACT_EMAIL>`.
+   DMARC olmadan Gmail/Outlook e-postaları spam'e atabilir.
+4. Alan adı "Verified" olunca **API Keys → Create** (Sending access, yalnızca bu domain). `RESEND_API_KEY` bu
+   anahtar, `EMAIL_FROM="My Games <noreply@<doğrulanmış domain>>"`.
+5. İlk deploy'dan sonra kendi adresinle kayıt ol, ardından şifremi unuttum akışını dene. Gönderilemeyen
+   e-postalar yönetim paneli › Loglar'da `email_failed` olarak görünür.
+
+Giden e-postalar: kayıt doğrulama, şifre sıfırlama (sosyal hesapta şifre belirleme), e-posta değişikliği (eski
+adrese onay, yeni adrese doğrulama) ve şifre değişince güvenlik bildirimi. Hepsi HTML + düz metin, hesabın dilinde.
+Better Auth bu uç noktaları production'da IP başına dakikada 3 istekle sınırlar.
+
 ## 3. GHCR erişimi
 
 İlk başarılı `main` build'inden sonra imajlar oluşur:
@@ -71,7 +89,8 @@ GitHub token ekle (ya da paketleri public yap).
   ```
 - Dışarıya açma (public port kapalı). Uygulamalar Coolify'ın iç ağından bağlanır.
 - **Scheduled Backups**: günlük, hedef olarak R2'deki **yedek bucket'ını** (`my-games-backups`, public değil) S3
-  storage olarak ekle (Settings → S3 Storages). Görsellerin bucket'ını kullanma.
+  storage olarak ekle (Settings → S3 Storages). Görsellerin bucket'ını kullanma. Saklama **7 gün**: gizlilik
+  metni (`apps/web/src/lib/legal.ts`) bu süreyi taahhüt ediyor.
 
 ### app
 
@@ -89,7 +108,10 @@ GitHub token ekle (ya da paketleri public yap).
 
 ## 5. Ortam değişkenleri
 
-Opsiyonel olanlar boşsa ilgili özellik kapalı olur (UI `/api/v1/meta` ile öğrenir ve gizler).
+Opsiyonel olanlar boşsa ilgili özellik kapalı olur (UI `/api/v1/meta` ile öğrenir ve gizler). `NODE_ENV=production`
+iken (imaj bunu ayarlar) app şunlar eksikse **açılmaz**: `RESEND_API_KEY`, gerçek bir `EMAIL_FROM`, Turnstile
+anahtarları, `CONTACT_EMAIL`, `https://` ile başlayan `APP_URL`; `AI_PROVIDER=mock` da reddedilir
+(`packages/api/src/env.ts`).
 
 | Değişken | app | worker | Açıklama |
 |---|:-:|:-:|---|
@@ -100,7 +122,8 @@ Opsiyonel olanlar boşsa ilgili özellik kapalı olur (UI `/api/v1/meta` ile ö�
 | `BETTER_AUTH_SECRET` | ✓ | | `openssl rand -base64 32` |
 | `GOOGLE_CLIENT_ID` / `_SECRET` | opsiyonel | | Google OAuth |
 | `DISCORD_CLIENT_ID` / `_SECRET` | opsiyonel | | Discord OAuth |
-| `RESEND_API_KEY`, `EMAIL_FROM` | ✓ | | Doğrulama/şifre e-postaları (yoksa e-posta gönderilmez) |
+| `RESEND_API_KEY`, `EMAIL_FROM` | ✓ | | Doğrulama/şifre e-postaları; production'da zorunlu (doğrulama zorunlu olduğu için yoksa kimse kayıt olamaz) |
+| `CONTACT_EMAIL` | ✓ | | Gizlilik/şartlar sayfalarındaki iletişim ve hesap silme talepleri (KVKK başvuruları) |
 | `S3_*` | ✓ | ✓ | R2 (bkz. 2. bölüm); worker dosya silme ve yarım yükleme temizliği için kullanır |
 | `STORAGE_DEFAULT_QUOTA_MB` | opsiyonel | | Varsayılan kullanıcı kotası (250); yönetim panelinden de değişir |
 | `STORAGE_BUDGET_GB` | opsiyonel | | Tüm yüklemelerin üst sınırı (8); dolunca yükleme kapanır |
@@ -108,16 +131,16 @@ Opsiyonel olanlar boşsa ilgili özellik kapalı olur (UI `/api/v1/meta` ile ö�
 | `STEAM_API_KEY` | ✓ | ✓ | https://steamcommunity.com/dev/apikey — Steam girişi, sync, başarımlar, ekran görüntüleri |
 | `XBOX_CLIENT_ID` / `_SECRET` | opsiyonel | opsiyonel | Xbox bağlantısı (aşağıda "Xbox uygulaması") |
 | `PSN_DISABLED` | opsiyonel | opsiyonel | `true` ise PlayStation bağlantısı kapalı (anahtar gerekmez) |
-| `CREDENTIALS_SECRET` | opsiyonel | ✓ | PSN/Xbox token'larını şifreler; yoksa `BETTER_AUTH_SECRET` (o zaman worker'a da ver) |
+| `CREDENTIALS_SECRET` | ✓ | ✓ | PSN/Xbox token'larını ve panelden eklenen AI anahtarlarını şifreler; app ve worker'da **aynı** değer (`openssl rand -base64 32`). Yoksa `BETTER_AUTH_SECRET` kullanılır (o zaman worker'a da aynısını ver). Sonradan değişirse kayıtlı anahtarlar çözülemez |
 | `VAPID_PUBLIC_KEY` / `_PRIVATE_KEY` / `VAPID_SUBJECT` | ✓ | ✓ | Web Push; `npx web-push generate-vapid-keys` |
-| `GOOGLE_GENERATIVE_AI_API_KEYS` | ✓ | | My games AI (Gemini) anahtar havuzu, virgülle ayrılmış; tek anahtar için `GOOGLE_GENERATIVE_AI_API_KEY` de olur |
-| `AI_KEY_STRATEGY` | opsiyonel | | `round_robin` (varsayılan, yükü dağıtır) ya da `failover` (sıradakine yalnızca önceki dolunca) |
+| `GOOGLE_GENERATIVE_AI_API_KEYS` | opsiyonel | opsiyonel | Gemini anahtarları; **tercihen yönetim panelinden** (`/admin/ai` › Anahtar havuzu) eklenir, o zaman worker (tahminler, bitiş tarihleri) da kullanır. Env'dekiler panel anahtarlarından sonra kullanılır ve panelde salt okunurdur |
+| `AI_KEY_STRATEGY` | opsiyonel | opsiyonel | `round_robin` (varsayılan, yükü dağıtır) ya da `failover` (sıradakine yalnızca önceki dolunca); panelden de değişir |
 | `AI_MODEL` | opsiyonel | | Başlangıç sohbet modeli (yönetim panelinden seçilen önceliklidir); varsayılan `gemini-3.5-flash` (`sağlayıcı:model` biçimi de olur) |
 | `AI_FALLBACK_MODELS` | opsiyonel | | Panelde seçim yoksa: ana modelin bütün anahtarları dolunca denenecek modeller (ör. `gemini-3.5-flash-lite`) |
 | `AI_LIGHT_MODEL` | opsiyonel | | Panelde seçim yoksa: başlık, öneri gerekçesi, taslak, özet; varsayılan `gemini-3.5-flash-lite` |
 | `AI_DAILY_TOKEN_LIMIT` | opsiyonel | | Kullanıcı başına günlük token (varsayılan 200.000) |
 | `AI_MAX_STEPS` | opsiyonel | | Agent döngüsünün adım sınırı (varsayılan 10) |
-| `TURNSTILE_SITE_KEY` / `_SECRET_KEY` | opsiyonel | | Kayıt/giriş bot koruması |
+| `TURNSTILE_SITE_KEY` / `_SECRET_KEY` | ✓ | | Kayıt/giriş bot koruması (production'da zorunlu) |
 
 ## 6. GitHub → Coolify otomatik deploy
 
@@ -155,7 +178,10 @@ uygulama API'sini kullanır (resmî değil); Sony değiştirirse kırılabilir.
    Admin yetkisi yalnızca bu komutla verilir; web arayüzünde rol değiştirme yok. Panel: `/admin` (ayrıntı:
    `docs/notes/admin.md`). İstersen Cloudflare Access ile `/admin*` ve `/api/v1/admin*` yollarına ikinci bir
    kapı (e-posta doğrulaması) ekleyebilirsin.
-2. Eski verileri aktar (Kadir ve Mustafa hesap açtıktan sonra). App container'ında değil, repo'yu klonladığın bir
+2. `/admin/ai` › **Anahtar havuzu**'ndan Gemini anahtarlarını ekle (her biri eklenmeden önce Google'da denenir,
+   token harcamaz). Anahtar eklenene kadar AI kapalıdır. Env'de anahtar varsa onları da panele taşıyıp env'den
+   silebilirsin; panele eklenen anahtarı (açık/kapalı, sıra) artık panel yönetir.
+3. Eski verileri aktar (Kadir ve Mustafa hesap açtıktan sonra). App container'ında değil, repo'yu klonladığın bir
    makineden, production `DATABASE_URL` ile:
    ```sh
    DATABASE_URL=… IGDB_CLIENT_ID=… IGDB_CLIENT_SECRET=… pnpm migrate:legacy --file kadir_games.json --user kadir --dry-run
@@ -163,7 +189,7 @@ uygulama API'sini kullanır (resmî değil); Sony değiştirirse kırılabilir.
    ```
    IGDB anahtarlarıyla çalıştırılırsa kesin eşleşmeler hemen IGDB oyununa bağlanır; belirsizler kullanıcının onay
    kutusuna düşer. Anahtarsız çalıştırılırsa worker'ın gece eşleştirme işi sonradan yapar.
-3. Steam'i bağlayan kullanıcılarda ilk sync, elle girilmiş sürelerle Steam süresini karşılaştırıp onay ister.
+4. Steam'i bağlayan kullanıcılarda ilk sync, elle girilmiş sürelerle Steam süresini karşılaştırıp onay ister.
 
 ## 9. Kaynak kullanımı
 

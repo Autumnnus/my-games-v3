@@ -5,7 +5,7 @@
  * - Bekleme model başınadır: Gemini gibi sağlayıcılarda kota proje × model başına işler; bir anahtar
  *   ana modelde dolmuşken yedek modelde hâlâ kullanılabilir.
  * - Kimlik hatası (geçersiz/iptal edilmiş anahtar) anahtarı tüm modellerde uzun süre devre dışı bırakır.
- * - Durum bellekte tutulur (tek app process'i); yeniden başlatınca bütün anahtarlar yeniden denenir.
+ * - Durum bellekte tutulur (süreç başına); yeniden başlatınca bütün anahtarlar yeniden denenir.
  */
 
 export type FailureKind =
@@ -29,9 +29,13 @@ export type FailureVerdict = {
 
 export type KeyStrategy = "round_robin" | "failover";
 
+/** Havuza giren anahtar. `ref` yönetim ekranının satırla eşleştirdiği kimlik (`db:<id>`, `env:<n>`). */
+export type PoolKey = { key: string; label?: string; ref?: string };
+
 type Slot = {
   index: number;
   key: string;
+  ref: string;
   /** Loglarda ve yönetim ekranında görünen, anahtarı açık etmeyen ad. */
   label: string;
   /** Model → bu zamana kadar dinlenir (ms). */
@@ -47,6 +51,7 @@ type Slot = {
 };
 
 export type KeySnapshot = {
+  ref: string;
   label: string;
   state: "ready" | "cooling" | "disabled";
   /** Dinlenen/devre dışı kalan anahtarın yeniden deneneceği an. */
@@ -63,7 +68,7 @@ const SECOND = 1000;
 const MINUTE = 60 * SECOND;
 const HOUR = 60 * MINUTE;
 
-/** Anahtar geçersizse bu kadar süre hiç denenmez (düzeltilince yeniden başlatmak yeter). */
+/** Anahtar geçersizse bu kadar süre hiç denenmez (panelden silip yeniden eklemek ya da yeniden başlatmak sıfırlar). */
 const AUTH_DISABLE_MS = 6 * HOUR;
 const MAX_RATE_LIMIT_MS = 30 * MINUTE;
 
@@ -100,25 +105,50 @@ export class KeyPool {
 
   constructor(
     provider: string,
-    keys: string[],
+    keys: Array<string | PoolKey>,
     options: { strategy?: KeyStrategy; now?: () => number } = {},
   ) {
     this.provider = provider;
     this.strategy = options.strategy ?? "round_robin";
     this.now = options.now ?? Date.now;
-    this.slots = keys.map((key, index) => ({
-      index,
-      key,
-      label: `#${index + 1} ${maskKey(key)}`,
-      cooling: new Map(),
-      disabledUntil: 0,
-      streak: 0,
-      ok: 0,
-      failed: 0,
-      lastUsedAt: null,
-      lastError: null,
-      lastErrorAt: null,
-    }));
+    this.slots = keys.map((entry, index) => {
+      const { key, label, ref } = typeof entry === "string" ? { key: entry } : entry;
+      return {
+        index,
+        key,
+        ref: ref ?? `#${index + 1}`,
+        label: label ?? `#${index + 1} ${maskKey(key)}`,
+        cooling: new Map(),
+        disabledUntil: 0,
+        streak: 0,
+        ok: 0,
+        failed: 0,
+        lastUsedAt: null,
+        lastError: null,
+        lastErrorAt: null,
+      };
+    });
+  }
+
+  /**
+   * Anahtar listesi değişince (panelden ekleme/kapatma) yeni havuz kurulur; aynı anahtarların durumu
+   * (dinlenme, devre dışı, sayaçlar) eskisinden taşınır ki dolmuş anahtar hemen yeniden denenmesin.
+   */
+  inherit(previous: KeyPool) {
+    const old = new Map(previous.slots.map((slot) => [slot.key, slot]));
+    for (const slot of this.slots) {
+      const match = old.get(slot.key);
+      if (!match) continue;
+      slot.cooling = new Map(match.cooling);
+      slot.disabledUntil = match.disabledUntil;
+      slot.streak = match.streak;
+      slot.ok = match.ok;
+      slot.failed = match.failed;
+      slot.lastUsedAt = match.lastUsedAt;
+      slot.lastError = match.lastError;
+      slot.lastErrorAt = match.lastErrorAt;
+    }
+    return this;
   }
 
   get size() {
@@ -223,6 +253,7 @@ export class KeyPool {
         return min === null || value < min ? value : min;
       }, null);
       return {
+        ref: slot.ref,
         label: slot.label,
         state: disabled ? "disabled" : coolingModels.length > 0 ? "cooling" : "ready",
         until: disabled ? iso(slot.disabledUntil) : iso(coolest),
