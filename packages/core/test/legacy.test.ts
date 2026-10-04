@@ -4,11 +4,17 @@ import { eq, sql } from "drizzle-orm";
 import { afterEach, describe, expect, it } from "vitest";
 import { db } from "../src/db";
 import { resetIgdbTokenCache } from "../src/igdb/client";
-import { importLegacyRecords, type LegacyRecord, normalizeLegacyRecord } from "../src/legacy";
+import {
+  findLibraryMatch,
+  importLegacyRecords,
+  type LegacyRecord,
+  normalizeLegacyRecord,
+} from "../src/legacy";
+import { addEntry, updateEntry } from "../src/library";
 import { type MatchCandidate, pickAutoMatch } from "../src/matching";
 import { listProposals, resolveProposal } from "../src/proposals";
 import { titleSimilarity } from "../src/text";
-import { createUser, json, mockFetch } from "./factories";
+import { createGame, createUser, json, mockFetch } from "./factories";
 
 const dumpDir = new URL("../../../../my-games-old/old_db_data/", import.meta.url);
 const hasDumps = existsSync(new URL("kadir_games.json", dumpDir));
@@ -218,5 +224,99 @@ describe("legacy import with IGDB matching", () => {
     } finally {
       fetchMock.restore();
     }
+  });
+});
+
+describe("legacy import into a library filled by Steam", () => {
+  it("matches library names loosely but never across sequel numbers", () => {
+    const library = [{ name: "The Witcher® 3: Wild Hunt" }, { name: "Call of Duty: Black Ops II" }];
+    expect(findLibraryMatch("The Witcher 3 Wild Hunt", library)?.name).toBe(
+      "The Witcher® 3: Wild Hunt",
+    );
+    expect(findLibraryMatch("Call of Duty Black Ops 2", library)?.name).toBe(
+      "Call of Duty: Black Ops II",
+    );
+    expect(findLibraryMatch("Call of Duty Black Ops 3", library)).toBeNull();
+  });
+
+  it("fills the Steam entry instead of skipping it, without overriding the user's own edits", async () => {
+    const owner = await createUser();
+    const witcher = await createGame({ name: "The Witcher® 3: Wild Hunt" });
+    const hades = await createGame({ name: "Hades" });
+    // Steam senkronunun açtığı kayıtlar: durum tahmin, süre Steam'den.
+    const steamWitcher = await addEntry(
+      owner.id,
+      {
+        gameId: witcher.id,
+        status: "paused",
+        platform: "pc",
+        store: "steam",
+        playtimeSteamMin: 600,
+      },
+      { source: "steam" },
+    );
+    const steamHades = await addEntry(
+      owner.id,
+      { gameId: hades.id, status: "paused", playtimeSteamMin: 3000 },
+      { source: "steam" },
+    );
+    // Kullanıcı Hades'in durumunu ve puanını kendisi değiştirmiş.
+    await updateEntry(owner.id, steamHades.id, { status: "playing", rating: 70 });
+
+    const report = await importLegacyRecords(owner.id, [
+      {
+        id: "w",
+        gameName: "The Witcher 3 Wild Hunt",
+        gameStatus: "Bitirildi",
+        gamePlatform: "Torrent",
+        gameScore: 9.5,
+        gameTotalTime: 50,
+        gameDate: "2021-06-01",
+        gameReview: "Efsane",
+        createdAt: { seconds: 1_600_000_000 },
+        screenshots: [{ ssUrl: "https://example.com/w.jpg" }],
+      },
+      { id: "h", gameName: "Hades", gameStatus: "Bırakıldı", gameScore: 8, gameTotalTime: 20 },
+    ]);
+    expect(report).toMatchObject({
+      imported: 0,
+      merged: 2,
+      duplicates: [],
+      screenshots: 1,
+    });
+
+    const entries = await db
+      .select()
+      .from(schema.libraryEntries)
+      .where(eq(schema.libraryEntries.userId, owner.id));
+    expect(entries).toHaveLength(2);
+    const merged = entries.find((entry) => entry.id === steamWitcher.id);
+    expect(merged).toMatchObject({
+      status: "completed",
+      rating: 95,
+      review: "Efsane",
+      finishedAt: "2021-06-01",
+      // Steam'in bildirdiği 10 sa üstüne eski kaydın kalan 40 saati; toplam 50 sa.
+      playtimeManualMin: 2400,
+      playtimeSteamMin: 600,
+      // Steam'in koyduğu mağaza kalır.
+      store: "steam",
+      legacyRef: "legacy:w",
+    });
+    expect(merged?.createdAt.toISOString()).toBe(new Date(1_600_000_000_000).toISOString());
+
+    const kept = entries.find((entry) => entry.id === steamHades.id);
+    // Kullanıcının seçtiği durum ve puan korunur; Steam süresi eski kayıttan fazla, elle süre eklenmez.
+    expect(kept).toMatchObject({
+      status: "playing",
+      rating: 70,
+      playtimeManualMin: 0,
+      legacyRef: "legacy:h",
+    });
+
+    const again = await importLegacyRecords(owner.id, [
+      { id: "w", gameName: "The Witcher 3 Wild Hunt", gameStatus: "Bitirildi" },
+    ]);
+    expect(again).toMatchObject({ merged: 0, skippedExisting: 1 });
   });
 });

@@ -1,11 +1,16 @@
 import { schema } from "@my-games/db";
 import type { EntryStatus } from "@my-games/shared";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db";
 import { AppError, notFound } from "../errors";
 import { emit } from "../events";
-import { type ImportReport, importLegacyRecords, normalizeLegacyRecord } from "../legacy";
+import {
+  findLibraryMatch,
+  type ImportReport,
+  importLegacyRecords,
+  normalizeLegacyRecord,
+} from "../legacy";
 import { logger } from "../log";
 import { type AdminActor, audit } from "./audit";
 
@@ -15,7 +20,8 @@ const { legacyImports, libraryEntries, games, user } = schema;
  * Eski sistemden (my-games-old, Firestore dönemi) aktarımın yönetim paneli tarafı. Admin dışa aktarım dosyasını
  * (`kadir_games.json` gibi) bir kullanıcıya yükler: önce önizleme (hızlı, IGDB'ye gitmez), onaylanınca kayıtlar
  * `legacy_imports`'a yazılır ve worker aktarır. IGDB eşleştirmesi yüzlerce kayıtta dakikalar sürdüğü için istek
- * içinde yapılmaz. Aktarım tekrar çalıştırılabilir: aktarılmış kayıtlar (`legacy_ref`) atlanır.
+ * içinde yapılmaz. Kütüphanede zaten olan oyunlara (Steam senkronu) eski veri işlenir, yeni kayıt açılmaz.
+ * Aktarım tekrar çalıştırılabilir: aktarılmış ya da işlenmiş kayıtlar (`legacy_ref`) atlanır.
  */
 
 export const MAX_LEGACY_RECORDS = 5000;
@@ -112,16 +118,12 @@ export async function previewLegacyImport(userId: string, records: LegacyFileRec
     existing.filter((row) => row.userId !== userId).map((row) => row.legacyRef),
   );
 
-  // Kütüphanede aynı adlı oyun varsa (Steam'den gelmiş olabilir) kayıt tekrar sayılıp atlanır.
-  const libraryNames = new Set(
-    (
-      await db
-        .select({ name: games.name })
-        .from(libraryEntries)
-        .innerJoin(games, eq(games.id, libraryEntries.gameId))
-        .where(eq(libraryEntries.userId, userId))
-    ).map((row) => row.name.toLowerCase()),
-  );
+  // Kütüphanede zaten olan oyunlar (çoğunlukla Steam'den gelmiş) yeni kayıt açmaz; eski veri onlara işlenir.
+  const library = await db
+    .select({ name: games.name })
+    .from(libraryEntries)
+    .innerJoin(games, eq(games.id, libraryEntries.gameId))
+    .where(and(eq(libraryEntries.userId, userId), isNull(libraryEntries.legacyRef)));
 
   const statuses: Partial<Record<EntryStatus, number>> = {};
   const seenNames = new Map<string, number>();
@@ -135,7 +137,7 @@ export async function previewLegacyImport(userId: string, records: LegacyFileRec
     screenshots += record.screenshots.length;
     const key = record.name.toLowerCase();
     seenNames.set(key, (seenNames.get(key) ?? 0) + 1);
-    if (libraryNames.has(key)) inLibrary.push(record.name);
+    if (findLibraryMatch(record.name, library)) inLibrary.push(record.name);
   }
   const warnings = normalized
     .filter((record) => record.warnings.length)

@@ -109,9 +109,11 @@ describe("legacy import from the admin panel", () => {
     expect(await runLegacyImport(id)).toEqual({ imported: 2, total: 3 });
     const [row] = await listLegacyImports(owner.id);
     expect(row).toMatchObject({ status: "done", processed: 3, total: 3, fileName: "kadir.json" });
+    // Kütüphanede olan oyun atlanmaz, eski verisi o kayda işlenir.
     expect(row?.report).toMatchObject({
       imported: 2,
-      duplicates: ["Owned Already"],
+      merged: 1,
+      duplicates: [],
       screenshots: 1,
     });
     const [stored] = await db
@@ -129,13 +131,14 @@ describe("legacy import from the admin panel", () => {
 
     // Aynı dosya tekrar: aktarılmışlar görünür, başka hesaba aktarılanlar ayrıca uyarılır.
     expect(await previewLegacyImport(owner.id, file)).toMatchObject({
-      toImport: 1,
-      alreadyImported: 2,
+      toImport: 0,
+      alreadyImported: 3,
+      inLibraryCount: 0,
     });
     const other = await createUser();
     expect(await previewLegacyImport(other.id, file)).toMatchObject({
-      toImport: 1,
-      importedElsewhere: 2,
+      toImport: 0,
+      importedElsewhere: 3,
     });
   });
 

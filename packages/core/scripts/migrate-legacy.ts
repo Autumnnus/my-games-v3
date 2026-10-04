@@ -43,6 +43,7 @@ const report = await importLegacyRecords(user.id, records, {
 
 console.log("\nÖzet");
 console.log(`  aktarılan:            ${report.imported}`);
+console.log(`  mevcut kayda işlenen: ${report.merged}`);
 console.log(`  zaten aktarılmış:     ${report.skippedExisting}`);
 console.log(
   `  tekrar eden (atlanan): ${report.duplicates.length}${report.duplicates.length ? ` (${report.duplicates.join(", ")})` : ""}`,

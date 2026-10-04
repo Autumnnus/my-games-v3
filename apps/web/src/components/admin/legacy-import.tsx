@@ -288,6 +288,7 @@ function ImportItem({ row }: { row: ImportRow }) {
         <span className="text-foreground/70 text-xs">
           {m.admin_legacy_report({
             imported: formatNumber(report.imported),
+            merged: formatNumber(report.merged ?? 0),
             auto: formatNumber(report.autoMatched),
             pending: formatNumber(report.pendingMatches),
             unmatched: formatNumber(report.unmatched),
