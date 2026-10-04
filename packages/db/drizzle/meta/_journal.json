@@ -162,6 +162,13 @@
       "when": 1791103928632,
       "tag": "0022_user_onboarding",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791118117523,
+      "tag": "0023_legacy_imports",
+      "breakpoints": true
     }
   ]
 }

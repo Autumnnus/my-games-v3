@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { LegacyImportPanel } from "@/components/admin/legacy-import";
 import { AdminHeader } from "@/components/admin/shell";
 import { Empty, Fact, Panel, Pill } from "@/components/admin/ui";
 import { AiLimitsPanel, BanDialog, DangerZone, StoragePanel } from "@/components/admin/user-panels";
@@ -351,6 +352,7 @@ function UserPage() {
         <div className="grid content-start gap-4">
           <AiLimitsPanel key={`ai-${data.limits.updatedAt ?? "none"}`} detail={data} />
           <StoragePanel key={`storage-${data.storage.quotaUpdatedAt ?? "none"}`} detail={data} />
+          <LegacyImportPanel detail={data} />
 
           <Panel
             title={m.admin_onboarding_title()}

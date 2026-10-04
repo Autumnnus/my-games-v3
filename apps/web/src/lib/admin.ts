@@ -231,6 +231,7 @@ const auditActions: Record<string, () => string> = {
   "user.purge": m.admin_action_purge,
   "user.delete": m.admin_action_delete,
   "user.export": m.admin_action_export,
+  "user.legacy_import": m.admin_action_legacy_import,
   "ai.thread.view": m.admin_action_thread_view,
   "report.resolved": m.admin_action_report_resolved,
   "report.dismissed": m.admin_action_report_dismissed,

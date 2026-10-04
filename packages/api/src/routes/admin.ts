@@ -6,6 +6,12 @@ import {
   traceDetail,
 } from "@my-games/core/admin/ai";
 import { audit, auditRead, listAudit } from "@my-games/core/admin/audit";
+import {
+  legacyFileSchema,
+  listLegacyImports,
+  previewLegacyImport,
+  startLegacyImport,
+} from "@my-games/core/admin/legacy-import";
 import { adminOverview } from "@my-games/core/admin/overview";
 import {
   adminSettings,
@@ -66,6 +72,10 @@ import { uuidParam, validate } from "../validation";
 
 /** Better Auth kullanıcı kimlikleri UUID değil (32 karakterlik rastgele dizi). */
 const userParam = z.object({ id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/) });
+const legacyImportSchema = z.object({
+  fileName: z.string().trim().min(1).max(200),
+  records: legacyFileSchema,
+});
 
 const providerName = z.string().regex(/^[a-z0-9-]{1,32}$/);
 const keyName = z.string().trim().max(40).nullable().optional();
@@ -143,6 +153,27 @@ export const adminRoutes = new Hono<AppEnv>()
     await resetUserOnboarding(adminActor(c), c.req.valid("param").id);
     return c.json({ ok: true });
   })
+  // Eski sistemden aktarım: önizleme veritabanına yazmaz; başlatılınca worker aktarır.
+  .get("/users/:id/legacy-imports", validate("param", userParam), async (c) =>
+    c.json(await listLegacyImports(c.req.valid("param").id)),
+  )
+  .post(
+    "/users/:id/legacy-imports/preview",
+    validate("param", userParam),
+    validate("json", legacyImportSchema),
+    async (c) =>
+      c.json(await previewLegacyImport(c.req.valid("param").id, c.req.valid("json").records)),
+  )
+  .post(
+    "/users/:id/legacy-imports",
+    validate("param", userParam),
+    validate("json", legacyImportSchema),
+    async (c) =>
+      c.json(
+        await startLegacyImport(adminActor(c), c.req.valid("param").id, c.req.valid("json")),
+        201,
+      ),
+  )
   .post("/users/:id/unban", validate("param", userParam), async (c) => {
     await unbanUser(adminActor(c), c.req.valid("param").id);
     return c.json({ ok: true });

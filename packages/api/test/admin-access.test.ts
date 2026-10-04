@@ -315,3 +315,43 @@ describe("AI key pool management", () => {
     }
   });
 });
+
+describe("legacy import", () => {
+  it("previews and queues an old export for a user", async () => {
+    const admin = await account("admin");
+    const target = await account("user");
+    // Gerçek dosyalar ~600 KB; istek gövdesi sınırına takılmamalı.
+    const records = Array.from({ length: 400 }, (_, index) => ({
+      id: `r${index}`,
+      gameName: `Game ${index}`,
+      gameStatus: "Bitirildi",
+      gamePlatform: "Steam",
+      gameReview: "x".repeat(1200),
+    }));
+    const body = JSON.stringify({ fileName: "kadir_games.json", records });
+    expect(body.length).toBeGreaterThan(500_000);
+    const base = `/api/v1/admin/users/${target.id}/legacy-imports`;
+
+    const preview = await call(`${base}/preview`, { method: "POST", cookie: admin.cookie, body });
+    expect(preview.status).toBe(200);
+    expect(await preview.json()).toMatchObject({ total: 400, toImport: 400 });
+
+    const invalid = await call(`${base}/preview`, {
+      method: "POST",
+      cookie: admin.cookie,
+      body: JSON.stringify({ fileName: "x.json", records: [{ hello: "world" }] }),
+    });
+    expect(invalid.status).toBe(400);
+
+    const started = await call(base, { method: "POST", cookie: admin.cookie, body });
+    expect(started.status).toBe(201);
+    const again = await call(base, { method: "POST", cookie: admin.cookie, body });
+    expect(again.status).toBe(409);
+    expect(await again.json()).toMatchObject({ reason: "legacy_import_running" });
+
+    const list = await (await call(base, { cookie: admin.cookie })).json();
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({ status: "queued", total: 400, processed: 0 });
+    expect(list[0]).not.toHaveProperty("records");
+  });
+});

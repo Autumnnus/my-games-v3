@@ -181,14 +181,12 @@ uygulama API'sini kullanır (resmî değil); Sony değiştirirse kırılabilir.
 2. `/admin/ai` › **Anahtar havuzu**'ndan Gemini anahtarlarını ekle (her biri eklenmeden önce Google'da denenir,
    token harcamaz). Anahtar eklenene kadar AI kapalıdır. Env'de anahtar varsa onları da panele taşıyıp env'den
    silebilirsin; panele eklenen anahtarı (açık/kapalı, sıra) artık panel yönetir.
-3. Eski verileri aktar (Kadir ve Mustafa hesap açtıktan sonra). App container'ında değil, repo'yu klonladığın bir
-   makineden, production `DATABASE_URL` ile:
-   ```sh
-   DATABASE_URL=… IGDB_CLIENT_ID=… IGDB_CLIENT_SECRET=… pnpm migrate:legacy --file kadir_games.json --user kadir --dry-run
-   DATABASE_URL=… IGDB_CLIENT_ID=… IGDB_CLIENT_SECRET=… pnpm migrate:legacy --file kadir_games.json --user kadir
-   ```
-   IGDB anahtarlarıyla çalıştırılırsa kesin eşleşmeler hemen IGDB oyununa bağlanır; belirsizler kullanıcının onay
-   kutusuna düşer. Anahtarsız çalıştırılırsa worker'ın gece eşleştirme işi sonradan yapar.
+3. Eski verileri aktar (Kadir ve Mustafa hesap açtıktan sonra): yönetim paneli › Kullanıcılar › kişi ›
+   **Eski sistemden aktar**. Eski dışa aktarım dosyasını (`kadir_games.json`, `mustafa_games.json`) seç; önizleme
+   aktarılacak, zaten aktarılmış ya da başka hesaba aktarılmış kayıtları gösterir. "Aktarımı başlat" deyince worker
+   aktarır (IGDB ile eşleştirerek; belirsizler kullanıcının onay kutusuna düşer), ilerleme aynı panelde görünür.
+   Tekrar çalıştırmak güvenli: aktarılmış kayıtlar atlanır. Komut satırı alternatifi (production `DATABASE_URL`
+   ile, repo'nun olduğu bir makineden): `pnpm migrate:legacy --file <json> --user <kullanıcı adı> [--dry-run]`.
 4. Steam'i bağlayan kullanıcılarda ilk sync, elle girilmiş sürelerle Steam süresini karşılaştırıp onay ister.
 
 ## 9. Kaynak kullanımı

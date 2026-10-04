@@ -1,3 +1,4 @@
+import { runLegacyImport } from "@my-games/core/admin/legacy-import";
 import { refreshGameArt, refreshStaleGames, refreshSteamCovers } from "@my-games/core/catalog";
 import { rebuildPlayEstimates, usersNeedingEstimates } from "@my-games/core/estimates/build";
 import { suggestFinishDates } from "@my-games/core/estimates/finish";
@@ -80,6 +81,13 @@ export const jobs: JobDefinition[] = [
     },
     concurrency: 1,
     policy: "stately",
+  },
+  {
+    // Yönetim panelinden başlatılan eski sistem aktarımı. IGDB eşleştirmesiyle dakikalar sürebilir; yarıda
+    // kalırsa tekrar denenir ve aktarılmış kayıtlar atlanır.
+    name: "legacy.import",
+    run: (data) => runLegacyImport(String(data.importId)),
+    concurrency: 1,
   },
   {
     name: "push.send",

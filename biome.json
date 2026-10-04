@@ -11,7 +11,10 @@
       "!**/routeTree.gen.ts",
       "!**/src/paraglide",
       "!**/drizzle/meta",
-      "!**/components/ui"
+      "!**/components/ui",
+      "!**/brand/**/*.html",
+      "!assets",
+      "!.claude"
     ]
   },
   "formatter": {

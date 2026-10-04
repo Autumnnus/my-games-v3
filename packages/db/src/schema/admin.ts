@@ -64,3 +64,31 @@ export const userLimits = pgTable("user_limits", {
   updatedBy: text(),
   updatedAt: tstz(),
 });
+
+export type LegacyImportStatus = "queued" | "running" | "done" | "failed";
+
+/**
+ * Yönetim panelinden başlatılan eski sistem aktarımları. Kayıtlar (`records`) worker iş bitene kadar burada
+ * bekler, iş başarıyla bitince silinir; rapor kalır.
+ */
+export const legacyImports = pgTable(
+  "legacy_imports",
+  {
+    id: id(),
+    userId: text()
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdBy: text().references(() => user.id, { onDelete: "set null" }),
+    fileName: text().notNull(),
+    status: text().$type<LegacyImportStatus>().notNull().default("queued"),
+    total: integer().notNull(),
+    processed: integer().notNull().default(0),
+    records: jsonb().$type<unknown[]>(),
+    report: jsonb().$type<Record<string, unknown>>(),
+    error: text(),
+    createdAt: createdAt(),
+    startedAt: tstz(),
+    finishedAt: tstz(),
+  },
+  (t) => [index().on(t.userId, t.createdAt)],
+);

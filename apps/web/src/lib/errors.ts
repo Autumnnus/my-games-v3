@@ -20,6 +20,7 @@ const reasonMessages: Record<string, () => string> = {
   ai_key_not_found: m.err_ai_key_not_found,
   ai_key_order: m.err_ai_key_order,
   ai_key_provider: m.err_ai_key_provider,
+  legacy_import_running: m.err_legacy_import_running,
   user_not_found: m.err_user_not_found,
   list_not_found: m.err_list_not_found,
   list_name_empty: m.err_list_name_empty,

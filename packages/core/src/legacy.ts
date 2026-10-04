@@ -149,11 +149,12 @@ type GameChoice = { gameId: string; candidates: MatchCandidate[]; autoMatched: b
 async function chooseGame(record: NormalizedRecord, dryRun: boolean): Promise<GameChoice | null> {
   const normalized = normalizeTitle(record.name);
   const [local] = await db
-    .select({ id: schema.games.id })
+    .select({ id: schema.games.id, igdbId: schema.games.igdbId })
     .from(schema.games)
     .where(sql`lower(${schema.games.name}) = lower(${record.name})`)
     .limit(1);
-  if (local) return { gameId: local.id, candidates: [], autoMatched: false };
+  // Katalogda IGDB'ye bağlı aynı adlı oyun varsa eşleşmiş sayılır (rapor "eşleşmesiz" demesin).
+  if (local) return { gameId: local.id, candidates: [], autoMatched: local.igdbId !== null };
 
   const candidates = igdbConfig() ? await findIgdbCandidates(record.name).catch(() => []) : [];
   const best = pickAutoMatch(candidates);
@@ -181,7 +182,12 @@ async function chooseGame(record: NormalizedRecord, dryRun: boolean): Promise<Ga
 export async function importLegacyRecords(
   userId: string,
   records: LegacyRecord[],
-  options: { dryRun?: boolean; log?: (line: string) => void } = {},
+  options: {
+    dryRun?: boolean;
+    log?: (line: string) => void;
+    /** Her kayıttan sonra (atlananlar dahil) işlenen kayıt sayısıyla çağrılır. */
+    onProgress?: (processed: number) => Promise<void> | void;
+  } = {},
 ): Promise<ImportReport> {
   const log = options.log ?? (() => {});
   const report: ImportReport = {
@@ -198,7 +204,10 @@ export async function importLegacyRecords(
   const seenGames = new Set<string>();
   let pending = 0;
 
+  let processed = 0;
   for (const raw of records) {
+    if (processed > 0) await options.onProgress?.(processed);
+    processed++;
     const record = normalizeLegacyRecord(raw);
     if (record.warnings.length)
       report.warnings.push({ name: record.name, warnings: record.warnings });
@@ -289,5 +298,6 @@ export async function importLegacyRecords(
   }
 
   if (pending > 0) await db.transaction((tx) => notifyPending(tx, userId, pending));
+  await options.onProgress?.(processed);
   return report;
 }

@@ -76,6 +76,8 @@ export type DomainEvent =
   | { type: "steam.sync_requested"; payload: { userId: string } }
   | { type: "platform.sync_requested"; payload: { userId: string; provider: "psn" | "xbox" } }
   | { type: "igdb.match_requested"; payload: { gameId: string } }
+  /** Yönetim panelinden başlatılan eski sistem aktarımı (bkz. core/admin/legacy-import). */
+  | { type: "legacy.import_requested"; payload: { importId: string } }
   /** Platform sync'i bitti: takipten önceki geçmiş tahmini güncellenmeli (bkz. core/estimates). */
   | { type: "estimates.requested"; payload: { userId: string } }
   /** Silinen kayıtların depodaki dosyaları (kayıt silinince R2'de sahipsiz kalmasın). */
