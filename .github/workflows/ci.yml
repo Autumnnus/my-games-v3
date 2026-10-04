@@ -93,8 +93,14 @@ jobs:
             echo "COOLIFY_TOKEN tanımlı değil, deploy atlandı."
             exit 0
           fi
-          for url in "$COOLIFY_DEPLOY_APP_URL" "$COOLIFY_DEPLOY_WORKER_URL"; do
-            if [ -n "$url" ]; then
-              curl -fsS -H "Authorization: Bearer $COOLIFY_TOKEN" "$url"
-            fi
-          done
+          deploy() {
+            # Coolify'ın deploy uç noktası (`/api/v1/deploy?uuid=…`); yeni sürümler yalnızca POST kabul ediyor.
+            [ -n "$2" ] || return 0
+            status=$(curl -sS -o /tmp/coolify.json -w '%{http_code}' -X POST \
+              -H "Authorization: Bearer $COOLIFY_TOKEN" -H "Accept: application/json" "$2")
+            echo "$1: HTTP $status"
+            cat /tmp/coolify.json; echo
+            [ "$status" -lt 300 ] || return 1
+          }
+          deploy app "$COOLIFY_DEPLOY_APP_URL"
+          deploy worker "$COOLIFY_DEPLOY_WORKER_URL"
