@@ -36,7 +36,14 @@ const legacyRecordSchema = z
     gameTotalTime: z.union([z.number(), z.string(), z.null()]).optional(),
     gameDate: z.string().max(100).nullish(),
     gameReview: z.string().max(20_000).nullish(),
-    gamePhoto: z.string().max(2000).nullish(),
+    // Eski sistem bazı kapakları base64 olarak gömmüş (`data:image/…`, ~20 KB). Yalnızca https bağlantısı
+    // kapak olarak kullanılır; diğerleri aktarılmaz (IGDB kapağı gelir), dosya da reddedilmez.
+    gamePhoto: z
+      .string()
+      .nullish()
+      .transform((value) =>
+        value?.trim().startsWith("https://") && value.length <= 2000 ? value : null,
+      ),
     createdAt: timestampSchema.optional(),
     screenshots: z
       .array(

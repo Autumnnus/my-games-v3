@@ -1,3 +1,4 @@
+import { existsSync, readFileSync } from "node:fs";
 import { schema } from "@my-games/db";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
@@ -35,7 +36,37 @@ const file = legacyFileSchema.parse([
   { id: 3, gameName: "Owned Already", gameStatus: "Bitirilecek" },
 ]);
 
+const dumpDir = new URL("../../../../my-games-old/old_db_data/", import.meta.url);
+const dumps = ["kadir_games.json", "mustafa_games.json"].filter((name) =>
+  existsSync(new URL(name, dumpDir)),
+);
+
+describe.skipIf(dumps.length === 0)("real old exports", () => {
+  it.each(dumps)("accepts %s as uploaded from the panel", async (name) => {
+    const raw = JSON.parse(readFileSync(new URL(name, dumpDir), "utf8"));
+    // Panel dosyayı API'ye JSON olarak gönderir; aynı şema doğrular.
+    const parsed = legacyFileSchema.safeParse(JSON.parse(JSON.stringify(raw)));
+    expect(parsed.error?.issues.slice(0, 3)).toBeUndefined();
+    // Gömülü base64 kapaklar atılır, https kapaklar kalır.
+    expect(parsed.data?.some((record) => record.gamePhoto?.startsWith("data:"))).toBe(false);
+    const { owner } = await setup();
+    expect((await previewLegacyImport(owner.id, parsed.data ?? [])).total).toBe(raw.length);
+  });
+});
+
 describe("legacy import from the admin panel", () => {
+  it("drops embedded base64 covers instead of rejecting the file", () => {
+    const [record] = legacyFileSchema.parse([
+      {
+        id: "p",
+        gameName: "P",
+        gameStatus: "Bitirildi",
+        gamePhoto: `data:image/jpeg;base64,${"A".repeat(25_000)}`,
+      },
+    ]);
+    expect(record?.gamePhoto).toBeNull();
+  });
+
   it("rejects files that aren't the old export", () => {
     expect(legacyFileSchema.safeParse([]).success).toBe(false);
     expect(legacyFileSchema.safeParse({ id: "x" }).success).toBe(false);
