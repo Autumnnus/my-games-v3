@@ -13,7 +13,7 @@ import {
 import { statusLabel } from "@/lib/format";
 import { m } from "@/paraglide/messages";
 import { ToolCard } from "./cards/tool-card";
-import { Pati } from "./mascot";
+import { Paddie } from "./mascot";
 
 /** `**kalın**`, `*eğik*`, `` `kod` `` — modelin ara sıra kullandığı kadarı; geri kalanı düz metin. */
 function inline(text: string, key: string): ReactNode[] {
@@ -124,8 +124,8 @@ function AssistantMessage({
   onOpenDeck,
 }: {
   message: AssistantUIMessage;
-  /** Sohbetin son mesajı: başlıktaki Pati hafifçe süzülür; eskilerde yerinde durur. Asıl hareketler mesajların
-   * altındaki çalışma sahnesinde (`PatiStage`). */
+  /** Sohbetin son mesajı: başlıktaki Paddie hafifçe süzülür; eskilerde yerinde durur. Asıl hareketler mesajların
+   * altındaki çalışma sahnesinde (`PaddieStage`). */
   live?: boolean;
   wide?: boolean;
   onRespond: (approvalId: string, approved: boolean) => void;
@@ -148,7 +148,7 @@ function AssistantMessage({
   return (
     <div className="grid gap-2.5">
       <div className="text-foreground/62 flex items-center gap-2 text-xs">
-        <Pati size={22} still={!live} />
+        <Paddie size={22} still={!live} />
         <span className="text-foreground font-bold">{m.ai_name()}</span>
         {done.length > 0 && <span className="truncate">{done.join(" · ")}</span>}
       </div>

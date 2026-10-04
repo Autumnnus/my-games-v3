@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod/mini";
 import { Conversation } from "@/components/assistant/conversation";
-import { Pati, PatiSoundToggle } from "@/components/assistant/mascot";
+import { Paddie, PaddieSoundToggle } from "@/components/assistant/mascot";
 import { useAssistant } from "@/components/assistant/provider";
 import { GameCover } from "@/components/game-cover";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -68,7 +68,7 @@ function ThreadRow({
         />
       ) : (
         <span className="flex size-[26px] shrink-0 items-center justify-center rounded-lg bg-white/8">
-          <Pati size={15} still />
+          <Paddie size={15} still />
         </span>
       )}
       <span className="grid min-w-0">
@@ -283,7 +283,7 @@ function ContextRail() {
 }
 
 /**
- * Pati'nin tam ekran görünümü (eski /chat'in yerine). Panelle aynı sohbet örneğini kullanır: panelden
+ * Paddie'nin tam ekran görünümü (eski /chat'in yerine). Panelle aynı sohbet örneğini kullanır: panelden
  * genişletince akış kesilmez; "Panele küçült" önceki sayfaya dönüp paneli aynı sohbetle açar.
  */
 function AssistantPage() {
@@ -314,7 +314,7 @@ function AssistantPage() {
       <section className="flex min-h-0 flex-col overflow-hidden rounded-3xl border border-white/8 bg-[#0f1015]">
         <header className="flex h-[60px] shrink-0 items-center justify-between gap-3 border-b border-white/7 pr-3 pl-5">
           <h1 className="m-0 truncate text-base font-bold">{title}</h1>
-          <PatiSoundToggle className="text-foreground/85 hover:text-foreground ml-auto flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-white/10" />
+          <PaddieSoundToggle className="text-foreground/85 hover:text-foreground ml-auto flex size-10 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-white/10" />
           <Button
             variant="ghost"
             className="shrink-0"

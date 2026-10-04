@@ -123,7 +123,7 @@
       translate: 0 16px;
     }
   }
-  /* Pati: açılan menüler ve "yazıyor" noktaları. */
+  /* Paddie: açılan menüler ve "yazıyor" noktaları. */
   @keyframes pop {
     from {
       opacity: 0;
@@ -201,183 +201,183 @@
 }
 
 /*
- * Pati (bkz. `components/assistant/mascot.tsx`). Ruh hâli `data-mood`'dan gelir; her hâl gövdeye (p-bob),
+ * Paddie (bkz. `components/assistant/mascot.tsx`). Ruh hâli `data-mood`'dan gelir; her hâl gövdeye (p-bob),
  * gözlere, kartlara ve küçük efektlere (baloncuk, soru işareti, yıldız, ter damlası) ayrı hareket verir.
  * SVG'de CSS `transform` öğenin `transform` niteliğini ezer; bu yüzden dönük kartlar ve yıldızlar bir dış
  * gruba sarılıdır ve animasyon dış gruptadır.
  */
-.pati * {
+.paddie * {
   transform-box: fill-box;
   transform-origin: 50% 50%;
 }
-.pati .p-bob {
+.paddie .p-bob {
   transform-origin: 50% 100%;
   animation: p-float 3.2s ease-in-out infinite;
 }
-.pati .p-eyes {
+.paddie .p-eyes {
   animation: p-blink 4.6s infinite;
 }
-.pati .p-look {
+.paddie .p-look {
   transition: transform 0.35s var(--ease-salon);
 }
-.pati .p-alt,
-.pati .p-fx {
+.paddie .p-alt,
+.paddie .p-fx {
   opacity: 0;
   transition: opacity 0.2s;
 }
-.pati .p-eyes,
-.pati .p-mouth {
+.paddie .p-eyes,
+.paddie .p-mouth {
   transition: opacity 0.2s;
 }
-.pati[data-mood="idle"] .p-look {
+.paddie[data-mood="idle"] .p-look {
   animation: p-glance 9s ease-in-out infinite;
 }
 
-.pati[data-mood="listening"] .p-look {
+.paddie[data-mood="listening"] .p-look {
   transform: translate(2px, 3px);
 }
-.pati[data-mood="listening"] .p-bob {
+.paddie[data-mood="listening"] .p-bob {
   animation: p-lean 1.8s ease-in-out infinite;
 }
 
-.pati[data-mood="thinking"] .p-look {
+.paddie[data-mood="thinking"] .p-look {
   transform: translate(3px, -3px);
 }
-.pati[data-mood="thinking"] .p-dots {
+.paddie[data-mood="thinking"] .p-dots {
   opacity: 1;
 }
-.pati[data-mood="thinking"] .p-dots circle {
+.paddie[data-mood="thinking"] .p-dots circle {
   animation: p-pulse 1.2s infinite;
 }
-.pati[data-mood="thinking"] .p-dots circle:nth-child(2) {
+.paddie[data-mood="thinking"] .p-dots circle:nth-child(2) {
   animation-delay: 0.2s;
 }
-.pati[data-mood="thinking"] .p-dots circle:nth-child(3) {
+.paddie[data-mood="thinking"] .p-dots circle:nth-child(3) {
   animation-delay: 0.4s;
 }
-.pati[data-mood="thinking"] .p-c1 {
+.paddie[data-mood="thinking"] .p-c1 {
   animation: p-sway-card 2.4s ease-in-out infinite;
 }
-.pati[data-mood="thinking"] .p-c2 {
+.paddie[data-mood="thinking"] .p-c2 {
   animation: p-sway-card 2.4s ease-in-out infinite reverse;
 }
 
-.pati[data-mood="working"] .p-bob {
+.paddie[data-mood="working"] .p-bob {
   animation: p-busy 0.5s ease-in-out infinite;
 }
-.pati[data-mood="working"] .p-eyes {
+.paddie[data-mood="working"] .p-eyes {
   animation: none;
   transform: scaleY(0.7);
 }
-.pati[data-mood="working"] .p-c1 {
+.paddie[data-mood="working"] .p-c1 {
   animation: p-shuffle-1 0.8s ease-in-out infinite;
 }
-.pati[data-mood="working"] .p-c2 {
+.paddie[data-mood="working"] .p-c2 {
   animation: p-shuffle-2 0.8s ease-in-out infinite;
 }
-.pati[data-mood="working"] .p-btn {
+.paddie[data-mood="working"] .p-btn {
   animation: p-pulse 0.6s infinite;
 }
-.pati[data-mood="working"] .p-btn + .p-btn {
+.paddie[data-mood="working"] .p-btn + .p-btn {
   animation-delay: 0.3s;
 }
 
-.pati[data-mood="talking"] .p-bob {
+.paddie[data-mood="talking"] .p-bob {
   animation: p-float 1.6s ease-in-out infinite;
 }
-.pati[data-mood="talking"] .p-mouth {
+.paddie[data-mood="talking"] .p-mouth {
   opacity: 0;
 }
-.pati[data-mood="talking"] .p-talk {
+.paddie[data-mood="talking"] .p-talk {
   opacity: 1;
   animation: p-talk 0.22s ease-in-out infinite alternate;
 }
 
-.pati[data-mood="approval"] .p-bob {
+.paddie[data-mood="approval"] .p-bob {
   animation: p-tilt 2.4s ease-in-out infinite;
 }
-.pati[data-mood="approval"] .p-ask {
+.paddie[data-mood="approval"] .p-ask {
   opacity: 1;
   animation: p-bounce 2.4s ease-in-out infinite;
 }
-.pati[data-mood="approval"] .p-eyes {
+.paddie[data-mood="approval"] .p-eyes {
   animation: none;
   transform: scale(1.14);
 }
 
-.pati[data-mood="success"] .p-bob {
+.paddie[data-mood="success"] .p-bob {
   animation: p-jump 0.95s infinite;
 }
-.pati[data-mood="success"] .p-shadow {
+.paddie[data-mood="success"] .p-shadow {
   animation: p-shadow 0.95s infinite;
 }
-.pati[data-mood="success"] .p-eyes {
+.paddie[data-mood="success"] .p-eyes {
   opacity: 0;
 }
-.pati[data-mood="success"] .p-happy,
-.pati[data-mood="success"] .p-spark {
+.paddie[data-mood="success"] .p-happy,
+.paddie[data-mood="success"] .p-spark {
   opacity: 1;
 }
-.pati[data-mood="success"] .p-spark path {
+.paddie[data-mood="success"] .p-spark path {
   animation: p-twinkle 0.95s infinite;
 }
-.pati[data-mood="success"] .p-spark g:nth-child(2) path {
+.paddie[data-mood="success"] .p-spark g:nth-child(2) path {
   animation-delay: 0.12s;
 }
-.pati[data-mood="success"] .p-spark g:nth-child(3) path {
+.paddie[data-mood="success"] .p-spark g:nth-child(3) path {
   animation-delay: 0.24s;
 }
 
 /* Hata: iki kez silkinir, sonra üzgün durur; ter damlası yavaşça süzülür. */
-.pati[data-mood="error"] .p-bob {
+.paddie[data-mood="error"] .p-bob {
   animation: p-shake 0.5s 2;
 }
-.pati[data-mood="error"] .p-eyes,
-.pati[data-mood="error"] .p-mouth {
+.paddie[data-mood="error"] .p-eyes,
+.paddie[data-mood="error"] .p-mouth {
   opacity: 0;
 }
-.pati[data-mood="error"] .p-sad,
-.pati[data-mood="error"] .p-frown {
+.paddie[data-mood="error"] .p-sad,
+.paddie[data-mood="error"] .p-frown {
   opacity: 1;
 }
-.pati[data-mood="error"] .p-sweat {
+.paddie[data-mood="error"] .p-sweat {
   opacity: 1;
   animation: p-drip 2.2s infinite;
 }
 
 /* Arkadaki oyun renginde ışık: boşta yavaş nefes alır, çalışırken hızlanır, sevinince parlar, hatada söner. */
-.pati .p-glow {
+.paddie .p-glow {
   animation: p-breathe 4s ease-in-out infinite;
 }
-.pati[data-mood="thinking"] .p-glow {
+.paddie[data-mood="thinking"] .p-glow {
   animation-duration: 2.2s;
 }
-.pati[data-mood="talking"] .p-glow {
+.paddie[data-mood="talking"] .p-glow {
   animation-duration: 1.6s;
 }
-.pati[data-mood="working"] .p-glow {
+.paddie[data-mood="working"] .p-glow {
   animation: p-breathe-busy 1s ease-in-out infinite;
 }
-.pati[data-mood="success"] .p-glow {
+.paddie[data-mood="success"] .p-glow {
   animation: p-flare 0.95s infinite;
 }
-.pati[data-mood="error"] .p-glow {
+.paddie[data-mood="error"] .p-glow {
   animation: none;
   opacity: 0.35;
 }
 
-.pati[data-still] .p-bob,
-.pati[data-still] .p-glow,
-.pati[data-still] .p-eyes,
-.pati[data-still] .p-look {
+.paddie[data-still] .p-bob,
+.paddie[data-still] .p-glow,
+.paddie[data-still] .p-eyes,
+.paddie[data-still] .p-look {
   animation: none;
 }
 
 /* Başlık düğmesinin üstüne gelince küçük bir sıçrayış. */
-.pati-host:hover .pati[data-mood="idle"] .p-bob {
+.paddie-host:hover .paddie[data-mood="idle"] .p-bob {
   animation: p-hop 0.6s var(--ease-salon);
 }
-.pati-host:hover .pati[data-mood="idle"] .p-c1 {
+.paddie-host:hover .paddie[data-mood="idle"] .p-c1 {
   animation: p-wiggle 0.6s var(--ease-salon);
 }
 

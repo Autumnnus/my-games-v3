@@ -11,7 +11,7 @@ import { api, unwrap } from "@/lib/api";
 import { latestHistoryId, mentionsQuery, revertHistory } from "@/lib/assistant";
 import { errorMessage, formatPlaytime, statusLabel } from "@/lib/format";
 import { m } from "@/paraglide/messages";
-import { Pati } from "./mascot";
+import { Paddie } from "./mascot";
 
 type Time = "short" | "mid" | "long";
 type Mood = "relax" | "story" | "challenge" | "strategy";
@@ -186,7 +186,7 @@ export function PickDialog({
         {step === "ask" && (
           <div className="animate-rise relative flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-5 pt-1 pb-5">
             <div className="flex items-center gap-3.5">
-              <Pati size={64} mood={pick.isPending ? "working" : "idle"} glow={null} />
+              <Paddie size={64} mood={pick.isPending ? "working" : "idle"} glow={null} />
               <div className="grid gap-1">
                 <span className="font-bold">{m.ai_pick_intro()}</span>
                 <span className="text-foreground/72 text-[13px] leading-snug">
@@ -403,7 +403,7 @@ export function PickDialog({
             {picked.status !== "playing" && (
               <article className="grid gap-3 rounded-[20px] border border-[#f2c77a]/35 bg-[#16171d] p-3.5">
                 <div className="text-foreground/66 flex items-center gap-2 text-xs">
-                  <Pati size={20} still />
+                  <Paddie size={20} still />
                   <span className="text-foreground font-bold">{m.ai_name()}</span>
                   <span className="rounded-full bg-[#f2c77a]/16 px-2 py-0.5 text-[11px] font-bold text-[#f2c77a]">
                     {m.ai_mode_act()}
@@ -454,7 +454,7 @@ export function PickDialog({
                 onClick={() => onOpenChange(false)}
                 className="flex items-center gap-3 rounded-[20px] border border-white/10 bg-[#16171d] p-3.5 hover:bg-white/5"
               >
-                <Pati size={32} still />
+                <Paddie size={32} still />
                 <span className="grid flex-1 gap-0.5">
                   <span className="text-sm font-bold">
                     {stale(picked.lastPlayedAt) ? m.ai_pick_recap() : m.salon_open_entry()}

@@ -17,9 +17,9 @@ import { greetingFor, type Suggestion, suggestionsQuery } from "@/lib/assistant"
 import { formatPlaytime, formatRating } from "@/lib/format";
 import { useHydrated } from "@/lib/hydrated";
 import { m } from "@/paraglide/messages";
-import { Pati, useFlash } from "./mascot";
+import { Paddie, useFlash } from "./mascot";
 import { playSound } from "./mascot-sound";
-import { usePatiMood } from "./mascot-store";
+import { usePaddieMood } from "./mascot-store";
 import { useAssistant, useMediaQuery } from "./provider";
 
 const PRIVACY_KEY = "mg.ai.privacy-seen";
@@ -84,7 +84,7 @@ export function Greeting() {
   const wide = useMediaQuery("(min-width: 1280px)");
   const suggestions = useQuery({ ...suggestionsQuery(assistant.page), enabled: assistant.enabled });
   const [privacySeen, setPrivacySeen] = useState(true);
-  const mood = usePatiMood();
+  const mood = usePaddieMood();
   const [boops, setBoops] = useState(0);
   const booped = useFlash(boops);
   useEffect(() => {
@@ -207,7 +207,7 @@ export function Greeting() {
           }}
           className="rounded-full outline-offset-4"
         >
-          <Pati mood={booped ? "success" : mood} size={92} glow={pageGame?.accentColor ?? null} />
+          <Paddie mood={booped ? "success" : mood} size={92} glow={pageGame?.accentColor ?? null} />
         </button>
         <h2 className="font-display m-0 mt-1 text-[21px] font-medium">
           {/* Selam saate bağlı: ilk karede (sunucu + hydration) saatten bağımsız metin, sonra saate göre. */}

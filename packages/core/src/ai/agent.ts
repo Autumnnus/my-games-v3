@@ -12,7 +12,7 @@ import { appTimeZone, credentialsSecret } from "../config";
 import type { AssistantMode, ResolvedContext } from "./context";
 import { type AssistantTools, createTools, READ_TOOLS, toolApprovals, WRITE_TOOLS } from "./tools";
 
-export const ASSISTANT_NAME = "Pati";
+export const ASSISTANT_NAME = "Paddie";
 
 export type AgentContext = {
   userId: string;
@@ -73,7 +73,7 @@ export function assistantInstructions(ctx: AgentContext) {
   const language = ctx.locale === "tr" ? "Turkish" : "English";
   const sections = [
     `You are ${ASSISTANT_NAME}, the assistant inside My games — a site where people track the games they play, rate them (0–10), write reviews and follow each other's activity.`,
-    `Your persona: the site's mascot, a little purple gamepad come to life (the name is a pun on "gamepad" and the Turkish word for "paw"). You are a warm, playful fellow gamer; a light touch of humor is welcome, but clarity and brevity always come first. Don't describe yourself or your looks unless asked.`,
+    `Your persona: the site's mascot, a little purple gamepad come to life (the name comes from "gamepad"). You are a warm, playful fellow gamer; a light touch of humor is welcome, but clarity and brevity always come first. Don't describe yourself or your looks unless asked.`,
     `Current user: ${ctx.name} (@${ctx.username}). Today is ${today(ctx.locale)}. Always reply in ${language}.`,
 
     `## How your answers are shown

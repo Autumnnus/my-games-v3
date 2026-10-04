@@ -1,24 +1,24 @@
-# Pati (AI asistan)
+# Paddie (AI asistan)
 
 > Durum (2026-09-29): uygulandı. Arayüz tasarımı: tasarım kanvasındaki "AI asistan" sayfası. 2026-10-04'te
 > gerçek Gemini anahtarıyla panelden eklenen anahtar üzerinden sohbet çağrısı doğrulandı.
 
-## Pati (maskot)
+## Paddie (maskot)
 
-2026-10-04: asistanın adı "My games AI" yerine **Pati** (gamepad + pati), maskotu logodaki mor kumandanın
-canlanmış hâli (yüz düğmeleri göz, koleksiyon kartları kulak). Seçilmeyen konseptler: Karto (kartuş),
+2026-10-04: asistanın adı "My games AI" yerine **Paddie** (game**pad**'den; aynı gün önce seçilen Pati yerine), maskotu
+logodaki mor kumandanın canlanmış hâli (yüz düğmeleri göz, koleksiyon kartları kulak). Seçilmeyen konseptler: Karto (kartuş),
 Savi (yüzlü save-point küresi, eski küre).
 
-- Bileşen `components/assistant/mascot.tsx` (`Pati`, `LivePati`), animasyonlar `styles.css` `.pati`.
+- Bileşen `components/assistant/mascot.tsx` (`Paddie`, `LivePaddie`), animasyonlar `styles.css` `.paddie`.
   Renk sabit marka moru; eski küre gibi sayfanın oyun rengini almaz.
 - Ruh hâlleri: `idle` (süzülür, göz kırpar, ara sıra etrafa bakar), `listening` (kutuda yazı varken),
   `thinking` (istek gitti / metin henüz yok), `working` (araç çalışıyor; kartları karıştırır), `talking`
   (metin akıyor), `approval` (onay kartı bekliyor), `success` (akışta bir yazma aracı uygulandı; ~2 sn),
   `error` (sohbet hatası; iki kez silkinip üzgün kalır).
 - Ortak durum `mascot-store.ts` (AI SDK'sız; başlık düğmesi onu yüklemeden okur). `chat-store.ts` her
-  `Chat`'e AI SDK'nın `~register*Callback` kancalarıyla bağlanır; panel kapalıyken de başlıktaki Pati
+  `Chat`'e AI SDK'nın `~register*Callback` kancalarıyla bağlanır; panel kapalıyken de başlıktaki Paddie
   çalışır. Bu kancalar `@ai-sdk/react`'in iç API'si (useChat da bunları kullanır); sürüm yükseltmede kontrol et.
-- Geçmiş mesajlar ve küçük simgeler `still` (hareketsiz); karşılamadaki büyük Pati'ye dokununca sevinir.
+- Geçmiş mesajlar ve küçük simgeler `still` (hareketsiz); karşılamadaki büyük Paddie'ye dokununca sevinir.
 - Sistem talimatında kısa bir persona satırı var (sıcak, oyuncu arkadaş; kısalık önce gelir).
 - Hareket azaltma tercihi global kuralla bütün animasyonları durdurur; yüz ifadeleri yine değişir.
 

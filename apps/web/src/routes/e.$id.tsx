@@ -111,7 +111,7 @@ function EntryPage() {
     onSuccess: async (_, values) => {
       setEditing(false);
       // "Bitirdim" anı: kayıt yeni bitirildiyse damga vurulur, yoksa sade bir bildirim yeter. İncelemesi
-      // yoksa damgadan sonra Pati röportaja çağırır.
+      // yoksa damgadan sonra Paddie röportaja çağırır.
       if (values.status === "completed" && entry.status !== "completed") {
         setStamp((n) => n + 1);
         if (!values.review && !entry.review && assistant?.enabled) {

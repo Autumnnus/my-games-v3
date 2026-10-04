@@ -28,7 +28,7 @@ import { Dialog as DialogPrimitive } from "radix-ui";
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useAddGame } from "@/components/add-game";
-import { Pati } from "@/components/assistant/mascot";
+import { Paddie } from "@/components/assistant/mascot";
 import { useOptionalAssistant } from "@/components/assistant/provider";
 import { GameCover } from "@/components/game-cover";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -209,8 +209,8 @@ function SpotlightDialog(props: {
           {
             id: "ask-ai",
             title: trimmed ? m.spotlight_ask_ai_query({ query: trimmed }) : m.spotlight_ask_ai(),
-            keywords: "pati ai assistant chat ask yapay zeka asistan sor sohbet",
-            icon: <Pati size={20} still />,
+            keywords: "paddie ai assistant chat ask yapay zeka asistan sor sohbet",
+            icon: <Paddie size={20} still />,
             hint: <Kbd className="max-sm:hidden">⌘J</Kbd>,
             run: () => {
               close();

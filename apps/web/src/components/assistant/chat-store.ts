@@ -4,7 +4,7 @@ import { DefaultChatTransport, lastAssistantMessageIsCompleteWithApprovalRespons
 import { type AssistantUIMessage, isToolPart, toolNameOf, WRITE_TOOLS } from "@/lib/assistant";
 import { aiUsageQuery, chatThreadsQuery } from "@/lib/queries";
 import { getLocale } from "@/paraglide/runtime";
-import { flashSuccess, type PatiMood, setChatMood } from "./mascot-store";
+import { flashSuccess, type PaddieMood, setChatMood } from "./mascot-store";
 
 /**
  * Sohbet örnekleri (AI SDK `Chat`). Modül düzeyinde tutulur: panel, tam ekran görünüm ve karşılama kartları
@@ -66,8 +66,8 @@ export function getChat(id: string, queryClient: QueryClient) {
   return chat;
 }
 
-/** Sohbetin o anki hâli Pati'nin hangi ruh hâlinde olacağını belirler. */
-function moodOf(chat: Chat<AssistantUIMessage>): PatiMood {
+/** Sohbetin o anki hâli Paddie'nin hangi ruh hâlinde olacağını belirler. */
+function moodOf(chat: Chat<AssistantUIMessage>): PaddieMood {
   if (chat.error) return "error";
   if (chat.status === "submitted") return "thinking";
   const last = chat.messages.at(-1);
@@ -87,7 +87,7 @@ function moodOf(chat: Chat<AssistantUIMessage>): PatiMood {
   return waiting ? "approval" : "idle";
 }
 
-/** Uygulanmış yazma araçlarının sayısı; akış sırasında artınca Pati sevinir. */
+/** Uygulanmış yazma araçlarının sayısı; akış sırasında artınca Paddie sevinir. */
 function writesOf(chat: Chat<AssistantUIMessage>) {
   let count = 0;
   for (const message of chat.messages)
@@ -101,7 +101,7 @@ function writesOf(chat: Chat<AssistantUIMessage>) {
   return count;
 }
 
-/** Ruh hâlini son hareket eden sohbet belirler (panel kapalıyken de başlık düğmesindeki Pati çalışır). */
+/** Ruh hâlini son hareket eden sohbet belirler (panel kapalıyken de başlık düğmesindeki Paddie çalışır). */
 let moodOwner: string | null = null;
 
 function watchMood(chat: Chat<AssistantUIMessage>) {
@@ -122,7 +122,7 @@ function watchMood(chat: Chat<AssistantUIMessage>) {
   chat["~registerMessagesCallback"](sync, 120);
 }
 
-/** Açık sohbet değişince Pati onun hâline geçer (yeni, boş sohbette boşta). */
+/** Açık sohbet değişince Paddie onun hâline geçer (yeni, boş sohbette boşta). */
 export function focusMood(id: string) {
   moodOwner = id;
   const chat = chats.get(id);

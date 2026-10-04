@@ -226,7 +226,7 @@ Sohbetler Postgres'te; her adım ve tool çağrısı loglanır. Kullanıcı baş
 
 **Büyük geliştirme (Faz 7):** yazma tool'ları (öneri onay kutusuna düşer), RAG, hafıza.
 
-**Pati — AI asistan (Faz 7a, 2026-09-29; 2026-10-04 maskot + ad):** sayfanın üstünde panel (⌘J, sabitlenebilir), `/ai` tam ekran,
+**Paddie — AI asistan (Faz 7a, 2026-09-29; 2026-10-04 maskot + ad):** sayfanın üstünde panel (⌘J, sabitlenebilir), `/ai` tam ekran,
 sayfa bağlamı, `@`/`/`, Sor/Yap (yazma araçları AI SDK tool onayıyla; kart + geri al), kart cevaplar,
 akıllı listeler, "Ne oynasam?", oyun sonrası röportaj, "Kaldığın yer". Sağlayıcıdan bağımsız anahtar
 havuzu + yedek model zinciri. Ayrıntı: [notes/ai.md](notes/ai.md).

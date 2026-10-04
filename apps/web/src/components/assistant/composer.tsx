@@ -24,7 +24,7 @@ import {
 } from "@/lib/assistant";
 import { formatRating, statusLabel } from "@/lib/format";
 import { m } from "@/paraglide/messages";
-import { Pati } from "./mascot";
+import { Paddie } from "./mascot";
 import { setTyping } from "./mascot-store";
 import { useAssistant } from "./provider";
 
@@ -145,7 +145,7 @@ export function Composer({
     setWithoutPage(false);
   }, [threadId]);
 
-  // Kutuda yazı varken Pati mesaj kutusuna bakar (dinler).
+  // Kutuda yazı varken Paddie mesaj kutusuna bakar (dinler).
   const typing = text.trim().length > 0;
   useEffect(() => setTyping(typing), [typing]);
   useEffect(() => () => setTyping(false), []);
@@ -393,7 +393,7 @@ export function Composer({
                 <MenuRow active={index === active} onPick={() => choose(item)}>
                   {item.kind === "ask" ? (
                     <>
-                      <Pati size={30} still />
+                      <Paddie size={30} still />
                       <span className="grid min-w-0 gap-0.5">
                         <span className="text-sm font-bold">{m.ai_quick_ask()}</span>
                         <span className="text-foreground/72 truncate text-xs">“{quickText}”</span>

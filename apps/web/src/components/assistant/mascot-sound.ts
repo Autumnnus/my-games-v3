@@ -1,12 +1,12 @@
 import { useSyncExternalStore } from "react";
-import type { PatiMood } from "./mascot-store";
+import type { PaddieMood } from "./mascot-store";
 
 /**
- * Pati'nin sesleri. Dosya yok: hepsi Web Audio ile o an üretilen çok kısa, kısık tonlar (indirme ve lisans
+ * Paddie'nin sesleri. Dosya yok: hepsi Web Audio ile o an üretilen çok kısa, kısık tonlar (indirme ve lisans
  * derdi yok, birkaç yüz bayt kod). Tarayıcı ses çalmayı ancak bir dokunuş/tuşa basıştan sonra açar; ondan
  * önce gelen olaylar sessiz geçer. Kapatma tercihi tarayıcıda (`mg.ai.sound`).
  */
-export type PatiSound = "send" | "shuffle" | "ask" | "success" | "error" | "boop";
+export type PaddieSound = "send" | "shuffle" | "ask" | "success" | "error" | "boop";
 
 const STORAGE = "mg.ai.sound";
 const VOLUME = 0.14;
@@ -17,7 +17,7 @@ let noise: AudioBuffer | null = null;
 let unlocked = false;
 let enabled = true;
 const listeners = new Set<() => void>();
-const lastPlayed = new Map<PatiSound, number>();
+const lastPlayed = new Map<PaddieSound, number>();
 
 if (typeof window !== "undefined") {
   try {
@@ -99,7 +99,7 @@ function flick(ctx: AudioContext, at: number, pitch: number) {
   source.stop(at + 0.05);
 }
 
-const SOUNDS: Record<PatiSound, (ctx: AudioContext, now: number) => void> = {
+const SOUNDS: Record<PaddieSound, (ctx: AudioContext, now: number) => void> = {
   // Mesaj gitti: yukarı kayan yumuşak bir "blup".
   send: (ctx, now) => tone(ctx, now, { from: 520, to: 860, duration: 0.14, gain: 0.7 }),
   // Araç çalışıyor: üç kart çevrilir.
@@ -126,7 +126,7 @@ const SOUNDS: Record<PatiSound, (ctx: AudioContext, now: number) => void> = {
   boop: (ctx, now) => tone(ctx, now, { from: 900, to: 1500, duration: 0.09, gain: 0.6 }),
 };
 
-export function playSound(sound: PatiSound) {
+export function playSound(sound: PaddieSound) {
   const ctx = audio();
   if (!ctx) return;
   // Aynı ses art arda (ör. çok araçlı bir turda her araçta) üst üste binmesin.
@@ -137,7 +137,7 @@ export function playSound(sound: PatiSound) {
 }
 
 /** Ruh hâli değişince çalan ses (`mascot-store` çağırır). Konuşurken ve boştayken ses yok. */
-export function soundForMood(previous: PatiMood, next: PatiMood) {
+export function soundForMood(previous: PaddieMood, next: PaddieMood) {
   if (next === "thinking" && (previous === "idle" || previous === "listening")) playSound("send");
   else if (next === "working") playSound("shuffle");
   else if (next === "approval") playSound("ask");

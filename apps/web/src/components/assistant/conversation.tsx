@@ -17,18 +17,18 @@ import { m } from "@/paraglide/messages";
 import { focusMood, getChat } from "./chat-store";
 import { Composer } from "./composer";
 import { Greeting } from "./greeting";
-import { LivePati, Pati } from "./mascot";
-import { usePatiMood } from "./mascot-store";
+import { LivePaddie, Paddie } from "./mascot";
+import { usePaddieMood } from "./mascot-store";
 import { MessageView, TypingDots } from "./message";
 import { useAssistant } from "./provider";
 
 /**
- * Pati'nin çalışma sahnesi: sohbet bir şey yaparken (düşünüyor, araç çalıştırıyor, yazıyor, onay bekliyor,
- * az önce uyguladı) mesajların altında büyük Pati ve ne yaptığı. Mesaj başlığındaki küçük Pati hareketsizdir;
+ * Paddie'nin çalışma sahnesi: sohbet bir şey yaparken (düşünüyor, araç çalıştırıyor, yazıyor, onay bekliyor,
+ * az önce uyguladı) mesajların altında büyük Paddie ve ne yaptığı. Mesaj başlığındaki küçük Paddie hareketsizdir;
  * hareketler burada okunur.
  */
-function PatiStage({ tool, glow }: { tool: string | null; glow: string | null }) {
-  const mood = usePatiMood();
+function PaddieStage({ tool, glow }: { tool: string | null; glow: string | null }) {
+  const mood = usePaddieMood();
   const label =
     mood === "working"
       ? `${tool ? toolRunningLabel(tool) : m.ai_thinking().replace(/…$/, "")}…`
@@ -42,7 +42,7 @@ function PatiStage({ tool, glow }: { tool: string | null; glow: string | null })
   const dots = mood === "thinking" || mood === "working" || mood === "talking";
   return (
     <div className="animate-pop flex items-center gap-3" role="status">
-      <LivePati size={68} glow={glow} />
+      <LivePaddie size={68} glow={glow} />
       <span className="text-foreground/75 grid gap-0.5 text-[13px]">
         <span className="text-foreground text-sm font-bold">{m.ai_name()}</span>
         {dots ? <TypingDots label={label} /> : <span>{label}</span>}
@@ -92,7 +92,7 @@ export function Conversation({
     }
   }, [history.data, chat, setMessages]);
 
-  // Pati açık sohbetin hâlini gösterir (başka bir sohbette akış sürüyorsa da ona geçer).
+  // Paddie açık sohbetin hâlini gösterir (başka bir sohbette akış sürüyorsa da ona geçer).
   useEffect(() => focusMood(threadId), [threadId]);
 
   // Silinmiş/başkasının sohbeti: temiz bir sohbetle devam.
@@ -113,9 +113,9 @@ export function Conversation({
   const errorText = assistantErrorText(error);
   const glow = useQuery({ ...suggestionsQuery(assistant.page), enabled: assistant.enabled }).data
     ?.pageGame?.accentColor;
-  const mood = usePatiMood();
+  const mood = usePaddieMood();
 
-  // Sahnedeki yazı için son çalışan araç; araç bitip Pati bir an daha "çalışıyor"da kalsa da adı kaybolmasın.
+  // Sahnedeki yazı için son çalışan araç; araç bitip Paddie bir an daha "çalışıyor"da kalsa da adı kaybolmasın.
   const lastTool = useRef<string | null>(null);
   const tools = last?.role === "assistant" ? last.parts.filter(isToolPart) : [];
   const running = tools.find(
@@ -154,10 +154,10 @@ export function Conversation({
               />
             ))
           )}
-          {staged && <PatiStage tool={lastTool.current} glow={glow ?? null} />}
+          {staged && <PaddieStage tool={lastTool.current} glow={glow ?? null} />}
           {errorText && (
             <div className="border-destructive/35 bg-destructive/8 flex items-center gap-3 rounded-2xl border p-3 text-sm">
-              <Pati mood="error" size={44} />
+              <Paddie mood="error" size={44} />
               <span className="flex-1">{errorText}</span>
               <Button
                 variant="ghost"

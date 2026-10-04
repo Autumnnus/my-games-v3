@@ -14,7 +14,7 @@ import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/
 import { chatThreadsQuery } from "@/lib/queries";
 import { m } from "@/paraglide/messages";
 import { Conversation } from "./conversation";
-import { PatiSoundToggle } from "./mascot";
+import { PaddieSoundToggle } from "./mascot";
 import { useMediaQuery, useOptionalAssistant } from "./provider";
 
 const iconButton =
@@ -76,7 +76,7 @@ function PanelBody() {
       <header className="flex h-[60px] shrink-0 items-center justify-between gap-2 border-b border-white/7 pr-2.5 pl-3">
         <ThreadPicker />
         <div className="flex shrink-0 gap-0.5">
-          <PatiSoundToggle className={iconButton} />
+          <PaddieSoundToggle className={iconButton} />
           <button
             type="button"
             aria-label={m.ai_new_chat()}
@@ -109,7 +109,7 @@ function PanelBody() {
 }
 
 /**
- * Pati (AI asistan) paneli. Geniş ekranda sayfanın sağına sabitlenir ve sayfa onun kadar daralır (Cloudflare
+ * Paddie (AI asistan) paneli. Geniş ekranda sayfanın sağına sabitlenir ve sayfa onun kadar daralır (Cloudflare
  * gibi; sayfa kullanılmaya devam eder). Daha dar ekranlarda sağdan, telefonda alttan açılan bir sayfa olur.
  * Tam ekran görünümde (/ai) gösterilmez.
  */

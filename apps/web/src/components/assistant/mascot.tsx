@@ -3,7 +3,7 @@ import { Volume2Icon, VolumeOffIcon } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { m } from "@/paraglide/messages";
 import { setSoundEnabled, useSoundEnabled } from "./mascot-sound";
-import { type PatiMood, usePatiMood } from "./mascot-store";
+import { type PaddieMood, usePaddieMood } from "./mascot-store";
 
 const INK = "#1d1533";
 const SPARK = "M0-6L1.5-1.5L6 0L1.5 1.5L0 6L-1.5 1.5L-6 0L-1.5-1.5Z";
@@ -34,8 +34,8 @@ export function glowColor(hex: string | null | undefined) {
 }
 
 /**
- * Pati: logodaki mor kumanda canlanmış hâli; yüz düğmeleri gözü, koleksiyon kartları kulağı. Ruh hâline göre
- * hareket eder (animasyonlar `styles.css` `.pati` altında): boşta süzülür ve göz kırpar, sen yazarken mesaj
+ * Paddie: logodaki mor kumanda canlanmış hâli; yüz düğmeleri gözü, koleksiyon kartları kulağı. Ruh hâline göre
+ * hareket eder (animasyonlar `styles.css` `.paddie` altında): boşta süzülür ve göz kırpar, sen yazarken mesaj
  * kutusuna bakar, düşünürken düşünce baloncukları çıkar, araç çalışırken kartlarını karıştırır, cevap yazarken
  * konuşur, onay beklerken başını yana eğer, değişiklik uygulanınca zıplar, hata olunca üzülür.
  *
@@ -43,14 +43,14 @@ export function glowColor(hex: string | null | undefined) {
  * `glow`: arkada bulunduğun sayfanın oyun renginde yumuşak bir ışık (bkz. `glowColor`); ruh hâline göre nefes
  * alır, çalışırken hızlanır, sevinince parlar. Küçük boyutta gölge çizilmez ve çerçeve gövdeye daralır.
  */
-export function Pati({
+export function Paddie({
   mood = "idle",
   size = 28,
   still = false,
   glow,
   className,
 }: {
-  mood?: PatiMood;
+  mood?: PaddieMood;
   size?: number;
   still?: boolean;
   /** Işığın oyun rengi; `null` sayfada oyun yok (marka moru), `undefined` ışık yok. */
@@ -58,7 +58,7 @@ export function Pati({
   className?: string;
 }) {
   const compact = size < 40;
-  const glowId = `pati-glow-${useId().replace(/[^\w-]/g, "")}`;
+  const glowId = `paddie-glow-${useId().replace(/[^\w-]/g, "")}`;
   return (
     <svg
       aria-hidden
@@ -67,7 +67,7 @@ export function Pati({
       height={size}
       data-mood={mood}
       data-still={still || undefined}
-      className={cn("pati shrink-0 overflow-visible", className)}
+      className={cn("paddie shrink-0 overflow-visible", className)}
     >
       {glow !== undefined && (
         <>
@@ -206,14 +206,14 @@ export function Pati({
   );
 }
 
-/** Sohbetin ortak ruh hâliyle hareket eden Pati (başlık düğmesi, karşılama, çalışma sahnesi). */
-export function LivePati(props: { size?: number; glow?: string | null; className?: string }) {
-  const mood = usePatiMood();
-  return <Pati mood={mood} {...props} />;
+/** Sohbetin ortak ruh hâliyle hareket eden Paddie (başlık düğmesi, karşılama, çalışma sahnesi). */
+export function LivePaddie(props: { size?: number; glow?: string | null; className?: string }) {
+  const mood = usePaddieMood();
+  return <Paddie mood={mood} {...props} />;
 }
 
-/** Pati'nin seslerini aç/kapat (panel ve tam ekran başlığında). */
-export function PatiSoundToggle({ className }: { className?: string }) {
+/** Paddie'nin seslerini aç/kapat (panel ve tam ekran başlığında). */
+export function PaddieSoundToggle({ className }: { className?: string }) {
   const on = useSoundEnabled();
   return (
     <button
@@ -230,7 +230,7 @@ export function PatiSoundToggle({ className }: { className?: string }) {
 }
 
 /**
- * Kısa bir an (ör. Pati'ye dokununca sevinmesi): `pulse` 0'dan başlar, her artışta `ms` boyunca `true` döner.
+ * Kısa bir an (ör. Paddie'ye dokununca sevinmesi): `pulse` 0'dan başlar, her artışta `ms` boyunca `true` döner.
  */
 export function useFlash(pulse: number, ms = 1300) {
   const [on, setOn] = useState(false);
