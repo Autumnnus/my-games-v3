@@ -310,13 +310,15 @@ export async function listHistory(
       changes: entryHistory.changes,
       revertedAt: entryHistory.revertedAt,
       createdAt: entryHistory.createdAt,
+      // Uygulama saat dilimindeki gün (bağlantı o dilimde): sayfa aynı gün aynı oyunu tek satırda toplar.
+      day: sql<string>`(${entryHistory.createdAt})::date::text`,
       game: { id: games.id, name: games.name, slug: games.slug },
     })
     .from(entryHistory)
     .leftJoin(games, eq(games.id, entryHistory.gameId))
     .where(and(...conditions))
     .orderBy(desc(entryHistory.createdAt))
-    .limit(Math.min(options.limit ?? 50, 200));
+    .limit(Math.min(options.limit ?? 200, 200));
 }
 
 // --- Okuma ---

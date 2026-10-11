@@ -172,6 +172,7 @@
   "history_action_delete": "removed",
   "history_reverted": "Undone",
   "history_revert_done": "Change undone.",
+  "history_group_count": "{count} updates",
   "settings_title": "Account",
   "settings_description": "Your account details.",
   "settings_profile": "Profile",

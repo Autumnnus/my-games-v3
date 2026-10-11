@@ -172,6 +172,7 @@
   "history_action_delete": "kaldırıldı",
   "history_reverted": "Geri alındı",
   "history_revert_done": "Değişiklik geri alındı.",
+  "history_group_count": "{count} güncelleme",
   "settings_title": "Hesap",
   "settings_description": "Hesap bilgilerin.",
   "settings_profile": "Profil",
