@@ -116,6 +116,9 @@ export const auth = betterAuth({
     ipAddress: { ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"] },
   },
   session: {
+    // Kayan süre: son kullanımdan 30 gün sonra düşer; kullanıldıkça (en fazla günde bir) yeniden 30 güne uzar.
+    expiresIn: 30 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
     // Her istekte DB'ye gitmemek için oturum 5 dakika imzalı cookie'de önbelleklenir.
     cookieCache: { enabled: true, maxAge: 5 * 60 },
   },

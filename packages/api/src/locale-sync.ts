@@ -27,12 +27,16 @@ export async function syncLocale(
   // Oturum çerezi yoksa auth'a hiç gidilmez (ziyaretçiler, botlar).
   if (!cookies.includes("session_token=")) return unchanged;
 
-  const session = await auth.api.getSession({ headers: request.headers }).catch(() => null);
+  const result = await auth.api
+    .getSession({ headers: request.headers, returnHeaders: true })
+    .catch(() => null);
+  const session = result?.response;
   if (!session) return unchanged;
 
   const current = readCookie(cookies, LOCALE_COOKIE);
   const account = session.user.locale;
-  const setCookies: string[] = [];
+  // Sayfa açılışı da oturumu uzatır: Better Auth'un yenilediği oturum çerezleri yanıta eklenir.
+  const setCookies: string[] = result.headers.getSetCookie();
 
   if (readCookie(cookies, LOCALE_PICK_COOKIE)) {
     setCookies.push(`${LOCALE_PICK_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax`);

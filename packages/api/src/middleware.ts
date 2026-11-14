@@ -35,14 +35,33 @@ function isRevoked(userId: string, sessionCreatedAt: Date | string | undefined) 
   return !sessionCreatedAt || new Date(sessionCreatedAt).getTime() <= at;
 }
 
-/** Oturumu okur; kullanıcı yoksa `null` bırakır. */
+/**
+ * Oturumu okur; kullanıcı yoksa `null` bırakır. Better Auth oturumu uzattığında (günde bir) ya da çerez
+ * önbelleğini tazelediğinde yeni çerezleri döner; bunlar yanıta eklenir. Eklenmezse tarayıcıdaki çerez girişteki
+ * süresiyle kalır ve kullanıcı aktif olsa bile o süre dolunca çıkış yapmış olur.
+ */
 export const withSession = createMiddleware<AppEnv>(async (c, next) => {
-  const result = await auth.api.getSession({ headers: c.req.raw.headers });
+  const { response: result, headers } = await auth.api.getSession({
+    headers: c.req.raw.headers,
+    returnHeaders: true,
+  });
   const revoked = result ? isRevoked(result.user.id, result.session.createdAt) : false;
   c.set("user", revoked ? null : (result?.user ?? null));
   c.set("session", revoked ? null : (result?.session ?? null));
   await next();
+  if (revoked) return;
+  // Handler'ın kendi çerezleri (ör. avatar sonrası tazeleme) sonra gelir; tarayıcıda sonuncusu geçerli olur.
+  const own = c.res.headers.getSetCookie();
+  for (const cookie of headers.getSetCookie()) {
+    if (!own.some((existing) => sameCookieName(existing, cookie))) {
+      c.header("Set-Cookie", cookie, { append: true });
+    }
+  }
 });
+
+function sameCookieName(a: string, b: string) {
+  return a.slice(0, a.indexOf("=")) === b.slice(0, b.indexOf("="));
+}
 
 /** Oturum zorunlu; yoksa 401, banlıysa 403. `withSession`'dan sonra kullanılır. */
 export const requireUser = createMiddleware<AppEnv>(async (c, next) => {
