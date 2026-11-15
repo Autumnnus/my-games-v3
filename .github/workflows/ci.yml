@@ -46,9 +46,29 @@ jobs:
       # MinIO ve eski veri dump'ı CI'da yok; o testler kendiliğinden atlanır.
       - run: pnpm test
 
-  images:
+  # Sürüm numarası: son `vN` etiketinin bir fazlası (hiç yoksa 1). Etiket deploy başarılı olunca atılır; başarısız
+  # ya da iptal edilen çalışmalar numara harcamaz.
+  version:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: check
+    runs-on: ubuntu-latest
+    outputs:
+      number: ${{ steps.next.outputs.number }}
+      released_at: ${{ steps.next.outputs.released_at }}
+    steps:
+      - id: next
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          last=$(gh api --paginate "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/v" --jq '.[].ref' \
+            | sed -n 's#^refs/tags/v\([0-9][0-9]*\)$#\1#p' | sort -n | tail -1)
+          number=$(( ${last:-0} + 1 ))
+          echo "Sürüm: v$number"
+          echo "number=$number" >> "$GITHUB_OUTPUT"
+          echo "released_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
+  images:
+    needs: version
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -71,15 +91,22 @@ jobs:
           context: .
           target: ${{ matrix.target }}
           push: true
+          build-args: |
+            APP_VERSION=${{ needs.version.outputs.number }}
+            APP_RELEASED_AT=${{ needs.version.outputs.released_at }}
+            APP_COMMIT=${{ github.sha }}
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:v${{ needs.version.outputs.number }}
           cache-from: type=gha,scope=${{ matrix.target }}
           cache-to: type=gha,mode=max,scope=${{ matrix.target }}
 
   deploy:
-    needs: images
+    needs: [version, images]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       # Coolify'da her kaynağın "Webhooks" sekmesindeki deploy URL'i ve bir API token'ı secret olarak eklenir.
       # Secret'lar yoksa adım atlanır (Coolify'da otomatik deploy da kullanılabilir).
@@ -104,3 +131,16 @@ jobs:
           }
           deploy app "$COOLIFY_DEPLOY_APP_URL"
           deploy worker "$COOLIFY_DEPLOY_WORKER_URL"
+      # Bu commit'e `vN` etiketi; sonraki çalışma numarayı buradan devam ettirir. Etiket zaten varsa (yeniden
+      # çalıştırma) dokunulmaz.
+      - name: Sürüm etiketini at
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: v${{ needs.version.outputs.number }}
+        run: |
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" >/dev/null 2>&1; then
+            echo "$TAG zaten var."
+          else
+            gh api "repos/$GITHUB_REPOSITORY/git/refs" -f ref="refs/tags/$TAG" -f sha="$GITHUB_SHA" >/dev/null
+            echo "$TAG etiketi atıldı ($GITHUB_SHA)."
+          fi

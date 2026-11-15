@@ -10,6 +10,7 @@ import {
   restoreOnboarding,
 } from "@my-games/core/onboarding";
 import { signupsOpen } from "@my-games/core/settings";
+import { appVersion } from "@my-games/core/version";
 import { onboardingTips } from "@my-games/shared";
 import { Hono } from "hono";
 import { z } from "zod";
@@ -31,7 +32,7 @@ import { steamRoutes } from "./steam";
 export const v1 = new Hono<AppEnv>()
   .get("/health", async (c) => {
     await pool().query("select 1");
-    return c.json({ ok: true });
+    return c.json({ ok: true, version: appVersion() });
   })
   .get("/meta", async (c) =>
     c.json({
@@ -40,6 +41,7 @@ export const v1 = new Hono<AppEnv>()
       features: { ...features(), ai: await aiEnabled() },
       signupsOpen: await signupsOpen(),
       contactEmail: contactEmail(),
+      version: appVersion(),
     }),
   )
   .get("/me", withSession, (c) => {

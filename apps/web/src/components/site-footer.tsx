@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useRouteContext, useRouterState } from "@tanstack/react-router";
 import { cn } from "cn";
+import { AppVersionLabel } from "@/components/app-version";
 import { BrandMark } from "@/components/brand-mark";
 import { metaQuery } from "@/lib/meta";
 import { m } from "@/paraglide/messages";
@@ -37,6 +38,11 @@ export function SiteFooter() {
         <a href={`mailto:${contact}`} className={link}>
           {m.legal_contact()}
         </a>
+      )}
+      {meta.data && (
+        <span className="text-muted-foreground/70 ms-auto">
+          <AppVersionLabel version={meta.data.version} />
+        </span>
       )}
     </footer>
   );

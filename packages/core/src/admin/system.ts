@@ -9,6 +9,7 @@ import { db } from "../db";
 import { notFound } from "../errors";
 import { OUTBOX_CHANNEL } from "../events";
 import { readSetting, SETTING_KEYS, signupsOpen, writeSetting } from "../settings";
+import { type AppVersion, appVersion } from "../version";
 import { type AdminActor, audit } from "./audit";
 
 const { outbox } = schema;
@@ -20,6 +21,8 @@ export type WorkerHeartbeat = {
   rss: number;
   heapUsed: number;
   node: string;
+  /** Eski heartbeat kayıtlarında yoktur. */
+  version?: AppVersion;
 };
 
 /** Worker dakikada bir yazar; panel "son görülme" ve bellek kullanımını buradan okur. */
@@ -32,6 +35,7 @@ export async function writeWorkerHeartbeat(startedAt: Date) {
     rss: memory.rss,
     heapUsed: memory.heapUsed,
     node: process.version,
+    version: appVersion(),
   };
   await writeSetting(SETTING_KEYS.workerHeartbeat, value);
 }
@@ -59,6 +63,7 @@ async function processInfo() {
     heapUsed: memory.heapUsed,
     heapTotal: memory.heapTotal,
     node: process.version,
+    version: appVersion(),
     memoryLimit: await memoryLimit(),
     loadavg: os.loadavg(),
     cpus: os.cpus().length,

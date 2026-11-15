@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Bars } from "@/components/admin/charts";
 import { AdminHeader } from "@/components/admin/shell";
 import { Empty, Fact, Meter, Panel, Pill } from "@/components/admin/ui";
+import { AppVersionLabel } from "@/components/app-version";
 import { RelativeTime } from "@/components/time";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -34,6 +35,8 @@ function Processes({ status }: { status: SystemStatus }) {
   const { app, worker } = status;
   const workerAge = worker ? Date.now() - new Date(worker.at).getTime() : null;
   const workerOk = workerAge !== null && workerAge < WORKER_STALE_MS;
+  // Deploy'da worker yeniden başlamadıysa eski imajda kalmış olabilir.
+  const workerOutdated = !!worker?.version && worker.version.number !== app.version.number;
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <Panel
@@ -66,6 +69,9 @@ function Processes({ status }: { status: SystemStatus }) {
             {app.loadavg.map((value) => value.toFixed(2)).join(" · ")} (
             {m.admin_process_cpus({ count: app.cpus })})
           </Fact>
+          <Fact label={m.admin_process_version()}>
+            <AppVersionLabel version={app.version} detailed />
+          </Fact>
           <Fact label="Node">{app.node}</Fact>
         </dl>
       </Panel>
@@ -89,6 +95,10 @@ function Processes({ status }: { status: SystemStatus }) {
             <Fact label={m.admin_process_memory()}>{formatBytes(worker.rss)}</Fact>
             <Fact label={m.admin_process_heap()}>{formatBytes(worker.heapUsed)}</Fact>
             <Fact label={m.admin_process_started()}>{formatDateTime(worker.startedAt)}</Fact>
+            <Fact label={m.admin_process_version()}>
+              {workerOutdated && <Pill tone="warn">{m.admin_process_version_outdated()}</Pill>}{" "}
+              <AppVersionLabel version={worker.version} detailed />
+            </Fact>
             <Fact label="Node">{worker.node}</Fact>
           </dl>
         ) : (

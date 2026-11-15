@@ -34,6 +34,13 @@ WORKDIR /app
 COPY --from=build --chown=node:node /repo/apps/web/.output ./.output
 COPY --from=build --chown=node:node /repo/packages/db/dist ./db/dist
 COPY --from=build --chown=node:node /repo/packages/db/drizzle ./db/drizzle
+# CI'ın ürettiği sürüm bilgisi (bkz. packages/core/src/version.ts). Değişince yalnızca bu katman yenilenir.
+ARG APP_VERSION= \
+    APP_RELEASED_AT= \
+    APP_COMMIT=
+ENV APP_VERSION=${APP_VERSION} \
+    APP_RELEASED_AT=${APP_RELEASED_AT} \
+    APP_COMMIT=${APP_COMMIT}
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
@@ -46,5 +53,12 @@ ENV NODE_ENV=production \
     NODE_OPTIONS=--max-old-space-size=128
 WORKDIR /app
 COPY --from=build --chown=node:node /repo/apps/worker/dist ./
+# CI'ın ürettiği sürüm bilgisi (bkz. packages/core/src/version.ts). Değişince yalnızca bu katman yenilenir.
+ARG APP_VERSION= \
+    APP_RELEASED_AT= \
+    APP_COMMIT=
+ENV APP_VERSION=${APP_VERSION} \
+    APP_RELEASED_AT=${APP_RELEASED_AT} \
+    APP_COMMIT=${APP_COMMIT}
 USER node
 CMD ["node", "index.mjs"]
